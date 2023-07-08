@@ -1,0 +1,12 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/XMapLib_Keyboard
+/x64/Debug
+/XMapLib_Keyboard/.vs/XMapLib_Keyboard
+/XMapLib_Keyboard/x64
+/XMapLib_Mouse/x64
+/XMapLib_Utils/x64
+/TestKeyboard/x64
+/x64/Release
