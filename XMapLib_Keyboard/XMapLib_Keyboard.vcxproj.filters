@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Keyboard">
+      <UniqueIdentifier>{a47992e6-5fdc-4e51-beab-ade5cd4e7e65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Keyboard\KeyInfoWrappers">
+      <UniqueIdentifier>{b56c2449-2429-4552-aceb-b63de8833d99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Keyboard\SettingsAndConfig">
+      <UniqueIdentifier>{c4b2771a-42ff-42ae-ac75-d8ef12a48cfb}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="XMapLib_Keyboard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ControllerButtonToActionMap.h">
+      <Filter>Header Files\Keyboard\KeyInfoWrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="ControllerStateUpdateWrapper.h">
+      <Filter>Header Files\Keyboard\KeyInfoWrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardSettingsPack.h">
+      <Filter>Header Files\Keyboard\SettingsAndConfig</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardPollerController.h">
+      <Filter>Header Files\Keyboard</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardTranslationHelpers.h">
+      <Filter>Header Files\Keyboard</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardLibIncludes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardCustomTypes.h">
+      <Filter>Header Files\Keyboard</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardLegacyApiFunctions.h">
+      <Filter>Header Files\Keyboard</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardTranslationFilters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
