@@ -321,7 +321,10 @@ auto RunTestDriverLoop()
         // TODO, filter for overtaking behavior.
         //const auto filtered = groupingFilter.FilterTranslationPack(translation);
         translation();
-        nanotime_sleep(sleepDelay.count());
+        if(sds::ControllerStatus::IsControllerConnected(playerInfo.PlayerId))
+            nanotime_sleep(sleepDelay.count());
+        else
+            nanotime_sleep(sleepDelay.count()*2);
     }
     std::cout << "Performing cleanup actions...\n";
     const auto cleanupTranslation = poller.GetCleanupActions();

@@ -1,13 +1,19 @@
 #pragma once
-#include "pch.h"
-#include "IOFuncs.h"
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <Windows.h>
+#include <type_traits>
 
 namespace sds::Utilities
 {
 	/// <summary>
 	/// Utility class for simulating mouse movement input via the Windows API.
 	/// </summary>
-	class SendMouseInput
+	class SendMouseInput final
 	{
 		INPUT m_mouseMoveInput{};
 	public:

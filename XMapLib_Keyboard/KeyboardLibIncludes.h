@@ -51,6 +51,5 @@
 #include "../XMapLib_Utils/SendKeyInput.h"
 #include "../XMapLib_Utils/SendMouseInput.h"
 #include "../XMapLib_Utils/VirtualMap.h"
-#include "../XMapLib_Utils/Smarts.h"
 
 //#include <boost/container/small_vector.hpp>
