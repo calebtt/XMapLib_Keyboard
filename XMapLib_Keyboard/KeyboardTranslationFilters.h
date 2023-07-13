@@ -69,6 +69,7 @@ namespace sds
 		{
 			return FilterTranslationPack(std::move(translation));
 		}
+
 		auto FilterTranslationPack(TranslationPack&& translation) -> FilteredTranslationPack
 		{
 			using std::ranges::find, std::ranges::end, std::ranges::find_if;
