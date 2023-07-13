@@ -133,9 +133,6 @@ namespace sds
 		 */
 		KeyboardPollerControllerLegacy(KeyboardPollerControllerLegacy&& other) noexcept // implemented move
 		{
-			const auto cleanup = other.GetCleanupActions();
-			for(const auto & action : cleanup)
-				action();
 			m_mappings = std::move(other.m_mappings);
 		}
 
@@ -145,9 +142,6 @@ namespace sds
 		{
 			if (this == &other)
 				return *this;
-			const auto cleanup = other.GetCleanupActions();
-			for (const auto& action : cleanup)
-				action();
 			m_mappings = std::move(other.m_mappings);
 			return *this;
 		}
