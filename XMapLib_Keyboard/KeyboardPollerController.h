@@ -192,25 +192,21 @@ namespace sds
 				if (const auto upToInitial = GetButtonTranslationForUpToInitial(mapping))
 				{
 					translations.UpdateRequests.emplace_back(*upToInitial);
-					continue;
 				}
-				if (const auto initialToDown = GetButtonTranslationForInitialToDown(stateUpdate, mapping))
+				else if (const auto initialToDown = GetButtonTranslationForInitialToDown(stateUpdate, mapping))
 				{
 					// Advance to next state.
 					translations.NextStateRequests.emplace_back(*initialToDown);
-					continue;
 				}
-				if (const auto downToFirstRepeat = GetButtonTranslationForDownToRepeat(stateUpdate, mapping))
+				else if (const auto downToFirstRepeat = GetButtonTranslationForDownToRepeat(stateUpdate, mapping))
 				{
 					translations.NextStateRequests.emplace_back(*downToFirstRepeat);
-					continue;
 				}
-				if (const auto repeatToRepeat = GetButtonTranslationForRepeatToRepeat(stateUpdate, mapping))
+				else if (const auto repeatToRepeat = GetButtonTranslationForRepeatToRepeat(stateUpdate, mapping))
 				{
 					translations.RepeatRequests.emplace_back(*repeatToRepeat);
-					continue;
 				}
-				if (const auto repeatToUp = GetButtonTranslationForDownOrRepeatToUp(stateUpdate, mapping))
+				else if (const auto repeatToUp = GetButtonTranslationForDownOrRepeatToUp(stateUpdate, mapping))
 				{
 					translations.NextStateRequests.emplace_back(*repeatToUp);
 				}
