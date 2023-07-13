@@ -215,7 +215,7 @@ auto GetDriverMouseMappings()
     using namespace sds;
     sds::Utilities::SendMouseInput smi;
     constexpr auto FirstDelay = 0ns; // mouse move delays
-    constexpr auto RepeatDelay = 0ns;
+    constexpr auto RepeatDelay = 1200us;
     constexpr int MouseExGroup = 102;
 
     static constexpr keyboardtypes::VirtualKey_t RightThumbstickLeft{VK_GAMEPAD_RIGHT_THUMBSTICK_LEFT};
