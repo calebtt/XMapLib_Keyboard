@@ -38,6 +38,7 @@ namespace sds
 				for (const auto& elem : NextStateRequests)
 					elem();
 			}
+
 			keyboardtypes::SmallVector_t<TranslationResult> UpdateRequests{};
 			keyboardtypes::SmallVector_t<TranslationResult> RepeatRequests{};
 			keyboardtypes::SmallVector_t<TranslationResult> OvertakenRequests{};
