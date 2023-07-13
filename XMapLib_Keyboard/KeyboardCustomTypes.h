@@ -12,7 +12,6 @@ namespace sds::keyboardtypes
 	using VirtualKey_t = int32_t;
 	using TriggerValue_t = uint8_t;
 	using ThumbstickValue_t = int16_t;
-	using Index_t = std::uint32_t;
 
 	// TODO this might be replaced with std::vector if the user doesn't have boost.
 	template<typename T>
