@@ -8,6 +8,8 @@
 #include <Windows.h>
 #include <type_traits>
 
+#include "SendKeyInput.h"
+
 namespace sds::Utilities
 {
 	/// <summary>

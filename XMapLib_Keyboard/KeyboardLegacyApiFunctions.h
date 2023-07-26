@@ -1,5 +1,13 @@
 #pragma once
-#include "KeyboardLibIncludes.h"
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#endif
+#include <Windows.h>
+#include <Xinput.h>
+
 #include "ControllerStateUpdateWrapper.h"
 
 namespace sds

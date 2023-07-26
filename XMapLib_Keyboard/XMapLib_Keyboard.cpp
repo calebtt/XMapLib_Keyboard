@@ -1,6 +1,5 @@
 // XMapLib_Keyboard.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-#include "KeyboardLibIncludes.h"
 #include "KeyboardTranslationHelpers.h"
 #include "ControllerButtonToActionMap.h"
 #include "KeyboardPollerController.h"
@@ -8,6 +7,7 @@
 #include "KeyboardTranslationFilters.h"
 #include "../XMapLib_Utils/nanotime.h"
 #include "../XMapLib_Utils/SendMouseInput.h"
+#include "../XMapLib_Utils/ControllerStatus.h"
 
 #include <iostream>
 
@@ -309,8 +309,8 @@ auto RunTestDriverLoop()
 
     // Creating a few polling/translation related types
     const sds::KeyboardPlayerInfo playerInfo{};
-    sds::KeyboardPollerControllerLegacy poller{std::move(mapBuffer)};
-    sds::OvertakingFilter groupingFilter(poller.GetMappingsRef());
+    sds::OvertakingFilter filter{};
+    sds::KeyboardPollerControllerLegacy poller{std::move(mapBuffer), std::move(filter) };
     GetterExitCallable gec;
     const auto exitFuture = std::async(std::launch::async, [&]() { gec.GetExitSignal(); });
     while (!gec.IsDone)
@@ -318,8 +318,6 @@ auto RunTestDriverLoop()
         constexpr auto sleepDelay = std::chrono::nanoseconds{ 500us };
         const auto stateUpdate = sds::GetWrappedLegacyApiStateUpdate(playerInfo.PlayerId);
         const auto translation = poller(stateUpdate);
-        // TODO, filter for overtaking behavior.
-        //const auto filtered = groupingFilter.FilterTranslationPack(translation);
         translation();
         if(sds::ControllerStatus::IsControllerConnected(playerInfo.PlayerId))
             nanotime_sleep(sleepDelay.count());

@@ -1,9 +1,11 @@
 #pragma once
-#include <stdexcept>
-#include "KeyboardLibIncludes.h"
 #include "KeyboardCustomTypes.h"
 #include "ControllerStateUpdateWrapper.h"
 #include "KeyboardTranslationHelpers.h"
+#include "KeyboardTranslationFilters.h"
+
+#include <stdexcept>
+#include <concepts>
 
 /*
  *	Note: There are some static sized arrays used here with capacity defined in customtypes.
@@ -20,8 +22,17 @@ namespace sds
 	template<typename T>
 	concept MappingRange_c = requires (T & t)
 	{
-		{ std::same_as<typename T::value_type, CBActionMap> };
-		{ std::ranges::forward_range<T> };
+		{ std::same_as<typename T::value_type, CBActionMap> == true };
+		{ std::ranges::forward_range<T> == true };
+	};
+	// Concept for a filter class, used to apply a specific "overtaking" behavior (exclusivity grouping behavior) implementation.
+	template<typename FilterType_t>
+	concept ValidFilterType = requires(FilterType_t & t)
+	{
+		{ t.SetMappingRange(std::span<CBActionMap>{}) };
+		{ t.FilterDownTranslation(TranslationResult{}) } -> std::convertible_to<FilteredPair>;
+		{ t.FilterUpTranslation(TranslationResult{}) };
+		{ std::movable<FilterType_t> == true };
 	};
 
 	/*
@@ -39,7 +50,10 @@ namespace sds
 	inline
 	auto GetButtonTranslationForInitialToDown(const ControllerStateUpdateWrapper<>& updatesWrapper, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
-		using std::ranges::find, std::ranges::end;
+		using
+		std::ranges::find,
+		std::ranges::end;
+
 		if (singleButton.LastAction.IsInitialState())
 		{
 			const auto downResults = GetDownVirtualKeycodesRange(updatesWrapper);
@@ -119,21 +133,23 @@ namespace sds
 	 * \remarks If, before destruction, the mappings are in a state other than initial or awaiting reset, then you may wish to
 	 *	make use of the <c>GetCleanupActions()</c> function. Not copyable. Is movable.
 	 */
+	template<ValidFilterType OvertakingFilter_t = OvertakingFilter>
 	class KeyboardPollerControllerLegacy final
 	{
 		using MappingVector_t = std::vector<CBActionMap>;
 		static_assert(MappingRange_c<MappingVector_t>);
 		MappingVector_t m_mappings;
+		std::optional<OvertakingFilter_t> m_filter;
 	public:
 		KeyboardPollerControllerLegacy() = delete; // no default
 		KeyboardPollerControllerLegacy(const KeyboardPollerControllerLegacy& other) = delete; // no copy
 
 		/**
-		 * \brief Move constructor will call the cleanup actions on the moved-into instance before the move!
+		 * \brief Move constructor will not call the cleanup actions on the moved-into instance before the move!
 		 */
 		KeyboardPollerControllerLegacy(KeyboardPollerControllerLegacy&& other) noexcept // implemented move
+			: m_mappings(std::move(other.m_mappings))
 		{
-			m_mappings = std::move(other.m_mappings);
 		}
 
 		auto operator=(const KeyboardPollerControllerLegacy& other) -> KeyboardPollerControllerLegacy& = delete; // no copy-assign
@@ -160,18 +176,15 @@ namespace sds
 				throw std::runtime_error("Exception: Mappings with multiple exclusivity groupings for a single VK!");
 		}
 
-		/**
-		 * \brief Mapping Vector copy Ctor, throws on exclusivity group error, initializes the timers with the custom timer values.
-		 * \param keyMappings const-ref to an iterable range of mappings.
-		 * \exception std::runtime_error on exclusivity group error during construction
-		 */
-		explicit KeyboardPollerControllerLegacy(const MappingRange_c auto& keyMappings)
-		: m_mappings(keyMappings)
+		// Ctor for adding a filter.
+		KeyboardPollerControllerLegacy(MappingVector_t&& keyMappings, OvertakingFilter_t&& filter)
+			: m_mappings(std::move(keyMappings)), m_filter(std::move(filter))
 		{
 			for (auto& e : m_mappings)
 				InitCustomTimers(e);
 			if (!AreExclusivityGroupsUnique(m_mappings))
 				throw std::runtime_error("Exception: Mappings with multiple exclusivity groupings for a single VK!");
+			m_filter->SetMappingRange(m_mappings);
 		}
 
 		~KeyboardPollerControllerLegacy() = default;
@@ -193,10 +206,21 @@ namespace sds
 				{
 					translations.UpdateRequests.emplace_back(*upToInitial);
 				}
-				else if (const auto initialToDown = GetButtonTranslationForInitialToDown(stateUpdate, mapping))
+				else if (auto initialToDown = GetButtonTranslationForInitialToDown(stateUpdate, mapping))
 				{
-					// Advance to next state.
-					translations.NextStateRequests.emplace_back(*initialToDown);
+					if (m_filter)
+					{
+						auto filteredPack = m_filter->FilterDownTranslation(std::move(*initialToDown));
+						if (filteredPack.Original)
+							translations.NextStateRequests.emplace_back(std::move(*filteredPack.Original));
+						if (filteredPack.Overtaking)
+							translations.OvertakenRequests.emplace_back(std::move(*filteredPack.Overtaking));
+					}
+					else
+					{
+						// Advance to next state.
+						translations.NextStateRequests.emplace_back(*initialToDown);
+					}
 				}
 				else if (const auto downToFirstRepeat = GetButtonTranslationForDownToRepeat(stateUpdate, mapping))
 				{
@@ -208,6 +232,10 @@ namespace sds
 				}
 				else if (const auto repeatToUp = GetButtonTranslationForDownOrRepeatToUp(stateUpdate, mapping))
 				{
+					if(m_filter)
+					{
+						m_filter->FilterUpTranslation(*repeatToUp);
+					}
 					translations.NextStateRequests.emplace_back(*repeatToUp);
 				}
 			}
@@ -236,7 +264,7 @@ namespace sds
 		}
 	};
 
-	static_assert(InputPoller_c<KeyboardPollerControllerLegacy>);
-	static_assert(std::movable<KeyboardPollerControllerLegacy>);
+	static_assert(InputPoller_c<KeyboardPollerControllerLegacy<>>);
+	static_assert(std::movable<KeyboardPollerControllerLegacy<>>);
 
 }

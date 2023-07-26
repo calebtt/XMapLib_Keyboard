@@ -44,9 +44,6 @@
     <ClInclude Include="KeyboardTranslationHelpers.h">
       <Filter>Header Files\Keyboard</Filter>
     </ClInclude>
-    <ClInclude Include="KeyboardLibIncludes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="KeyboardCustomTypes.h">
       <Filter>Header Files\Keyboard</Filter>
     </ClInclude>

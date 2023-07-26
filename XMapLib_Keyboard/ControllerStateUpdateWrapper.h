@@ -1,6 +1,17 @@
 #pragma once
-#include "KeyboardLibIncludes.h"
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#endif
+#include <Windows.h>
+#include <Xinput.h>
+
+#include "KeyboardCustomTypes.h"
 #include "ControllerButtonToActionMap.h"
+
+#include <concepts>
 
 namespace sds
 {
@@ -122,6 +133,7 @@ namespace sds
 		[[nodiscard]] constexpr bool IsLeftTriggerDown() const noexcept { return IsLeftTriggerBeyondThreshold(m_controllerStates.Gamepad.bLeftTrigger, m_settings.LeftTriggerThreshold); }
 		[[nodiscard]] constexpr bool IsRightTriggerDown() const noexcept { return IsRightTriggerBeyondThreshold(m_controllerStates.Gamepad.bRightTrigger, m_settings.RightTriggerThreshold); }
 
+		// TODO update this such that ONLY one direction can be down at a time per thumbstick.
 		[[nodiscard]] constexpr bool IsLeftThumbstickLeftDown() const noexcept { return m_controllerStates.Gamepad.sThumbLX < -m_settings.LeftStickDeadzone; }
 		[[nodiscard]] constexpr bool IsLeftThumbstickRightDown() const noexcept { return m_controllerStates.Gamepad.sThumbLX > m_settings.LeftStickDeadzone; }
 		[[nodiscard]] constexpr bool IsLeftThumbstickUpDown() const noexcept { return m_controllerStates.Gamepad.sThumbLY > m_settings.LeftStickDeadzone; }

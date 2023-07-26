@@ -1,5 +1,8 @@
 ﻿#pragma once
-#include "KeyboardLibIncludes.h"
+#include <functional>
+#include <optional>
+#include <chrono>
+#include <vector>
 
 namespace sds::keyboardtypes
 {

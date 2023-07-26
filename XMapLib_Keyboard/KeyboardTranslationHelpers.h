@@ -1,5 +1,5 @@
 #pragma once
-#include "KeyboardLibIncludes.h"
+#include "KeyboardCustomTypes.h"
 #include "ControllerButtonToActionMap.h"
 
 #include <optional>
@@ -8,6 +8,8 @@
 #include <type_traits>
 #include <span>
 #include <algorithm>
+#include <concepts>
+#include <map>
 
 namespace sds
 {
@@ -50,13 +52,15 @@ namespace sds
 				elem();
 			for (const auto& elem : RepeatRequests)
 				elem();
+			for (const auto& elem : OvertakenRequests)
+				elem();
 			for (const auto& elem : NextStateRequests)
 				elem();
 		}
 		// TODO might wrap the vectors in a struct with a call operator to have individual call operators for range of TranslationResult.
 		keyboardtypes::SmallVector_t<TranslationResult> UpdateRequests{};
 		keyboardtypes::SmallVector_t<TranslationResult> RepeatRequests{};
-		//keyboardtypes::SmallVector_t<TranslationResult> OvertakenRequests{};
+		keyboardtypes::SmallVector_t<TranslationResult> OvertakenRequests{};
 		keyboardtypes::SmallVector_t<TranslationResult> NextStateRequests{};
 	};
 

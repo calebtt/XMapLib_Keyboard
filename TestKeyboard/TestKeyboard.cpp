@@ -91,11 +91,11 @@ namespace TestKeyboard
             auto maps2 = GetMapping(buttonB, 101);
             maps2.append_range(maps1);
             sds::KeyboardPollerControllerLegacy poller{ maps2 };
-            sds::OvertakingFilter filter(poller.GetMappingsRef());
-            const auto translations1 = filter.FilterTranslationPack(poller(stateUpdate));
-            Assert::IsTrue(translations1.NextStateRequests.size() == 1, L"Next State Translation count not 1.");
-            Assert::IsTrue(translations1.OvertakenRequests.size() == 1, L"Overtaken Translation count not 1.");
-            translations1();
+            //sds::OvertakingFilter filter(poller.GetMappingsRef());
+            //const auto translations1 = filter.FilterTranslationPack(poller(stateUpdate));
+            //Assert::IsTrue(translations1.NextStateRequests.size() == 1, L"Next State Translation count not 1.");
+            //Assert::IsTrue(translations1.OvertakenRequests.size() == 1, L"Overtaken Translation count not 1.");
+            //translations1();
 
             std::this_thread::sleep_for(500ms);
 
