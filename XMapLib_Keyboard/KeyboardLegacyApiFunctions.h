@@ -22,10 +22,8 @@ namespace sds
 	auto GetLegacyApiStateUpdate(const int playerId = 0) noexcept -> XINPUT_STATE
 	{
 		XINPUT_STATE controllerState{};
-		const auto resultCode = XInputGetState(playerId, &controllerState);
-		if (resultCode == ERROR_SUCCESS)
-			return controllerState;
-		return {};
+		XInputGetState(playerId, &controllerState);
+		return controllerState;
 	}
 
 	/**
@@ -37,7 +35,6 @@ namespace sds
 	inline
 	auto GetWrappedLegacyApiStateUpdate(const int playerId = 0) noexcept -> ControllerStateUpdateWrapper<>
 	{
-		const auto controllerStateUpdate = GetLegacyApiStateUpdate(playerId);
-		return ControllerStateUpdateWrapper<>{controllerStateUpdate};
+		return ControllerStateUpdateWrapper<>{GetLegacyApiStateUpdate(playerId)};
 	}
 }

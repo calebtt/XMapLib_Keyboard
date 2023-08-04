@@ -147,4 +147,5 @@ namespace sds
 
 	static_assert(ControllerStateOperations_c<ControllerStateUpdateWrapper<KeyboardSettings>>);
 	static_assert(std::copyable<ControllerStateUpdateWrapper<KeyboardSettings>>);
+	static_assert(std::movable<ControllerStateUpdateWrapper<KeyboardSettings>>);
 }

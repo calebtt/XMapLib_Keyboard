@@ -22,6 +22,9 @@
     <Filter Include="Header Files\Keyboard\SettingsAndConfig">
       <UniqueIdentifier>{c4b2771a-42ff-42ae-ac75-d8ef12a48cfb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Keyboard\Filters">
+      <UniqueIdentifier>{2f83540b-8c8f-4d59-96ed-de4b91079462}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="XMapLib_Keyboard.cpp">
@@ -52,6 +55,9 @@
     </ClInclude>
     <ClInclude Include="KeyboardTranslationFilters.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardOvertakingFilter.h">
+      <Filter>Header Files\Keyboard\Filters</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

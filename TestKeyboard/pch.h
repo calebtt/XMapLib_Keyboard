@@ -20,5 +20,6 @@
 #include "../XMapLib_Keyboard/KeyboardTranslationHelpers.h"
 #include "../XMapLib_Keyboard/ControllerButtonToActionMap.h"
 #include "../XMapLib_Keyboard/KeyboardPollerController.h"
+#include "../XMapLib_Keyboard/KeyboardTranslationFilters.h"
 
 #endif //PCH_H

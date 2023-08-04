@@ -53,6 +53,7 @@ namespace sds
 	};
 
 	static_assert(std::copyable<MappingStateManager>);
+	static_assert(std::movable<MappingStateManager>);
 
 	/**
 	 * \brief	Controller button to action mapping. This is how a mapping of a controller button to an action is described.
@@ -103,5 +104,6 @@ namespace sds
 	};
 
 	static_assert(std::copyable<CBActionMap>);
+	static_assert(std::movable<CBActionMap>);
 
 }

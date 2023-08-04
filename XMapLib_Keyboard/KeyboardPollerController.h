@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <concepts>
 
+#include "KeyboardOvertakingFilter.h"
+
 /*
  *	Note: There are some static sized arrays used here with capacity defined in customtypes.
  */
@@ -133,7 +135,7 @@ namespace sds
 	 * \remarks If, before destruction, the mappings are in a state other than initial or awaiting reset, then you may wish to
 	 *	make use of the <c>GetCleanupActions()</c> function. Not copyable. Is movable.
 	 */
-	template<ValidFilterType OvertakingFilter_t = OvertakingFilter>
+	template<ValidFilterType OvertakingFilter_t = KeyboardOvertakingFilter>
 	class KeyboardPollerControllerLegacy final
 	{
 		using MappingVector_t = std::vector<CBActionMap>;
@@ -143,22 +145,23 @@ namespace sds
 	public:
 		KeyboardPollerControllerLegacy() = delete; // no default
 		KeyboardPollerControllerLegacy(const KeyboardPollerControllerLegacy& other) = delete; // no copy
+		auto operator=(const KeyboardPollerControllerLegacy& other)->KeyboardPollerControllerLegacy & = delete; // no copy-assign
+		~KeyboardPollerControllerLegacy() = default;
 
 		/**
 		 * \brief Move constructor will not call the cleanup actions on the moved-into instance before the move!
 		 */
 		KeyboardPollerControllerLegacy(KeyboardPollerControllerLegacy&& other) noexcept // implemented move
-			: m_mappings(std::move(other.m_mappings))
+			: m_mappings(std::move(other.m_mappings)), m_filter(other.m_filter)
 		{
 		}
-
-		auto operator=(const KeyboardPollerControllerLegacy& other) -> KeyboardPollerControllerLegacy& = delete; // no copy-assign
 
 		auto operator=(KeyboardPollerControllerLegacy&& other) noexcept -> KeyboardPollerControllerLegacy& // implemented move-assign
 		{
 			if (this == &other)
 				return *this;
 			m_mappings = std::move(other.m_mappings);
+			m_filter = other.m_filter;
 			return *this;
 		}
 
@@ -186,8 +189,6 @@ namespace sds
 				throw std::runtime_error("Exception: Mappings with multiple exclusivity groupings for a single VK!");
 			m_filter->SetMappingRange(m_mappings);
 		}
-
-		~KeyboardPollerControllerLegacy() = default;
 	public:
 		[[nodiscard]]
 		auto operator()(const ControllerStateUpdateWrapper<>& stateUpdate) noexcept -> TranslationPack
@@ -234,9 +235,16 @@ namespace sds
 				{
 					if(m_filter)
 					{
-						m_filter->FilterUpTranslation(*repeatToUp);
+						auto filteredPack = m_filter->FilterUpTranslation(*repeatToUp);
+						if (filteredPack.Original)
+							translations.NextStateRequests.emplace_back(std::move(*filteredPack.Original));
+						if (filteredPack.Overtaking)
+							translations.OvertakenRequests.emplace_back(std::move(*filteredPack.Overtaking));
 					}
-					translations.NextStateRequests.emplace_back(*repeatToUp);
+					else
+					{
+						translations.NextStateRequests.emplace_back(*repeatToUp);
+					}
 				}
 			}
 			return translations;
