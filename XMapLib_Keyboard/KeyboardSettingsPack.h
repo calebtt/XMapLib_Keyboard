@@ -91,10 +91,11 @@ namespace sds
 		using ButtonBuffer_t = std::remove_reference_t< std::remove_cv_t<decltype(ButtonCodeArray)> >;
 
 		// TODO update this if the values become non-const
-		friend auto hash_value(const KeyboardSettings& obj) -> std::size_t { return 0x0ED35098; }
+		friend auto hash_value([[maybe_unused]] const KeyboardSettings& obj) -> std::size_t { return 0x0ED35098; }
 	};
 
 	static_assert(std::copyable<KeyboardSettings>);
+
 	/**
 	 * \brief For no other reason but to make the common task of injecting these down the architecture less verbose.
 	 */

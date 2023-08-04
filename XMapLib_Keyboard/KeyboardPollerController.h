@@ -1,12 +1,10 @@
 #pragma once
-#include "KeyboardCustomTypes.h"
-#include "ControllerStateUpdateWrapper.h"
-#include "KeyboardTranslationHelpers.h"
-#include "KeyboardTranslationFilters.h"
-
 #include <stdexcept>
 #include <concepts>
 
+#include "KeyboardCustomTypes.h"
+#include "ControllerStateUpdateWrapper.h"
+#include "KeyboardTranslationHelpers.h"
 #include "KeyboardOvertakingFilter.h"
 
 /*
@@ -18,7 +16,7 @@ namespace sds
 	template<typename Poller_t>
 	concept InputPoller_c = requires(Poller_t & t)
 	{
-		{ t.GetUpdatedState(ControllerStateUpdateWrapper<>{{}}) } -> std::convertible_to<TranslationPack>;
+		{ t.GetUpdatedState(ControllerStateUpdateWrapper<>{ {{1, 2, 3}} }) } -> std::convertible_to<TranslationPack>;
 	};
 	// Concept for range of CBActionMap type that at least provides one-time forward-iteration.
 	template<typename T>
@@ -73,7 +71,8 @@ namespace sds
 	{
 		using std::ranges::find, std::ranges::end;
 		const bool isDownAndUsesRepeat = singleButton.LastAction.IsDown() && (singleButton.UsesInfiniteRepeat || singleButton.SendsFirstRepeatOnly);
-		if (isDownAndUsesRepeat && singleButton.LastAction.DelayBeforeFirstRepeat.IsElapsed())
+		const bool isDelayElapsed = singleButton.LastAction.DelayBeforeFirstRepeat.IsElapsed();
+		if (isDownAndUsesRepeat && isDelayElapsed)
 		{
 			const auto downResults = GetDownVirtualKeycodesRange(updatesWrapper);
 			const auto findResult = find(downResults, singleButton.ButtonVirtualKeycode);
@@ -193,7 +192,7 @@ namespace sds
 		[[nodiscard]]
 		auto operator()(const ControllerStateUpdateWrapper<>& stateUpdate) noexcept -> TranslationPack
 		{
-			return GetUpdatedState(stateUpdate);
+			return m_filter.has_value() ? GetUpdatedState(m_filter->GetUpdatedState(stateUpdate)) : GetUpdatedState(stateUpdate);
 		}
 
 		[[nodiscard]]
@@ -207,21 +206,10 @@ namespace sds
 				{
 					translations.UpdateRequests.emplace_back(*upToInitial);
 				}
-				else if (auto initialToDown = GetButtonTranslationForInitialToDown(stateUpdate, mapping))
+				else if (const auto initialToDown = GetButtonTranslationForInitialToDown(stateUpdate, mapping))
 				{
-					if (m_filter)
-					{
-						auto filteredPack = m_filter->FilterDownTranslation(std::move(*initialToDown));
-						if (filteredPack.Original)
-							translations.NextStateRequests.emplace_back(std::move(*filteredPack.Original));
-						if (filteredPack.Overtaking)
-							translations.OvertakenRequests.emplace_back(std::move(*filteredPack.Overtaking));
-					}
-					else
-					{
-						// Advance to next state.
-						translations.NextStateRequests.emplace_back(*initialToDown);
-					}
+					// Advance to next state.
+					translations.NextStateRequests.emplace_back(*initialToDown);
 				}
 				else if (const auto downToFirstRepeat = GetButtonTranslationForDownToRepeat(stateUpdate, mapping))
 				{
@@ -233,18 +221,7 @@ namespace sds
 				}
 				else if (const auto repeatToUp = GetButtonTranslationForDownOrRepeatToUp(stateUpdate, mapping))
 				{
-					if(m_filter)
-					{
-						auto filteredPack = m_filter->FilterUpTranslation(*repeatToUp);
-						if (filteredPack.Original)
-							translations.NextStateRequests.emplace_back(std::move(*filteredPack.Original));
-						if (filteredPack.Overtaking)
-							translations.OvertakenRequests.emplace_back(std::move(*filteredPack.Overtaking));
-					}
-					else
-					{
-						translations.NextStateRequests.emplace_back(*repeatToUp);
-					}
+					translations.NextStateRequests.emplace_back(*repeatToUp);
 				}
 			}
 			return translations;

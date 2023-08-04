@@ -36,13 +36,13 @@ namespace sds
 	concept ControllerSettings_c = requires(Settings_t &settings)
 	{
 		// has compile-time accessible value for the number of controller buttons, and is convertible to size_t
-		{ std::convertible_to<decltype(std::size(Settings_t::ButtonCodeArray)), std::size_t> };
+		{ std::convertible_to<decltype(std::size(Settings_t::ButtonCodeArray)), std::size_t> == true };
 		// number of controller buttons is also greater than 0
-		{ std::size(Settings_t::ButtonCodeArray) > 0 };
-		{ std::convertible_to<decltype(settings.LeftTriggerThreshold), int> };
-		{ std::convertible_to<decltype(settings.RightTriggerThreshold), int> };
-		{ std::convertible_to<decltype(settings.LeftStickDeadzone), int> };
-		{ std::convertible_to<decltype(settings.RightStickDeadzone), int> };
+		{ std::size(Settings_t::ButtonCodeArray) > 0  == true };
+		{ std::convertible_to<decltype(settings.LeftTriggerThreshold), int> == true };
+		{ std::convertible_to<decltype(settings.RightTriggerThreshold), int> == true };
+		{ std::convertible_to<decltype(settings.LeftStickDeadzone), int> == true };
+		{ std::convertible_to<decltype(settings.RightStickDeadzone), int> == true };
 	};
 
 	// Concept for a state update wrapper that probably depends on some platform specific type or behavior.
@@ -113,18 +113,93 @@ namespace sds
 	class ControllerStateUpdateWrapper final
 	{
 		static_assert(ControllerSettings_c<ConfigSettings_t>);
-		XINPUT_STATE m_controllerStates;
+		XINPUT_STATE m_controllerStates{};
 		ConfigSettings_t m_settings;
 	public:
 		constexpr
-		ControllerStateUpdateWrapper(const XINPUT_STATE newStates) noexcept
+		explicit ControllerStateUpdateWrapper(const XINPUT_STATE newStates) noexcept
 			: m_controllerStates(newStates)
 		{ }
-		[[nodiscard]]
-		constexpr auto GetSettings() const noexcept -> ConfigSettings_t
+
+		constexpr
+		explicit ControllerStateUpdateWrapper(const keyboardtypes::SmallVector_t<int>& downKeycodesRange) noexcept
+		{
+			using std::ranges::find, std::ranges::cend;
+			for(const auto vk : downKeycodesRange)
+			{
+				if(const auto foundVk = find(m_settings.ButtonCodeArray, vk); foundVk != cend(m_settings.ButtonCodeArray))
+				{
+					m_controllerStates.Gamepad.wButtons |= vk;
+				}
+				else
+				{
+					switch(vk)
+					{
+						case m_settings.LeftThumbstickDown:
+						{
+							m_controllerStates.Gamepad.sThumbLY = -(m_settings.LeftStickDeadzone + 1);
+							break;
+						}
+						case m_settings.LeftThumbstickLeft:
+						{
+							m_controllerStates.Gamepad.sThumbLX = -(m_settings.LeftStickDeadzone + 1);
+							break;
+						}
+						case m_settings.LeftThumbstickRight:
+						{
+							m_controllerStates.Gamepad.sThumbLX = m_settings.LeftStickDeadzone + 1;
+							break;
+						}
+						case m_settings.LeftThumbstickUp:
+						{
+							m_controllerStates.Gamepad.sThumbLY = m_settings.LeftStickDeadzone + 1;
+							break;
+						}
+						case m_settings.LeftTriggerVk:
+						{
+							m_controllerStates.Gamepad.bLeftTrigger = m_settings.LeftTriggerThreshold + 1;
+							break;
+						}
+						case m_settings.RightThumbstickDown:
+						{
+							m_controllerStates.Gamepad.sThumbRY = -(m_settings.RightStickDeadzone + 1);
+							break;
+						}
+						case m_settings.RightThumbstickLeft:
+						{
+							m_controllerStates.Gamepad.sThumbRX = -(m_settings.RightStickDeadzone + 1);
+							break;
+						}
+						case m_settings.RightThumbstickRight:
+						{
+							m_controllerStates.Gamepad.sThumbRX = m_settings.RightStickDeadzone + 1;
+							break;
+						}
+						case m_settings.RightThumbstickUp:
+						{
+							m_controllerStates.Gamepad.sThumbRY = m_settings.RightStickDeadzone + 1;
+							break;
+						}
+						case m_settings.RightTriggerVk:
+						{
+							m_controllerStates.Gamepad.bRightTrigger = m_settings.RightTriggerThreshold + 1;
+							break;
+						}
+						default:
+						{
+							break;
+						}
+					}
+				}
+			}
+		}
+
+	public:
+		[[nodiscard]] constexpr auto GetSettings() const noexcept -> ConfigSettings_t
 		{
 			return m_settings;
 		}
+
 		[[nodiscard]] constexpr bool IsButtonDown(const keyboardtypes::VirtualKey_t buttonId) const noexcept
 		{
 			return m_controllerStates.Gamepad.wButtons & buttonId;

@@ -4,7 +4,7 @@
 #include "ControllerButtonToActionMap.h"
 #include "KeyboardPollerController.h"
 #include "KeyboardLegacyApiFunctions.h"
-#include "KeyboardTranslationFilters.h"
+#include "KeyboardOvertakingFilter.h"
 #include "../XMapLib_Utils/nanotime.h"
 #include "../XMapLib_Utils/SendMouseInput.h"
 #include "../XMapLib_Utils/ControllerStatus.h"
@@ -201,7 +201,7 @@ auto GetDriverButtonMappings()
             .UsesInfiniteRepeat = false,
             .OnDown = []()
             {
-
+                // Add impl for something to do here
             }
         },
     };
@@ -309,7 +309,7 @@ auto RunTestDriverLoop()
 
     // Creating a few polling/translation related types
     const sds::KeyboardPlayerInfo playerInfo{};
-    sds::OvertakingFilter filter{};
+    sds::KeyboardOvertakingFilter filter{};
     sds::KeyboardPollerControllerLegacy poller{std::move(mapBuffer), std::move(filter) };
     GetterExitCallable gec;
     const auto exitFuture = std::async(std::launch::async, [&]() { gec.GetExitSignal(); });

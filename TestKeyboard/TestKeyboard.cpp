@@ -3,7 +3,7 @@
 #include "TestMappingProvider.h"
 #include "TestPollProvider.h"
 #include <filesystem>
-#include "../XMapLib_Keyboard/KeyboardTranslationFilters.h"
+#include "../XMapLib_Keyboard/KeyboardOvertakingFilter.h"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace TestKeyboard
@@ -92,7 +92,7 @@ namespace TestKeyboard
             auto maps2 = GetMapping(buttonB, 101);
             maps2.append_range(maps1);
 
-            sds::KeyboardPollerControllerLegacy<> poller{ std::move(maps2), sds::OvertakingFilter{} };
+            sds::KeyboardPollerControllerLegacy<> poller{ std::move(maps2), sds::KeyboardOvertakingFilter{} };
             const auto translations1 = poller(stateUpdate);
             translations1();
             Assert::IsTrue(translations1.NextStateRequests.size() == 1, L"Next State Translation count not 1.");

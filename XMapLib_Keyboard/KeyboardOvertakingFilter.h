@@ -61,6 +61,15 @@ namespace sds
 		// span to mappings
 		std::span<CBActionMap> m_mappings;
 	public:
+		auto GetUpdatedState(const ControllerStateUpdateWrapper<>& stateUpdate) -> ControllerStateUpdateWrapper<>
+		{
+			auto keyStates = GetDownVirtualKeycodesRange(stateUpdate);
+
+			// TODO parse all of the down key VKs based on overtaking behavior.
+
+			return ControllerStateUpdateWrapper<>{ keyStates };
+		}
+
 		void SetMappingRange(std::span<CBActionMap> mappingsList)
 		{
 			m_mappings = mappingsList;
@@ -83,10 +92,9 @@ namespace sds
 
 		auto FilterDownTranslation(TranslationResult&& translation) -> FilteredPair
 		{
-			using
-				std::ranges::find,
-				std::ranges::find_if,
-				std::ranges::cend;
+			using std::ranges::find;
+			using std::ranges::find_if;
+			using std::ranges::cend;
 
 			if (!translation.ExclusivityGrouping)
 			{
