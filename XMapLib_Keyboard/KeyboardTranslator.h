@@ -135,27 +135,27 @@ namespace sds
 	 *	make use of the <c>GetCleanupActions()</c> function. Not copyable. Is movable.
 	 */
 	template<ValidFilterType OvertakingFilter_t = KeyboardOvertakingFilter>
-	class KeyboardPollerControllerLegacy final
+	class KeyboardTranslator final
 	{
 		using MappingVector_t = std::vector<CBActionMap>;
 		static_assert(MappingRange_c<MappingVector_t>);
 		MappingVector_t m_mappings;
 		std::optional<OvertakingFilter_t> m_filter;
 	public:
-		KeyboardPollerControllerLegacy() = delete; // no default
-		KeyboardPollerControllerLegacy(const KeyboardPollerControllerLegacy& other) = delete; // no copy
-		auto operator=(const KeyboardPollerControllerLegacy& other)->KeyboardPollerControllerLegacy & = delete; // no copy-assign
-		~KeyboardPollerControllerLegacy() = default;
+		KeyboardTranslator() = delete; // no default
+		KeyboardTranslator(const KeyboardTranslator& other) = delete; // no copy
+		auto operator=(const KeyboardTranslator& other)->KeyboardTranslator & = delete; // no copy-assign
+		~KeyboardTranslator() = default;
 
 		/**
 		 * \brief Move constructor will not call the cleanup actions on the moved-into instance before the move!
 		 */
-		KeyboardPollerControllerLegacy(KeyboardPollerControllerLegacy&& other) noexcept // implemented move
+		KeyboardTranslator(KeyboardTranslator&& other) noexcept // implemented move
 			: m_mappings(std::move(other.m_mappings)), m_filter(other.m_filter)
 		{
 		}
 
-		auto operator=(KeyboardPollerControllerLegacy&& other) noexcept -> KeyboardPollerControllerLegacy& // implemented move-assign
+		auto operator=(KeyboardTranslator&& other) noexcept -> KeyboardTranslator& // implemented move-assign
 		{
 			if (this == &other)
 				return *this;
@@ -169,7 +169,7 @@ namespace sds
 		 * \param keyMappings Forwarding ref to a mapping vector type.
 		 * \exception std::runtime_error on exclusivity group error during construction
 		 */
-		explicit KeyboardPollerControllerLegacy(MappingVector_t&& keyMappings )
+		explicit KeyboardTranslator(MappingVector_t&& keyMappings )
 		: m_mappings(std::move(keyMappings))
 		{
 			for (auto& e : m_mappings)
@@ -179,7 +179,7 @@ namespace sds
 		}
 
 		// Ctor for adding a filter.
-		KeyboardPollerControllerLegacy(MappingVector_t&& keyMappings, OvertakingFilter_t&& filter)
+		KeyboardTranslator(MappingVector_t&& keyMappings, OvertakingFilter_t&& filter)
 			: m_mappings(std::move(keyMappings)), m_filter(std::move(filter))
 		{
 			for (auto& e : m_mappings)
@@ -249,7 +249,7 @@ namespace sds
 		}
 	};
 
-	static_assert(InputPoller_c<KeyboardPollerControllerLegacy<>>);
-	static_assert(std::movable<KeyboardPollerControllerLegacy<>>);
+	static_assert(InputPoller_c<KeyboardTranslator<>>);
+	static_assert(std::movable<KeyboardTranslator<>>);
 
 }

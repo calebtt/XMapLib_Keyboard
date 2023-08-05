@@ -2,7 +2,7 @@
 //
 #include "KeyboardTranslationHelpers.h"
 #include "ControllerButtonToActionMap.h"
-#include "KeyboardPollerController.h"
+#include "KeyboardTranslator.h"
 #include "KeyboardLegacyApiFunctions.h"
 #include "KeyboardOvertakingFilter.h"
 #include "../XMapLib_Utils/nanotime.h"
@@ -313,14 +313,14 @@ auto RunTestDriverLoop()
     sds::KeyboardOvertakingFilter filter{};
     // Filter is then moved into the poller at construction.
     //sds::KeyboardPollerControllerLegacy poller{std::move(mapBuffer), std::move(filter) };
-    sds::KeyboardPollerControllerLegacy poller{std::move(mapBuffer)};
+    sds::KeyboardTranslator translator{std::move(mapBuffer)};
     GetterExitCallable gec;
     const auto exitFuture = std::async(std::launch::async, [&]() { gec.GetExitSignal(); });
     while (!gec.IsDone)
     {
         constexpr auto sleepDelay = std::chrono::nanoseconds{ 500us };
         const auto stateUpdate = sds::GetWrappedLegacyApiStateUpdate(settingsPack);
-        const auto translation = poller(stateUpdate);
+        const auto translation = translator(stateUpdate);
         translation();
         if(sds::ControllerStatus::IsControllerConnected(settingsPack.PlayerInfo.PlayerId))
             nanotime_sleep(sleepDelay.count());
@@ -328,7 +328,7 @@ auto RunTestDriverLoop()
             nanotime_sleep(sleepDelay.count()*2);
     }
     std::cout << "Performing cleanup actions...\n";
-    const auto cleanupTranslation = poller.GetCleanupActions();
+    const auto cleanupTranslation = translator.GetCleanupActions();
     for (auto& cleanupAction : cleanupTranslation)
         cleanupAction();
 

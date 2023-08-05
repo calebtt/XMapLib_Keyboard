@@ -38,7 +38,7 @@
     <ClInclude Include="KeyboardSettingsPack.h">
       <Filter>Header Files\Keyboard\SettingsAndConfig</Filter>
     </ClInclude>
-    <ClInclude Include="KeyboardPollerController.h">
+    <ClInclude Include="KeyboardTranslator.h">
       <Filter>Header Files\Keyboard</Filter>
     </ClInclude>
     <ClInclude Include="KeyboardTranslationHelpers.h">

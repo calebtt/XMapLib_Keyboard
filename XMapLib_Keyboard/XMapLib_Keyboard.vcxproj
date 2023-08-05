@@ -106,11 +106,15 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -145,7 +149,7 @@
     <ClInclude Include="ControllerButtonToActionMap.h" />
     <ClInclude Include="KeyboardCustomTypes.h" />
     <ClInclude Include="KeyboardOvertakingFilter.h" />
-    <ClInclude Include="KeyboardPollerController.h" />
+    <ClInclude Include="KeyboardTranslator.h" />
     <ClInclude Include="KeyboardSettingsPack.h" />
     <ClInclude Include="KeyboardTranslationHelpers.h" />
     <ClInclude Include="KeyboardLegacyApiFunctions.h" />

@@ -49,7 +49,7 @@ namespace TestKeyboard
             auto maps1 = GetMapping(buttonA);
             auto maps2 = GetMapping(buttonB);
             maps2.append_range(maps1);
-            sds::KeyboardPollerControllerLegacy<> poller{ std::move(maps2) };
+            sds::KeyboardTranslator<> poller{ std::move(maps2) };
             const auto translations1 = poller(stateUpdate);
             Assert::IsTrue(translations1.NextStateRequests.size() == 2, L"Translation count not 2.");
             translations1();
@@ -78,7 +78,7 @@ namespace TestKeyboard
             auto maps2 = GetMapping(buttonB, 101);
             maps2.append_range(maps1);
 
-            sds::KeyboardPollerControllerLegacy<> poller{ std::move(maps2), sds::KeyboardOvertakingFilter{} };
+            sds::KeyboardTranslator<> poller{ std::move(maps2), sds::KeyboardOvertakingFilter{} };
             const auto translations1 = poller(stateUpdate);
             translations1();
             Assert::IsTrue(translations1.NextStateRequests.size() == 1, L"Next State Translation count not 1.");
