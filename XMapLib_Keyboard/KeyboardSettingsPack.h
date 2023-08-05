@@ -101,7 +101,7 @@ namespace sds
 	 */
 	struct KeyboardSettingsPack final
 	{
-		KeyboardPlayerInfo playerInfo;
-		KeyboardSettings settings;
+		KeyboardPlayerInfo PlayerInfo;
+		KeyboardSettings Settings;
 	};
 }

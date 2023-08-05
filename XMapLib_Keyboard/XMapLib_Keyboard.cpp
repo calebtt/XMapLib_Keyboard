@@ -308,18 +308,21 @@ auto RunTestDriverLoop()
         std::cout << hash_value(e) << '\n';
 
     // Creating a few polling/translation related types
-    const sds::KeyboardPlayerInfo playerInfo{};
+    sds::KeyboardSettingsPack settingsPack{};
+    // The filter is constructed here, to support custom filters with their own construction needs.
     sds::KeyboardOvertakingFilter filter{};
-    sds::KeyboardPollerControllerLegacy poller{std::move(mapBuffer), std::move(filter) };
+    // Filter is then moved into the poller at construction.
+    //sds::KeyboardPollerControllerLegacy poller{std::move(mapBuffer), std::move(filter) };
+    sds::KeyboardPollerControllerLegacy poller{std::move(mapBuffer)};
     GetterExitCallable gec;
     const auto exitFuture = std::async(std::launch::async, [&]() { gec.GetExitSignal(); });
     while (!gec.IsDone)
     {
         constexpr auto sleepDelay = std::chrono::nanoseconds{ 500us };
-        const auto stateUpdate = sds::GetWrappedLegacyApiStateUpdate(playerInfo.PlayerId);
+        const auto stateUpdate = sds::GetWrappedLegacyApiStateUpdate(settingsPack);
         const auto translation = poller(stateUpdate);
         translation();
-        if(sds::ControllerStatus::IsControllerConnected(playerInfo.PlayerId))
+        if(sds::ControllerStatus::IsControllerConnected(settingsPack.PlayerInfo.PlayerId))
             nanotime_sleep(sleepDelay.count());
         else
             nanotime_sleep(sleepDelay.count()*2);

@@ -1,9 +1,11 @@
 #pragma once
 #include <stdexcept>
 #include <concepts>
+#include <ranges>
+#include <type_traits>
 
 #include "KeyboardCustomTypes.h"
-#include "ControllerStateUpdateWrapper.h"
+#include "KeyboardLegacyApiFunctions.h"
 #include "KeyboardTranslationHelpers.h"
 #include "KeyboardOvertakingFilter.h"
 
@@ -16,15 +18,17 @@ namespace sds
 	template<typename Poller_t>
 	concept InputPoller_c = requires(Poller_t & t)
 	{
-		{ t.GetUpdatedState(ControllerStateUpdateWrapper<>{ {{1, 2, 3}} }) } -> std::convertible_to<TranslationPack>;
+		{ t.GetUpdatedState({ 1, 2, 3 }) } -> std::convertible_to<TranslationPack>;
 	};
-	// Concept for range of CBActionMap type that at least provides one-time forward-iteration.
+
+	// Concept for range of CBActionMap type that provides random access.
 	template<typename T>
 	concept MappingRange_c = requires (T & t)
 	{
 		{ std::same_as<typename T::value_type, CBActionMap> == true };
-		{ std::ranges::forward_range<T> == true };
+		{ std::ranges::random_access_range<T> == true };
 	};
+
 	// Concept for a filter class, used to apply a specific "overtaking" behavior (exclusivity grouping behavior) implementation.
 	template<typename FilterType_t>
 	concept ValidFilterType = requires(FilterType_t & t)
@@ -42,13 +46,13 @@ namespace sds
 
 	/**
 	 * \brief For a single mapping, search the controller state update buffer and produce a TranslationResult appropriate to the current mapping state and controller state.
-	 * \param updatesWrapper Wrapper class containing the results of a controller state update polling.
+	 * \param downKeys Wrapper class containing the results of a controller state update polling.
 	 * \param singleButton The mapping type for a single virtual key of the controller.
 	 * \returns Optional, <c>TranslationResult</c>
 	 */
 	[[nodiscard]]
 	inline
-	auto GetButtonTranslationForInitialToDown(const ControllerStateUpdateWrapper<>& updatesWrapper, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
+	auto GetButtonTranslationForInitialToDown(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
 		using
 		std::ranges::find,
@@ -56,10 +60,9 @@ namespace sds
 
 		if (singleButton.LastAction.IsInitialState())
 		{
-			const auto downResults = GetDownVirtualKeycodesRange(updatesWrapper);
-			const auto findResult = find(downResults, singleButton.ButtonVirtualKeycode);
+			const auto findResult = find(downKeys, singleButton.ButtonVirtualKeycode);
 			// If VK *is* found in the down list, create the down translation.
-			if(findResult != end(downResults))
+			if(findResult != end(downKeys))
 				return GetInitialKeyDownTranslationResult(singleButton);
 		}
 		return {};
@@ -67,17 +70,16 @@ namespace sds
 
 	[[nodiscard]]
 	inline
-	auto GetButtonTranslationForDownToRepeat(const ControllerStateUpdateWrapper<>& updatesWrapper, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
+	auto GetButtonTranslationForDownToRepeat(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
 		using std::ranges::find, std::ranges::end;
 		const bool isDownAndUsesRepeat = singleButton.LastAction.IsDown() && (singleButton.UsesInfiniteRepeat || singleButton.SendsFirstRepeatOnly);
 		const bool isDelayElapsed = singleButton.LastAction.DelayBeforeFirstRepeat.IsElapsed();
 		if (isDownAndUsesRepeat && isDelayElapsed)
 		{
-			const auto downResults = GetDownVirtualKeycodesRange(updatesWrapper);
-			const auto findResult = find(downResults, singleButton.ButtonVirtualKeycode);
+			const auto findResult = find(downKeys, singleButton.ButtonVirtualKeycode);
 			// If VK *is* found in the down list, create the repeat translation.
-			if (findResult != end(downResults))
+			if (findResult != end(downKeys))
 				return GetRepeatTranslationResult(singleButton);
 		}
 		return {};
@@ -85,16 +87,15 @@ namespace sds
 
 	[[nodiscard]]
 	inline
-	auto GetButtonTranslationForRepeatToRepeat(const ControllerStateUpdateWrapper<>& updatesWrapper, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
+	auto GetButtonTranslationForRepeatToRepeat(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
 		using std::ranges::find, std::ranges::end;
 		const bool isRepeatAndUsesInfinite = singleButton.LastAction.IsRepeating() && singleButton.UsesInfiniteRepeat;
 		if (isRepeatAndUsesInfinite && singleButton.LastAction.LastSentTime.IsElapsed())
 		{
-			const auto downResults = GetDownVirtualKeycodesRange(updatesWrapper);
-			const auto findResult = find(downResults, singleButton.ButtonVirtualKeycode);
+			const auto findResult = find(downKeys, singleButton.ButtonVirtualKeycode);
 			// If VK *is* found in the down list, create the repeat translation.
-			if (findResult != end(downResults))
+			if (findResult != end(downKeys))
 				return GetRepeatTranslationResult(singleButton);
 		}
 		return {};
@@ -102,15 +103,14 @@ namespace sds
 
 	[[nodiscard]]
 	inline
-	auto GetButtonTranslationForDownOrRepeatToUp(const ControllerStateUpdateWrapper<>& updatesWrapper, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
+	auto GetButtonTranslationForDownOrRepeatToUp(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
 		using std::ranges::find, std::ranges::end;
 		if (singleButton.LastAction.IsDown() || singleButton.LastAction.IsRepeating())
 		{
-			const auto downResults = GetDownVirtualKeycodesRange(updatesWrapper);
-			const auto findResult = find(downResults, singleButton.ButtonVirtualKeycode);
+			const auto findResult = find(downKeys, singleButton.ButtonVirtualKeycode);
 			// If VK is not found in the down list, create the up translation.
-			if(findResult == end(downResults))
+			if(findResult == end(downKeys))
 				return GetKeyUpTranslationResult(singleButton);
 		}
 		return {};
@@ -190,13 +190,13 @@ namespace sds
 		}
 	public:
 		[[nodiscard]]
-		auto operator()(const ControllerStateUpdateWrapper<>& stateUpdate) noexcept -> TranslationPack
+		auto operator()(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& stateUpdate) noexcept -> TranslationPack
 		{
 			return m_filter.has_value() ? GetUpdatedState(m_filter->GetUpdatedState(stateUpdate)) : GetUpdatedState(stateUpdate);
 		}
 
 		[[nodiscard]]
-		auto GetUpdatedState(const ControllerStateUpdateWrapper<>& stateUpdate) noexcept -> TranslationPack
+		auto GetUpdatedState(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& stateUpdate) noexcept -> TranslationPack
 		{
 			TranslationPack translations;
 			for(std::size_t i{}; i < m_mappings.size(); ++i)

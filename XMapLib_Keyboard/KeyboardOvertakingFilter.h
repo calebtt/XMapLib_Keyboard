@@ -60,14 +60,13 @@ namespace sds
 		keyboardtypes::SmallVector_t<GroupActivationInfo> m_exclusivityGroupInfo;
 		// span to mappings
 		std::span<CBActionMap> m_mappings;
+		KeyboardSettingsPack m_settings;
 	public:
-		auto GetUpdatedState(const ControllerStateUpdateWrapper<>& stateUpdate) -> ControllerStateUpdateWrapper<>
+		auto GetUpdatedState(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& stateUpdate) -> keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>
 		{
-			auto keyStates = GetDownVirtualKeycodesRange(stateUpdate);
 
 			// TODO parse all of the down key VKs based on overtaking behavior.
-
-			return ControllerStateUpdateWrapper<>{ keyStates };
+			return {};
 		}
 
 		void SetMappingRange(std::span<CBActionMap> mappingsList)

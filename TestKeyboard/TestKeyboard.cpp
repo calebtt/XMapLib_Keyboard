@@ -40,17 +40,11 @@ namespace TestKeyboard
             using namespace std::chrono_literals;
             using namespace std::chrono;
 
+            constexpr sds::KeyboardSettingsPack settingsPack;
             constexpr sds::keyboardtypes::VirtualKey_t buttonA{ XINPUT_GAMEPAD_A };
             constexpr sds::keyboardtypes::VirtualKey_t buttonB{ XINPUT_GAMEPAD_B };
 
-            XINPUT_STATE state{};
-            state.Gamepad.wButtons = buttonA | state.Gamepad.wButtons;
-            state.Gamepad.wButtons = buttonB | state.Gamepad.wButtons;
-
-            sds::ControllerStateUpdateWrapper<> stateUpdate{state};
-            Assert::IsTrue(stateUpdate.IsButtonDown(buttonA), L"Button A not down.");
-            Assert::IsTrue(stateUpdate.IsButtonDown(buttonB), L"Button B not down.");
-            Assert::IsTrue(GetDownVirtualKeycodesRange(stateUpdate).size() == 2, L"Two state updates not present!");
+            sds::keyboardtypes::SmallVector_t<sds::keyboardtypes::VirtualKey_t> stateUpdate{ buttonA, buttonB };
 
             auto maps1 = GetMapping(buttonA);
             auto maps2 = GetMapping(buttonB);
@@ -62,10 +56,8 @@ namespace TestKeyboard
 
             std::this_thread::sleep_for(500ms);
 
-            XINPUT_STATE emptyState{};
-            sds::ControllerStateUpdateWrapper<> stateUpdate2{emptyState};
-            Assert::IsFalse(stateUpdate2.IsButtonDown(buttonA));
-            const auto translations2 = poller(stateUpdate2);
+            sds::keyboardtypes::SmallVector_t<sds::keyboardtypes::VirtualKey_t> emptyState{};
+            const auto translations2 = poller(emptyState);
             Assert::IsTrue(translations2.NextStateRequests.size() == 2, L"Empty state not creating 2 translations after down.");
             translations2();
 		}
@@ -76,17 +68,11 @@ namespace TestKeyboard
             using namespace std::chrono_literals;
             using namespace std::chrono;
 
+            constexpr sds::KeyboardSettingsPack settingsPack;
             constexpr sds::keyboardtypes::VirtualKey_t buttonA{ XINPUT_GAMEPAD_A };
             constexpr sds::keyboardtypes::VirtualKey_t buttonB{ XINPUT_GAMEPAD_B };
 
-            XINPUT_STATE state{};
-            state.Gamepad.wButtons = buttonA | state.Gamepad.wButtons;
-            state.Gamepad.wButtons = buttonB | state.Gamepad.wButtons;
-
-            sds::ControllerStateUpdateWrapper<> stateUpdate{state};
-            Assert::IsTrue(stateUpdate.IsButtonDown(buttonA), L"Button A not down.");
-            Assert::IsTrue(stateUpdate.IsButtonDown(buttonB), L"Button B not down.");
-            Assert::IsTrue(GetDownVirtualKeycodesRange(stateUpdate).size() == 2, L"Two state updates not present!");
+            sds::keyboardtypes::SmallVector_t<sds::keyboardtypes::VirtualKey_t> stateUpdate{ buttonA, buttonB };
 
             auto maps1 = GetMapping(buttonA, 101);
             auto maps2 = GetMapping(buttonB, 101);
@@ -97,14 +83,11 @@ namespace TestKeyboard
             translations1();
             Assert::IsTrue(translations1.NextStateRequests.size() == 1, L"Next State Translation count not 1.");
             Assert::IsTrue(translations1.OvertakenRequests.size() == 1, L"Overtaken Translation count not 1.");
-            
 
             std::this_thread::sleep_for(500ms);
 
-            XINPUT_STATE emptyState{};
-            sds::ControllerStateUpdateWrapper<> stateUpdate2{emptyState};
-            Assert::IsFalse(stateUpdate2.IsButtonDown(buttonA));
-            const auto translations2 = poller(stateUpdate2);
+            sds::keyboardtypes::SmallVector_t<sds::keyboardtypes::VirtualKey_t> emptyState{};
+            const auto translations2 = poller(emptyState);
             Assert::IsTrue(translations2.NextStateRequests.size() == 2, L"Empty state not creating 2 translations after down.");
             translations2();
         }
