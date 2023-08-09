@@ -35,7 +35,7 @@ namespace sds
 
 	// Important helper function to build a small vector of button VKs that are 'down'.
 	[[nodiscard]]
-	constexpr
+	inline
 	auto GetDownVirtualKeycodesRange(const KeyboardSettings& settingsPack, const XINPUT_STATE& controllerState) -> keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>
 	{
 		keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t> allKeys{};

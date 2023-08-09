@@ -312,8 +312,8 @@ auto RunTestDriverLoop()
     // The filter is constructed here, to support custom filters with their own construction needs.
     sds::KeyboardOvertakingFilter filter{};
     // Filter is then moved into the poller at construction.
-    //sds::KeyboardPollerControllerLegacy poller{std::move(mapBuffer), std::move(filter) };
-    sds::KeyboardTranslator translator{std::move(mapBuffer)};
+    sds::KeyboardTranslator translator{std::move(mapBuffer), std::move(filter) };
+    //sds::KeyboardTranslator translator{std::move(mapBuffer)};
     GetterExitCallable gec;
     const auto exitFuture = std::async(std::launch::async, [&]() { gec.GetExitSignal(); });
     while (!gec.IsDone)

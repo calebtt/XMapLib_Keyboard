@@ -34,8 +34,7 @@ namespace sds
 	concept ValidFilterType = requires(FilterType_t & t)
 	{
 		{ t.SetMappingRange(std::span<CBActionMap>{}) };
-		{ t.FilterDownTranslation(TranslationResult{}) } -> std::convertible_to<FilteredPair>;
-		{ t.FilterUpTranslation(TranslationResult{}) };
+		{ t.GetUpdatedState({1,2,3}) } -> std::convertible_to<keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>>;
 		{ std::movable<FilterType_t> == true };
 	};
 

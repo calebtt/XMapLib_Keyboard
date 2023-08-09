@@ -1,5 +1,8 @@
 #pragma once
 #include <cassert>
+#include <ranges>
+#include <iostream>
+#include <format>
 #include "ControllerButtonToActionMap.h"
 #include "KeyboardTranslationHelpers.h"
 
@@ -37,14 +40,14 @@ namespace sds
 	}
 
 	[[nodiscard]]
-	constexpr
+	inline
 	auto GetGroupInfoForUnsetHashcode(const GroupActivationInfo& existingGroup) -> GroupActivationInfo
 	{
 		return GroupActivationInfo{ existingGroup.GroupingValue, {}, {} };
 	}
 
 	[[nodiscard]]
-	constexpr
+	inline
 	auto GetGroupInfoForNewSetHashcode(const GroupActivationInfo& existingGroup, const std::size_t newlyActivatedHash)
 	{
 		return GroupActivationInfo{ existingGroup.GroupingValue, newlyActivatedHash, {} };
@@ -62,11 +65,65 @@ namespace sds
 		std::span<CBActionMap> m_mappings;
 		KeyboardSettingsPack m_settings;
 	public:
+
+		// This function is used to filter the controller state updates before they are sent to the translator.
+		// It will effect overtaking behavior by modifying the state update buffer, which just contains the virtual keycodes that are reported as down.
+		// TODO complete this
 		auto GetUpdatedState(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& stateUpdate) -> keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>
 		{
+			using std::ranges::views::filter;
+			using std::ranges::cend;
+			using std::ranges::find;
+			using std::ranges::find_if;
 
+			// TODO filter and keep track of exclusivity groupings based on a stream of down/up virtual key-code information, before being
+			// sent on to the normal functionality translator. Behavior for this type of thing can be extremely nuanced and it should be
+			// possible for anyone else to make a custom filter such as this.
+
+			const auto existsAndHasGroup = [&stateUpdate](const CBActionMap& e)
+			{
+				const auto foundResult = find(stateUpdate, e.ButtonVirtualKeycode);
+				return foundResult != cend(stateUpdate) && e.ExclusivityGrouping.has_value();
+			};
+			const auto newDownFilter = [](const CBActionMap& e) { return e.LastAction.IsInitialState(); };
+			const auto alreadyDownFilter = [](const CBActionMap& e) { return e.LastAction.IsDown() || e.LastAction.IsRepeating(); };
+
+			auto filteredStateUpdate = m_mappings | filter(newDownFilter) | filter(existsAndHasGroup);
+
+			const auto DownVkWithGroupFilter = [maps = m_mappings](const keyboardtypes::VirtualKey_t keyCode)
+			{
+				const auto findResult = find_if(maps, [keyCode](const CBActionMap& e)
+					{
+						return e.ExclusivityGrouping.has_value() && e.ButtonVirtualKeycode == keyCode;
+					});
+				return findResult != cend(maps);
+			};
+			const auto NewDownVkFilter = [maps = m_mappings](const keyboardtypes::VirtualKey_t keyCode)
+			{
+				const auto findResult = find_if(maps, [keyCode](const CBActionMap& e) { return e.ButtonVirtualKeycode == keyCode; });
+				return findResult != cend(maps) && findResult->LastAction.IsInitialState();
+			};
+
+			auto downKeysWithGrouping = stateUpdate | filter(DownVkWithGroupFilter);
+			auto newDownKeys = stateUpdate | filter(NewDownVkFilter) | filter(DownVkWithGroupFilter);
+
+			// Handle new down keys.
+			for(const auto elem: newDownKeys)
+			{
+				const auto mappingIndex = GetMappingIndexByVk(elem);
+				auto& currentMapping = m_mappings[mappingIndex];
+				
+			}
+
+			for(auto& elem : filteredStateUpdate)
+			{
+				std::cout << std::format("{}\n", elem.ExclusivityGrouping.value_or(0));
+				// TODO might build a map or something, add to m_exgroupinfo data member for a new down.
+				// TODO probably have 3 functions, one for new down, one for repeating down, one for up. Don't know what I will do with the repeat-down but someone else might.
+				//FilterDownTranslation(elem);
+			}
 			// TODO parse all of the down key VKs based on overtaking behavior.
-			return {};
+			return stateUpdate;
 		}
 
 		void SetMappingRange(std::span<CBActionMap> mappingsList)
@@ -89,46 +146,41 @@ namespace sds
 			}
 		}
 
-		auto FilterDownTranslation(TranslationResult&& translation) -> FilteredPair
+		auto FilterDownTranslation(CBActionMap& translation)
 		{
 			using std::ranges::find;
 			using std::ranges::find_if;
 			using std::ranges::cend;
 
-			if (!translation.ExclusivityGrouping)
-			{
-				return { .Original = std::move(translation), .Overtaking = {} };
-			}
+			//const auto groupIndex = GetGroupingInfoIndex(*translation.ExclusivityGrouping);
+			//assert(groupIndex.has_value());
+			//const auto foundResult = find(m_exclusivityGroupInfo[*groupIndex].OvertakenHashes, translation.MappingHash);
+			//const bool isTranslationAlreadyOvertaken = foundResult != cend(m_exclusivityGroupInfo[*groupIndex].OvertakenHashes);
+			//const bool isTranslationAlreadyActivated = m_exclusivityGroupInfo[*groupIndex].ActivatedMappingHash == translation.MappingHash;
+			//const bool isNoMappingHashSet = !m_exclusivityGroupInfo[*groupIndex].ActivatedMappingHash;
+			//const auto currentMapping = find_if(m_mappings, [&](const auto& elem)
+			//	{
+			//		const auto elemHash = hash_value(elem);
+			//		return translation.MappingHash == elemHash;
+			//	});
+			//assert(currentMapping != cend(m_mappings));
 
-			const auto groupIndex = GetGroupingInfoIndex(*translation.ExclusivityGrouping);
-			assert(groupIndex.has_value());
-			const auto foundResult = find(m_exclusivityGroupInfo[*groupIndex].OvertakenHashes, translation.MappingHash);
-			const bool isTranslationAlreadyOvertaken = foundResult != cend(m_exclusivityGroupInfo[*groupIndex].OvertakenHashes);
-			const bool isTranslationAlreadyActivated = m_exclusivityGroupInfo[*groupIndex].ActivatedMappingHash == translation.MappingHash;
-			const bool isNoMappingHashSet = !m_exclusivityGroupInfo[*groupIndex].ActivatedMappingHash;
-			const auto currentMapping = find_if(m_mappings, [&](const auto& elem)
-				{
-					const auto elemHash = hash_value(elem);
-					return translation.MappingHash == elemHash;
-				});
-			assert(currentMapping != cend(m_mappings));
-
-			FilteredPair filteredPair;
-			// Handle new down
-			if (isNoMappingHashSet)
-			{
-				UpdateGroupInfoForNewDown(translation, *groupIndex);
-				filteredPair.Original = std::move(translation);
-			}
-			// Handle overtaking down translation, not one of the already overtaken.
-			else if (!isTranslationAlreadyActivated && !isTranslationAlreadyOvertaken)
-			{
-				const auto overtakenMappingIndex = GetMappingIndexByHash(m_exclusivityGroupInfo[*groupIndex].ActivatedMappingHash);
-				UpdateGroupInfoForOvertakingDown(translation, *groupIndex);
-				filteredPair.Overtaking = GetKeyUpTranslationResult(m_mappings[overtakenMappingIndex]);
-				filteredPair.Original = std::move(translation);
-			}
-			return filteredPair;
+			//FilteredPair filteredPair;
+			//// Handle new down
+			//if (isNoMappingHashSet)
+			//{
+			//	UpdateGroupInfoForNewDown(translation, *groupIndex);
+			//	filteredPair.Original = std::move(translation);
+			//}
+			//// Handle overtaking down translation, not one of the already overtaken.
+			//else if (!isTranslationAlreadyActivated && !isTranslationAlreadyOvertaken)
+			//{
+			//	const auto overtakenMappingIndex = GetMappingIndexByHash(m_exclusivityGroupInfo[*groupIndex].ActivatedMappingHash);
+			//	UpdateGroupInfoForOvertakingDown(translation, *groupIndex);
+			//	filteredPair.Overtaking = GetKeyUpTranslationResult(m_mappings[overtakenMappingIndex]);
+			//	filteredPair.Original = std::move(translation);
+			//}
+			//return filteredPair;
 		}
 
 		auto FilterUpTranslation(const TranslationResult& translation) -> FilteredPair
@@ -173,6 +225,19 @@ namespace sds
 			return filteredUp;
 		}
 	private:
+		[[nodiscard]]
+		constexpr
+		auto GetMappingIndexByVk(const keyboardtypes::VirtualKey_t keyCode) const -> std::size_t
+		{
+			for (std::size_t i{}; i < m_mappings.size(); ++i)
+			{
+				if (hash_value(m_mappings[i]) == keyCode)
+					return i;
+			}
+			assert(false);
+			return {};
+		}
+
 		[[nodiscard]]
 		constexpr
 		auto GetMappingIndexByHash(const std::size_t hash) const -> std::size_t
