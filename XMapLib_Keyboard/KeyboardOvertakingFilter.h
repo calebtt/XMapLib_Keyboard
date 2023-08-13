@@ -55,6 +55,30 @@ namespace sds
 
 
 	/**
+	 * \brief Used to retrieve information to access the range of CBActionMap mappings with a matching virtual key specified in keyRange.
+	 * \param keyRange Range of virtual key codes with which to match to added mappings.
+	 * \param mappingsRange The range of mappings describing controller button VK to state change actions.
+	 */
+	[[nodiscard]]
+	inline
+	auto GetMappingsForVks(std::span<keyboardtypes::VirtualKey_t> keyRange, std::span<CBActionMap> mappingsRange)
+	{
+		// TODO, implement, should probably return indices.
+		throw std::exception{};
+	}
+
+	[[nodiscard]]
+	inline
+	auto RemoveDuplicateExclusivityGroupIndices()
+	{
+		// TODO to handle multiple exclusivity group holding mapping changes at the same time requires some kind of strict priority ordering imposed on the
+		// TODO input polling results.
+
+		// TODO as in, if someone presses two exclusivity grouping having buttons at the exact same time and a single state update contains both, which is performed?
+		// TODO the arbitrary one that came first in the stream of 'down' virtual keycodes buffer? Then, to change that, someone would have to update GetDownVirtualKeycodesRange(...)
+	}
+
+	/**
 	 * \brief	May be used to internally filter the poller's translations in order to apply the overtaking behavior.
 	 */
 	class KeyboardOvertakingFilter final

@@ -89,7 +89,7 @@ namespace sds
 		 *	can perform the key-down.
 		 * \remarks		optional, if not in use set to default constructed value or '{}'
 		 */
-		keyboardtypes::OptGrp_t ExclusivityGrouping;
+		keyboardtypes::OptGrp_t ExclusivityGrouping; // TODO one variation of ex. group behavior is to have a priority value associated with the mapping.
 		keyboardtypes::Fn_t OnDown; // Key-down
 		keyboardtypes::Fn_t OnUp; // Key-up
 		keyboardtypes::Fn_t OnRepeat; // Key-repeat
