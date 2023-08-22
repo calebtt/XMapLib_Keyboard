@@ -73,16 +73,19 @@ namespace sds
 		 * \brief	Controller button Virtual Keycode. Can be platform dependent or custom mapping, depends on input poller behavior.
 		 */
 		keyboardtypes::VirtualKey_t ButtonVirtualKeycode{};
+
 		/**
 		 * \brief	If 'true', upon the button being held down, will translate to the key-repeat function activating repeatedly
 		 *	using a delay in between repeats.
 		 */
 		bool UsesInfiniteRepeat{ true };
+
 		/**
 		 * \brief	If 'true', upon the button being held down, will send a single repeat, will not continue translating to repeat after the single repeat.
 		 * \remarks Note that UsesInfiniteRepeat is expected to be set to 'false' for this to have a meaningful impact.
 		 */
 		bool SendsFirstRepeatOnly{ false };
+
 		/**
 		 * \brief	The exclusivity grouping member is intended to allow the user to add different groups of mappings
 		 *	that require another mapping from the same group to be "overtaken" or key-up sent before the "overtaking" new mapping

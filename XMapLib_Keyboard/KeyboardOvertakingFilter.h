@@ -1,13 +1,18 @@
 #pragma once
 #include <cassert>
 #include <ranges>
+#include <functional>
+#include <numeric>
 #include <iostream>
 #include <format>
+#include <execution>
 #include "ControllerButtonToActionMap.h"
 #include "KeyboardTranslationHelpers.h"
 
 namespace sds
 {
+	using VkToMappingsTable_t = keyboardtypes::SmallFlatMap_t<keyboardtypes::VirtualKey_t, keyboardtypes::SmallVector_t<keyboardtypes::Index_t>>;
+
 	/**
 	 * \brief	A logical representation of a mapping's exclusivity group activation status.
 	 */
@@ -53,24 +58,100 @@ namespace sds
 		return GroupActivationInfo{ existingGroup.GroupingValue, newlyActivatedHash, {} };
 	}
 
+	/**
+	 * \brief Returns the indices at which a mapping that matches the 'vk' was found.
+	 * \param vk Virtual keycode of the presumably 'down' key with which to match CBActionMap mappings.
+	 * \param mappingsRange The range of CBActionMap mappings for which to return the indices of matching mappings.
+	 */
+	[[nodiscard]]
+	inline
+	auto GetMappingIndexForVk(const keyboardtypes::VirtualKey_t vk, const std::span<const CBActionMap> mappingsRange) -> keyboardtypes::Index_t
+	{
+		using std::ranges::find;
+		using std::ranges::cend;
+		using std::ranges::cbegin;
+		using std::ranges::distance;
+		using keyboardtypes::Index_t;
+
+		const auto findResult = find(mappingsRange, vk, &CBActionMap::ButtonVirtualKeycode);
+		assert(findResult != cend(mappingsRange));
+		return static_cast<Index_t>(distance(cbegin(mappingsRange), findResult));
+
+		//using std::ranges::views::enumerate, std::ranges::views::filter;
+		//const auto matchingVkFilter = [vk](const auto elem)
+		//	{
+		//		return std::get<1>(elem).ButtonVirtualKeycode == vk;
+		//	};
+		//// build list of mappings that match the down VK
+		//keyboardtypes::SmallVector_t<keyboardtypes::Index_t> mappingIndices;
+		//for (const auto [ind, elem] : mappingsRange | enumerate | filter(matchingVkFilter))
+		//{
+		//	mappingIndices.emplace_back(static_cast<keyboardtypes::Index_t>(ind));
+		//}
+
+		//return mappingIndices;
+	}
 
 	/**
 	 * \brief Used to retrieve information to access the range of CBActionMap mappings with a matching virtual key specified in keyRange.
 	 * \param keyRange Range of virtual key codes with which to match to added mappings.
 	 * \param mappingsRange The range of mappings describing controller button VK to state change actions.
 	 */
-	[[nodiscard]]
-	inline
-	auto GetMappingsForVks(std::span<keyboardtypes::VirtualKey_t> keyRange, std::span<CBActionMap> mappingsRange)
-	{
-		// TODO, implement, should probably return indices.
-		throw std::exception{};
-	}
+	//[[nodiscard]]
+	//inline
+	//auto GetMappingIndicesForVks(const std::span<const keyboardtypes::VirtualKey_t> keyRange, const std::span<const CBActionMap> mappingsRange) -> VkToMappingsTable_t
+	//{
+	//	using std::ranges::find, std::ranges::cend, std::ranges::cbegin, std::ranges::distance;
+
+	//	// Map of VK to mapping indices.
+	//	VkToMappingsTable_t vkToIndicesMap;
+
+	//	std::ranges::for_each(keyRange.begin(), keyRange.end(), [&vkToIndicesMap, &mappingsRange](const auto vk)
+	//	{
+	//		vkToIndicesMap[vk] = GetMappingIndexForVk(vk, mappingsRange);
+	//	});
+
+	//	return vkToIndicesMap;
+	//}
+
 
 	[[nodiscard]]
 	inline
-	auto RemoveDuplicateExclusivityGroupIndices()
+	auto RemoveDuplicateExclusivityGroupIndices(std::span<const keyboardtypes::VirtualKey_t> indexRange)
 	{
+		using std::ranges::sort, std::ranges::copy;
+		using std::ranges::views::chunk_by, std::ranges::not_equal_to;
+
+		// create a copy
+		keyboardtypes::SmallVector_t<uint32_t> indices(indexRange.size(), 0);
+
+		copy(indexRange.cbegin(), indexRange.cend(), indices.begin());
+
+		// sort it
+		sort(indices, std::less<uint32_t>{});
+
+		// chunk it and then test each sub-range for having an exclusivity group, if so, take only the lowest value.
+		for(const auto duplicatesRange : indices | chunk_by(not_equal_to{}))
+		{
+			if(duplicatesRange.size() > 1)
+			{
+				//std::cout << std::ranges::views::all(duplicatesRange) << '\n';
+			}
+		}
+
+		//if(!std::is_sorted(indices.cbegin(), indices.cend()))
+		//{
+		//	std::cerr << "Not sorted.\n";
+		//}
+
+
+
+
+		// 
+		// TODO for this implementation, we will just use the order in which the mappings were added to the array as the priority.
+		// TODO actually, best to just use the virtual keycode lowest to highest
+
+
 		// TODO to handle multiple exclusivity group holding mapping changes at the same time requires some kind of strict priority ordering imposed on the
 		// TODO input polling results.
 
@@ -93,88 +174,103 @@ namespace sds
 		// This function is used to filter the controller state updates before they are sent to the translator.
 		// It will effect overtaking behavior by modifying the state update buffer, which just contains the virtual keycodes that are reported as down.
 		// TODO complete this
-		auto GetUpdatedState(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& stateUpdate) -> keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>
+		auto GetFilteredButtonState(keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>&& stateUpdate) -> keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>
 		{
 			using std::ranges::views::filter;
 			using std::ranges::cend;
 			using std::ranges::find;
 			using std::ranges::find_if;
 
-			// TODO filter and keep track of exclusivity groupings based on a stream of down/up virtual key-code information, before being
-			// sent on to the normal functionality translator. Behavior for this type of thing can be extremely nuanced and it should be
-			// possible for anyone else to make a custom filter such as this.
+			FilterDownTranslation(stateUpdate);
 
-			const auto existsAndHasGroup = [&stateUpdate](const CBActionMap& e)
-			{
-				const auto foundResult = find(stateUpdate, e.ButtonVirtualKeycode);
-				return foundResult != cend(stateUpdate) && e.ExclusivityGrouping.has_value();
-			};
-			const auto newDownFilter = [](const CBActionMap& e) { return e.LastAction.IsInitialState(); };
-			const auto alreadyDownFilter = [](const CBActionMap& e) { return e.LastAction.IsDown() || e.LastAction.IsRepeating(); };
-
-			auto filteredStateUpdate = m_mappings | filter(newDownFilter) | filter(existsAndHasGroup);
-
-			const auto DownVkWithGroupFilter = [maps = m_mappings](const keyboardtypes::VirtualKey_t keyCode)
-			{
-				const auto findResult = find_if(maps, [keyCode](const CBActionMap& e)
-					{
-						return e.ExclusivityGrouping.has_value() && e.ButtonVirtualKeycode == keyCode;
-					});
-				return findResult != cend(maps);
-			};
-			const auto NewDownVkFilter = [maps = m_mappings](const keyboardtypes::VirtualKey_t keyCode)
-			{
-				const auto findResult = find_if(maps, [keyCode](const CBActionMap& e) { return e.ButtonVirtualKeycode == keyCode; });
-				return findResult != cend(maps) && findResult->LastAction.IsInitialState();
-			};
-
-			auto downKeysWithGrouping = stateUpdate | filter(DownVkWithGroupFilter);
-			auto newDownKeys = stateUpdate | filter(NewDownVkFilter) | filter(DownVkWithGroupFilter);
-
-			// Handle new down keys.
-			for(const auto elem: newDownKeys)
-			{
-				const auto mappingIndex = GetMappingIndexByVk(elem);
-				auto& currentMapping = m_mappings[mappingIndex];
-				
-			}
-
-			for(auto& elem : filteredStateUpdate)
-			{
-				std::cout << std::format("{}\n", elem.ExclusivityGrouping.value_or(0));
-				// TODO might build a map or something, add to m_exgroupinfo data member for a new down.
-				// TODO probably have 3 functions, one for new down, one for repeating down, one for up. Don't know what I will do with the repeat-down but someone else might.
-				//FilterDownTranslation(elem);
-			}
-			// TODO parse all of the down key VKs based on overtaking behavior.
 			return stateUpdate;
+
+			//// TODO filter and keep track of exclusivity groupings based on a stream of down/up virtual key-code information, before being
+			//// sent on to the normal functionality translator. Behavior for this type of thing can be extremely nuanced and it should be
+			//// possible for anyone else to make a custom filter such as this.
+
+			//const auto existsAndHasGroup = [&stateUpdate](const CBActionMap& e)
+			//{
+			//	const auto foundResult = find(stateUpdate, e.ButtonVirtualKeycode);
+			//	return foundResult != cend(stateUpdate) && e.ExclusivityGrouping.has_value();
+			//};
+			//const auto newDownFilter = [](const CBActionMap& e) { return e.LastAction.IsInitialState(); };
+			//const auto alreadyDownFilter = [](const CBActionMap& e) { return e.LastAction.IsDown() || e.LastAction.IsRepeating(); };
+
+			//auto filteredStateUpdate = m_mappings | filter(newDownFilter) | filter(existsAndHasGroup);
+
+			//const auto DownVkWithGroupFilter = [maps = m_mappings](const keyboardtypes::VirtualKey_t keyCode)
+			//{
+			//	const auto findResult = find_if(maps, [keyCode](const CBActionMap& e)
+			//		{
+			//			return e.ExclusivityGrouping.has_value() && e.ButtonVirtualKeycode == keyCode;
+			//		});
+			//	return findResult != cend(maps);
+			//};
+			//const auto NewDownVkFilter = [maps = m_mappings](const keyboardtypes::VirtualKey_t keyCode)
+			//{
+			//	const auto findResult = find_if(maps, [keyCode](const CBActionMap& e) { return e.ButtonVirtualKeycode == keyCode; });
+			//	return findResult != cend(maps) && findResult->LastAction.IsInitialState();
+			//};
+
+			//auto downKeysWithGrouping = stateUpdate | filter(DownVkWithGroupFilter);
+			//auto newDownKeys = stateUpdate | filter(NewDownVkFilter) | filter(DownVkWithGroupFilter);
+
+			//// Handle new down keys.
+			//for(const auto elem: newDownKeys)
+			//{
+			//	const auto mappingIndex = GetMappingIndexByVk(elem);
+			//	auto& currentMapping = m_mappings[mappingIndex];
+			//	
+			//}
+
+			//for(auto& elem : filteredStateUpdate)
+			//{
+			//	std::cout << std::format("{}\n", elem.ExclusivityGrouping.value_or(0));
+			//	// TODO might build a map or something, add to m_exgroupinfo data member for a new down.
+			//	// TODO probably have 3 functions, one for new down, one for repeating down, one for up. Don't know what I will do with the repeat-down but someone else might.
+			//	//FilterDownTranslation(elem);
+			//}
+			//// TODO parse all of the down key VKs based on overtaking behavior.
+			//return stateUpdate;
 		}
 
-		void SetMappingRange(std::span<CBActionMap> mappingsList)
+		auto FilterDownTranslation(keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t> stateUpdate)
 		{
-			m_mappings = mappingsList;
-			m_exclusivityGroupInfo = {};
-			// Build the buffer of ex. group information.
-			for (const auto& elem : mappingsList)
-			{
-				if (elem.ExclusivityGrouping)
-				{
-					m_exclusivityGroupInfo.emplace_back(
-						GroupActivationInfo
-						{
-							.GroupingValue = *elem.ExclusivityGrouping,
-							.ActivatedMappingHash = 0,
-							.OvertakenHashes = {}
-						});
-				}
-			}
-		}
-
-		auto FilterDownTranslation(CBActionMap& translation)
-		{
+			using std::ranges::sort, std::ranges::copy;
 			using std::ranges::find;
 			using std::ranges::find_if;
 			using std::ranges::cend;
+			using std::ranges::count_if;
+			using std::ranges::views::transform;
+			using std::ranges::views::chunk_by;
+
+			// indices for all mappings of interest per the current 'down' VK buffer.
+			const auto indices = GetMappingIndicesForVks(stateUpdate, m_mappings);
+
+			for(const auto& [vk, indexBuf] : indices)
+			{
+				// for each sub-range of mapping indices pertaining to a single VK.
+
+				const auto mappingsView = indexBuf | transform([this](const auto ind) -> const CBActionMap&
+				{
+					return GetMappingAt(ind);
+				});
+				// Count the number of mappings with the same ex. group
+				// todo the result of this chunk is a sub-range of the ex grouping values, not the mappings.
+				const auto chunkedByGroup = mappingsView | transform([](const auto& e) { return e.ExclusivityGrouping.value_or(0); }) | chunk_by(std::ranges::not_equal_to{});
+				// Do some logic for the ex. group chunked sub-ranges
+				//for(const auto mappingSubRange : chunkedByGroup)
+				//{
+				//	// If current sub-range has more than one element, and has an ex. grouping
+				//	if(mappingSubRange.size() > 1 && mappingSubRange.front().ExclusivityGrouping.has_value())
+				//	{
+				//		
+				//	}
+
+				//}
+				//const auto countedResult = count_if(chunkedByGroup, [&](const auto& elem) { *std::get<1>(elem).ExclusivityGrouping == *currentMapping.ExclusivityGrouping; });
+			}
 
 			//const auto groupIndex = GetGroupingInfoIndex(*translation.ExclusivityGrouping);
 			//assert(groupIndex.has_value());
@@ -248,7 +344,34 @@ namespace sds
 
 			return filteredUp;
 		}
+
+		void SetMappingRange(std::span<CBActionMap> mappingsList)
+		{
+			m_mappings = mappingsList;
+			m_exclusivityGroupInfo = {};
+			// Build the buffer of ex. group information.
+			for (const auto& elem : mappingsList)
+			{
+				if (elem.ExclusivityGrouping)
+				{
+					m_exclusivityGroupInfo.emplace_back(
+						GroupActivationInfo
+						{
+							.GroupingValue = *elem.ExclusivityGrouping,
+							.ActivatedMappingHash = 0,
+							.OvertakenHashes = {}
+						});
+				}
+			}
+		}
 	private:
+		[[nodiscard]]
+		constexpr
+		auto GetMappingAt(const std::size_t index) noexcept -> CBActionMap&
+		{
+			return m_mappings[index];
+		}
+
 		[[nodiscard]]
 		constexpr
 		auto GetMappingIndexByVk(const keyboardtypes::VirtualKey_t keyCode) const -> std::size_t

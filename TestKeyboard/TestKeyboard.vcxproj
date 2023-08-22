@@ -177,6 +177,7 @@
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="TestMappingProvider.h" />
+    <ClInclude Include="TestOvertakingFilter.h" />
     <ClInclude Include="TestPollProvider.h" />
   </ItemGroup>
   <ItemGroup>

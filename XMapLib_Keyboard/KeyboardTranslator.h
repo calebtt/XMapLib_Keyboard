@@ -34,7 +34,7 @@ namespace sds
 	concept ValidFilterType = requires(FilterType_t & t)
 	{
 		{ t.SetMappingRange(std::span<CBActionMap>{}) };
-		{ t.GetUpdatedState({1,2,3}) } -> std::convertible_to<keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>>;
+		{ t.GetFilteredButtonState({1,2,3}) } -> std::convertible_to<keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>>;
 		{ std::movable<FilterType_t> == true };
 	};
 
@@ -132,6 +132,8 @@ namespace sds
 	 * \brief Encapsulates the mapping buffer, processes wrapped controller state updates, returns translation packs.
 	 * \remarks If, before destruction, the mappings are in a state other than initial or awaiting reset, then you may wish to
 	 *	make use of the <c>GetCleanupActions()</c> function. Not copyable. Is movable.
+	 *	<p></p>
+	 *	<p>An invariant exists such that: <b>There must be only one mapping per virtual keycode.</b></p>
 	 */
 	template<ValidFilterType OvertakingFilter_t = KeyboardOvertakingFilter>
 	class KeyboardTranslator final
@@ -146,9 +148,6 @@ namespace sds
 		auto operator=(const KeyboardTranslator& other)->KeyboardTranslator & = delete; // no copy-assign
 		~KeyboardTranslator() = default;
 
-		/**
-		 * \brief Move constructor will not call the cleanup actions on the moved-into instance before the move!
-		 */
 		KeyboardTranslator(KeyboardTranslator&& other) noexcept // implemented move
 			: m_mappings(std::move(other.m_mappings)), m_filter(other.m_filter)
 		{
@@ -173,8 +172,8 @@ namespace sds
 		{
 			for (auto& e : m_mappings)
 				InitCustomTimers(e);
-			if (!AreExclusivityGroupsUnique(m_mappings))
-				throw std::runtime_error("Exception: Mappings with multiple exclusivity groupings for a single VK!");
+			if (!AreMappingsUniquePerVk(m_mappings))
+				throw std::runtime_error("Exception: More than 1 mapping per VK!");
 		}
 
 		// Ctor for adding a filter.
@@ -183,19 +182,19 @@ namespace sds
 		{
 			for (auto& e : m_mappings)
 				InitCustomTimers(e);
-			if (!AreExclusivityGroupsUnique(m_mappings))
-				throw std::runtime_error("Exception: Mappings with multiple exclusivity groupings for a single VK!");
+			if (!AreMappingsUniquePerVk(m_mappings))
+				throw std::runtime_error("Exception: More than 1 mapping per VK!");
 			m_filter->SetMappingRange(m_mappings);
 		}
 	public:
 		[[nodiscard]]
-		auto operator()(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& stateUpdate) noexcept -> TranslationPack
+		auto operator()(keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>&& stateUpdate) noexcept -> TranslationPack
 		{
-			return m_filter.has_value() ? GetUpdatedState(m_filter->GetUpdatedState(stateUpdate)) : GetUpdatedState(stateUpdate);
+			return m_filter.has_value() ? GetUpdatedState(m_filter->GetFilteredButtonState(std::move(stateUpdate))) : GetUpdatedState(std::move(stateUpdate));
 		}
 
 		[[nodiscard]]
-		auto GetUpdatedState(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& stateUpdate) noexcept -> TranslationPack
+		auto GetUpdatedState(keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>&& stateUpdate) noexcept -> TranslationPack
 		{
 			TranslationPack translations;
 			for(std::size_t i{}; i < m_mappings.size(); ++i)

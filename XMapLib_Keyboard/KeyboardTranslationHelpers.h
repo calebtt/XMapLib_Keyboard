@@ -182,29 +182,26 @@ namespace sds
 	}
 
 	/**
-	 * \brief	Checks a list of mappings for having multiple exclusivity groupings mapped to a single controller button.
-	 * \param	mappingsList Vector of controller button to action mappings.
-	 * \return	true if good mapping list, false if there is a problem.
+	 * \brief	Checks a list of mappings for having multiple mappings mapped to a single controller button.
+	 * \param	mappingsList Span of controller button to action mappings.
+	 * \return	true if good (or empty) mapping list, false if there is a problem.
 	 */
 	[[nodiscard]]
 	inline
-	bool AreExclusivityGroupsUnique(const std::span<CBActionMap> mappingsList) noexcept
+	bool AreMappingsUniquePerVk(const std::span<CBActionMap> mappingsList) noexcept
 	{
-		std::map<keyboardtypes::VirtualKey_t, keyboardtypes::OptGrp_t> groupMap;
-		for (const auto& e : mappingsList)
+		keyboardtypes::SmallFlatMap_t<keyboardtypes::VirtualKey_t, bool> mappingTable;
+		for(const auto& e : mappingsList)
 		{
-			// If an exclusivity group is set, we must verify no duplicate ex groups are set to the same vk
-			const auto& vk = e.ButtonVirtualKeycode;
-			const auto& currentMappingGroupOpt = e.ExclusivityGrouping;
-			const auto& existingGroupOpt = groupMap[vk];
-			if (currentMappingGroupOpt.has_value() && existingGroupOpt.has_value())
+			if(mappingTable[e.ButtonVirtualKeycode])
 			{
-				if (existingGroupOpt.value() != currentMappingGroupOpt.value())
-					return false;
+				return false;
 			}
-			groupMap[vk] = currentMappingGroupOpt;
+			mappingTable[e.ButtonVirtualKeycode] = true;
 		}
 		return true;
 	}
+
+
 
 }

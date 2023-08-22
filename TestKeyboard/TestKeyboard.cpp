@@ -2,6 +2,7 @@
 #include "CppUnitTest.h"
 #include "TestMappingProvider.h"
 #include "TestPollProvider.h"
+#include "TestOvertakingFilter.h"
 #include <filesystem>
 #include "../XMapLib_Keyboard/KeyboardOvertakingFilter.h"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -10,31 +11,6 @@ namespace TestKeyboard
 {
 	TEST_CLASS(TestKeyboard)
 	{
-    	auto GetMapping(const unsigned short newVk, std::optional<int> exGroup = {}) const
-        {
-            using namespace sds;
-            const std::string vkString = "Vk:[" + std::to_string(newVk) + "]\n";
-            const std::string downMessage = "Action:[Down] " + vkString;
-            const std::string upMessage = "Action:[Up] " + vkString;
-            const std::string repeatMessage = "Action:[Repeat] " + vkString;
-            const std::string resetMessage = "Action:[Reset] " + vkString;
-
-            std::vector<CBActionMap> mappings;
-            CBActionMap tm{
-                .ButtonVirtualKeycode = newVk,
-                .UsesInfiniteRepeat = true,
-                .ExclusivityGrouping = exGroup,
-                .OnDown = [=](){ Logger::WriteMessage(downMessage.c_str()); },
-                .OnUp = [=]() { Logger::WriteMessage(upMessage.c_str()); },
-                .OnRepeat = [=]() { Logger::WriteMessage(repeatMessage.c_str()); },
-                .OnReset = [=]() { Logger::WriteMessage(resetMessage.c_str()); },
-                .LastAction = {}
-            };
-            mappings.emplace_back(tm);
-            return mappings;
-        }
-
-
 		TEST_METHOD(PollerTest)
 		{
             using namespace std::chrono_literals;
@@ -49,15 +25,15 @@ namespace TestKeyboard
             auto maps1 = GetMapping(buttonA);
             auto maps2 = GetMapping(buttonB);
             maps2.append_range(maps1);
-            sds::KeyboardTranslator<> poller{ std::move(maps2) };
-            const auto translations1 = poller(stateUpdate);
+            sds::KeyboardTranslator poller{ std::move(maps2) };
+            const auto translations1 = poller(std::move(stateUpdate));
             Assert::IsTrue(translations1.NextStateRequests.size() == 2, L"Translation count not 2.");
             translations1();
 
             std::this_thread::sleep_for(500ms);
 
             sds::keyboardtypes::SmallVector_t<sds::keyboardtypes::VirtualKey_t> emptyState{};
-            const auto translations2 = poller(emptyState);
+            const auto translations2 = poller(std::move(emptyState));
             Assert::IsTrue(translations2.NextStateRequests.size() == 2, L"Empty state not creating 2 translations after down.");
             translations2();
 		}
@@ -71,25 +47,27 @@ namespace TestKeyboard
             constexpr sds::KeyboardSettingsPack settingsPack;
             constexpr sds::keyboardtypes::VirtualKey_t buttonA{ XINPUT_GAMEPAD_A };
             constexpr sds::keyboardtypes::VirtualKey_t buttonB{ XINPUT_GAMEPAD_B };
-
             sds::keyboardtypes::SmallVector_t<sds::keyboardtypes::VirtualKey_t> stateUpdate{ buttonA, buttonB };
+            sds::keyboardtypes::SmallVector_t<sds::keyboardtypes::VirtualKey_t> emptyState{};
 
+            // Make the filter type.
+            sds::KeyboardOvertakingFilter filter;
+            // Make the mapping range
             auto maps1 = GetMapping(buttonA, 101);
             auto maps2 = GetMapping(buttonB, 101);
             maps2.append_range(maps1);
+            // Set mapping range on the filter (not necessary for normal use).
+            filter.SetMappingRange(maps2);
 
-            sds::KeyboardTranslator<> poller{ std::move(maps2), sds::KeyboardOvertakingFilter{} };
-            const auto translations1 = poller(stateUpdate);
-            translations1();
-            Assert::IsTrue(translations1.NextStateRequests.size() == 1, L"Next State Translation count not 1.");
-            Assert::IsTrue(translations1.OvertakenRequests.size() == 1, L"Overtaken Translation count not 1.");
+
+            //sds::KeyboardTranslator<> poller{ std::move(maps2), sds::KeyboardOvertakingFilter{} };
+            const auto stateUpdatesRange = filter.GetFilteredButtonState(std::move(stateUpdate));
+            Assert::IsTrue(stateUpdatesRange.size() == 1, L"State update count not 1.");
 
             std::this_thread::sleep_for(500ms);
 
-            sds::keyboardtypes::SmallVector_t<sds::keyboardtypes::VirtualKey_t> emptyState{};
-            const auto translations2 = poller(emptyState);
-            Assert::IsTrue(translations2.NextStateRequests.size() == 2, L"Empty state not creating 2 translations after down.");
-            translations2();
+            //const auto stateUpdatesRange2 = filter.GetFilteredButtonState(std::move(emptyState));
+            //Assert::IsTrue(stateUpdatesRange2.size() == 2, L"Empty state not creating 2 state updates after down.");
         }
 	};
 

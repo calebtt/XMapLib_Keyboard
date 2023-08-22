@@ -16,6 +16,7 @@
 #include <functional>
 #include <ranges>
 #include <chrono>
+#include <format>
 
 #include "../XMapLib_Keyboard/KeyboardTranslationHelpers.h"
 #include "../XMapLib_Keyboard/ControllerButtonToActionMap.h"

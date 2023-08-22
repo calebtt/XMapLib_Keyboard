@@ -32,5 +32,8 @@
     <ClInclude Include="TestPollProvider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TestOvertakingFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

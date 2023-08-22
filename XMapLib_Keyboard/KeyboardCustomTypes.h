@@ -1,9 +1,21 @@
 ﻿#pragma once
+
+#ifndef USERHAS_BOOST
+#define USERHAS_BOOST
+#endif
+
 #include <functional>
 #include <optional>
 #include <chrono>
 #include <vector>
-//#include <boost/container/small_vector.hpp>
+//#include <flat_map>
+#include <map>
+
+#ifdef USERHAS_BOOST
+#include <boost/container/small_vector.hpp>
+#include <boost/container/flat_map.hpp>
+#endif
+
 namespace sds::keyboardtypes
 {
 	using Fn_t = std::function<void()>;
@@ -15,9 +27,20 @@ namespace sds::keyboardtypes
 	using VirtualKey_t = int32_t;
 	using TriggerValue_t = uint8_t;
 	using ThumbstickValue_t = int16_t;
+	using Index_t = uint32_t; // Nothing we work with will have more elements than a 32 bit uint can position for.
 
-	// TODO this might be replaced with std::vector if the user doesn't have boost.
+#ifdef USERHAS_BOOST
+	template<typename From, typename To>
+	using SmallFlatMap_t = boost::container::small_flat_map<From, To, 32>;
+
+	template<typename T>
+	using SmallVector_t = boost::container::small_vector<T, 32>;
+#else
+	template<typename From, typename To>
+	using SmallFlatMap_t = std::map<From, To>;
+
 	template<typename T>
 	using SmallVector_t = std::vector<T>;
-	//using SmallVector_t = boost::container::small_vector<T, 32>;
+#endif
+
 }

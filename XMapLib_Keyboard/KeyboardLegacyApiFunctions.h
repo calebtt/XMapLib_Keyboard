@@ -33,7 +33,13 @@ namespace sds
 		return triggerValue > triggerThreshold;
 	}
 
-	// Important helper function to build a small vector of button VKs that are 'down'.
+	/**
+	 * \brief	Important helper function to build a small vector of button VKs that are 'down'. Essential function
+	 *	is to decompose bit masked state updates into an array.
+	 * \param settingsPack	Settings pertaining to deadzone info and virtual keycodes.
+	 * \param controllerState	The OS API state update.
+	 * \return	small vector of down buttons.
+	 */
 	[[nodiscard]]
 	inline
 	auto GetDownVirtualKeycodesRange(const KeyboardSettings& settingsPack, const XINPUT_STATE& controllerState) -> keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>
