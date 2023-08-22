@@ -188,7 +188,7 @@ namespace sds
 	 */
 	[[nodiscard]]
 	inline
-	bool AreMappingsUniquePerVk(const std::span<CBActionMap> mappingsList) noexcept
+	bool AreMappingsUniquePerVk(const std::span<const CBActionMap> mappingsList) noexcept
 	{
 		keyboardtypes::SmallFlatMap_t<keyboardtypes::VirtualKey_t, bool> mappingTable;
 		for(const auto& e : mappingsList)
@@ -202,6 +202,15 @@ namespace sds
 		return true;
 	}
 
-
-
+	/**
+	 * \brief	Checks a list of mappings for having multiple mappings mapped to a single controller button.
+	 * \param	mappingsList Span of controller button to action mappings.
+	 * \return	true if good (or empty) mapping list, false if there is a problem.
+	 */
+	[[nodiscard]]
+	inline
+	bool AreMappingVksNonZero(const std::span<const CBActionMap> mappingsList) noexcept
+	{
+		return ! std::ranges::any_of(mappingsList, [](const auto vk) { return vk == 0; }, &CBActionMap::ButtonVirtualKeycode);
+	}
 }

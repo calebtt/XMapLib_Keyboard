@@ -172,7 +172,7 @@ namespace sds
 		{
 			for (auto& e : m_mappings)
 				InitCustomTimers(e);
-			if (!AreMappingsUniquePerVk(m_mappings))
+			if (!AreMappingsUniquePerVk(m_mappings) || !AreMappingVksNonZero(m_mappings))
 				throw std::runtime_error("Exception: More than 1 mapping per VK!");
 		}
 
@@ -182,7 +182,7 @@ namespace sds
 		{
 			for (auto& e : m_mappings)
 				InitCustomTimers(e);
-			if (!AreMappingsUniquePerVk(m_mappings))
+			if (!AreMappingsUniquePerVk(m_mappings) || !AreMappingVksNonZero(m_mappings))
 				throw std::runtime_error("Exception: More than 1 mapping per VK!");
 			m_filter->SetMappingRange(m_mappings);
 		}

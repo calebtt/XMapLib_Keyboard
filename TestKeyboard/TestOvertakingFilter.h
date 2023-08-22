@@ -21,11 +21,8 @@ namespace TestKeyboard
 
 			const auto indexA = sds::GetMappingIndexForVk(ButtonA, mappings);
 			const auto indexB = sds::GetMappingIndexForVk(ButtonB, mappings);
-			Assert::IsTrue(indexA.size() == 1);
-			Assert::IsTrue(indexB.size() == 1);
-
-			const auto indices = sds::GetMappingIndicesForVks(std::vector{ ButtonA, ButtonB }, mappings);
-			Assert::IsTrue(indices.size() == 2);
+			Assert::IsTrue(indexA == 0);
+			Assert::IsTrue(indexB == 1);
 		}
 	};
 }
