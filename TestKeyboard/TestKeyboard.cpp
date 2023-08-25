@@ -3,6 +3,7 @@
 #include "TestMappingProvider.h"
 #include "TestPollProvider.h"
 #include "TestOvertakingFilter.h"
+#include "TestGroupActivationInfo.h"
 #include <filesystem>
 #include "../XMapLib_Keyboard/KeyboardOvertakingFilter.h"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;

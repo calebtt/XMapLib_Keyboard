@@ -2,6 +2,7 @@
 
 #ifndef USERHAS_BOOST
 #define USERHAS_BOOST
+#include <deque>
 #endif
 
 #include <functional>
@@ -28,6 +29,9 @@ namespace sds::keyboardtypes
 	using TriggerValue_t = uint8_t;
 	using ThumbstickValue_t = int16_t;
 	using Index_t = uint32_t; // Nothing we work with will have more elements than a 32 bit uint can position for.
+
+	template<typename T>
+	using Deque_t = std::deque<T>;
 
 #ifdef USERHAS_BOOST
 	template<typename From, typename To>
