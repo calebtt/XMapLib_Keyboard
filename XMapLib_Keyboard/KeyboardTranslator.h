@@ -5,7 +5,6 @@
 #include <type_traits>
 
 #include "KeyboardCustomTypes.h"
-#include "KeyboardLegacyApiFunctions.h"
 #include "KeyboardTranslationHelpers.h"
 #include "KeyboardOvertakingFilter.h"
 

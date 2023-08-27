@@ -97,7 +97,6 @@ namespace sds
 	/**
 	 * \brief Gets a wrapped controller state update.
 	 * \param settingsPack Settings information, not necessarily constexpr or compile time.
-	 * \param playerId Most commonly 0 for a single device connected.
 	 * \return Wrapper for the controller state buffer.
 	 */
 	[[nodiscard]]

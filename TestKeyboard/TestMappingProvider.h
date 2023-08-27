@@ -78,8 +78,7 @@ namespace TestKeyboard
                 .ExclusivityGrouping = PadButtonsGroup,
                 .OnDown = GetDownLambdaForKeyNamed("[PAD_A]"),
                 .OnUp = GetUpLambdaForKeyNamed("[PAD_A]"),
-                .OnRepeat = GetRepeatLambdaForKeyNamed("[PAD_A]"),
-                .DelayBeforeFirstRepeat = 500ms
+                .OnRepeat = GetRepeatLambdaForKeyNamed("[PAD_A]")
             },
             CBActionMap{
                 .ButtonVirtualKeycode = ButtonB,
@@ -89,8 +88,7 @@ namespace TestKeyboard
                 .OnDown = GetDownLambdaForKeyNamed("[PAD_B]"),
                 .OnUp = GetUpLambdaForKeyNamed("[PAD_B]"),
                 .OnRepeat = GetRepeatLambdaForKeyNamed("[PAD_B]"),
-                .OnReset = GetResetLambdaForKeyNamed("[PAD_B]"),
-                .DelayBeforeFirstRepeat = 1s
+                .OnReset = GetResetLambdaForKeyNamed("[PAD_B]")
             },
             CBActionMap{
                 .ButtonVirtualKeycode = ButtonX,
@@ -100,8 +98,7 @@ namespace TestKeyboard
                 .OnDown = GetDownLambdaForKeyNamed("[PAD_X]"),
                 .OnUp = GetUpLambdaForKeyNamed("[PAD_X]"),
                 .OnRepeat = GetRepeatLambdaForKeyNamed("[PAD_X]"),
-                .OnReset = GetResetLambdaForKeyNamed("[PAD_X]"),
-                .DelayBeforeFirstRepeat = 1s
+                .OnReset = GetResetLambdaForKeyNamed("[PAD_X]")
             },
             CBActionMap{
                 .ButtonVirtualKeycode = ButtonY,
@@ -111,8 +108,7 @@ namespace TestKeyboard
                 .OnDown = GetDownLambdaForKeyNamed("[PAD_Y]"),
                 .OnUp = GetUpLambdaForKeyNamed("[PAD_Y]"),
                 .OnRepeat = GetRepeatLambdaForKeyNamed("[PAD_Y]"),
-                .OnReset = GetResetLambdaForKeyNamed("[PAD_Y]"),
-                .DelayBeforeFirstRepeat = 1s
+                .OnReset = GetResetLambdaForKeyNamed("[PAD_Y]")
             },
             // Left thumbstick directional stuff
             CBActionMap{

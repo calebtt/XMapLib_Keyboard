@@ -39,8 +39,7 @@ namespace sds
 	static_assert(std::movable<TranslationResult>);
 
 	/**
-	 * \brief	TranslationPack is a pack of ranges containing individual TranslationResult structs for processing
-	 *	state changes.
+	 * \brief	TranslationPack is a pack of ranges containing individual TranslationResult structs for processing state changes.
 	 */
 	struct TranslationPack final
 	{
@@ -52,15 +51,12 @@ namespace sds
 				elem();
 			for (const auto& elem : RepeatRequests)
 				elem();
-			for (const auto& elem : OvertakenRequests)
-				elem();
 			for (const auto& elem : NextStateRequests)
 				elem();
 		}
 		// TODO might wrap the vectors in a struct with a call operator to have individual call operators for range of TranslationResult.
 		keyboardtypes::SmallVector_t<TranslationResult> UpdateRequests{};
 		keyboardtypes::SmallVector_t<TranslationResult> RepeatRequests{};
-		keyboardtypes::SmallVector_t<TranslationResult> OvertakenRequests{};
 		keyboardtypes::SmallVector_t<TranslationResult> NextStateRequests{};
 	};
 

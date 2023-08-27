@@ -3,17 +3,41 @@
 #include <ranges>
 #include <functional>
 #include <numeric>
-#include <iostream>
-#include <format>
 #include <execution>
 #include <deque>
-#include <set>
 
 #include "ControllerButtonToActionMap.h"
 #include "KeyboardTranslationHelpers.h"
 
 namespace sds
 {
+	/**
+	 * \brief Returns the indices at which a mapping that matches the 'vk' was found.
+	 * \param vk Virtual keycode of the presumably 'down' key with which to match CBActionMap mappings.
+	 * \param mappingsRange The range of CBActionMap mappings for which to return the indices of matching mappings.
+	 */
+	[[nodiscard]]
+	inline
+	auto GetMappingIndexForVk(const keyboardtypes::VirtualKey_t vk, const std::span<const CBActionMap> mappingsRange) -> keyboardtypes::Index_t
+	{
+		using std::ranges::find;
+		using std::ranges::cend;
+		using std::ranges::cbegin;
+		using std::ranges::distance;
+		using keyboardtypes::Index_t;
+
+		const auto findResult = find(mappingsRange, vk, &CBActionMap::ButtonVirtualKeycode);
+		assert(findResult != cend(mappingsRange));
+		return static_cast<Index_t>(distance(cbegin(mappingsRange), findResult));
+	}
+
+	[[nodiscard]]
+	constexpr
+	auto IsMappingInRange(const CBActionMap& mapping, const std::span<const keyboardtypes::VirtualKey_t> downVirtualKeys)
+	{
+		return std::ranges::any_of(downVirtualKeys, [&mapping](const auto vk) { return vk == mapping.ButtonVirtualKeycode; });
+	}
+
 	/**
 	 * \brief	<para>A logical representation of a mapping's exclusivity group activation status, for this setup a single key in the exclusivity group can be 'activated'
 	 *	or have a key-down state at a time. It is exclusively the only key in the group forwarded to the translator for processing of key-down events.</para>
@@ -41,10 +65,9 @@ namespace sds
 			// Filter all of the hashes already activated/overtaken.
 			const bool isActivated = IsMappingActivated(newDownVk);
 			const bool isOvertaken = IsMappingOvertaken(newDownVk);
-			if (isOvertaken)
-				return std::make_pair(true, std::optional<Elem_t>{});
-			if(isActivated)
-				return std::make_pair(false, std::optional<Elem_t>{});
+			const bool doFilterTheDown = isOvertaken;
+			if (isActivated || isOvertaken)
+				return std::make_pair(doFilterTheDown, std::optional<Elem_t>{});
 
 			// If any mapping hash is already activated, this new hash will be overtaking it and thus require a key-up for current activated.
 			if (IsAnyMappingActivated())
@@ -64,7 +87,7 @@ namespace sds
 		 *	in the event that the currently activated key is key-up'd and there is an overtaken key waiting behind it in the queue.
 		 * \remarks An <b>precondition</b> is that the mapping passed into this has a matching exclusivity grouping!
 		 */
-		[[nodiscard]] auto UpdateForNewMatchingGroupingUp(const Elem_t newUpVk) noexcept -> std::optional<Elem_t>
+		auto UpdateForNewMatchingGroupingUp(const Elem_t newUpVk) noexcept -> std::optional<Elem_t>
 		{
 			// Handle no hashes in queue to update case, and specific new up hash not in queue either.
 			if (!IsAnyMappingActivated())
@@ -96,6 +119,7 @@ namespace sds
 			return {};
 		}
 
+	public:
 		[[nodiscard]] bool IsMappingActivated(const Elem_t vk) const noexcept
 		{
 			if (ActivatedValuesQueue.empty())
@@ -124,33 +148,8 @@ namespace sds
 			return ActivatedValuesQueue.front();
 		}
 	};
-
-	/**
-	 * \brief Returns the indices at which a mapping that matches the 'vk' was found.
-	 * \param vk Virtual keycode of the presumably 'down' key with which to match CBActionMap mappings.
-	 * \param mappingsRange The range of CBActionMap mappings for which to return the indices of matching mappings.
-	 */
-	[[nodiscard]]
-	inline
-	auto GetMappingIndexForVk(const keyboardtypes::VirtualKey_t vk, const std::span<const CBActionMap> mappingsRange) -> keyboardtypes::Index_t
-	{
-		using std::ranges::find;
-		using std::ranges::cend;
-		using std::ranges::cbegin;
-		using std::ranges::distance;
-		using keyboardtypes::Index_t;
-
-		const auto findResult = find(mappingsRange, vk, &CBActionMap::ButtonVirtualKeycode);
-		assert(findResult != cend(mappingsRange));
-		return static_cast<Index_t>(distance(cbegin(mappingsRange), findResult));
-	}
-
-	[[nodiscard]]
-	constexpr
-	auto IsMappingInRange(const CBActionMap& mapping, const std::span<const keyboardtypes::VirtualKey_t> downVirtualKeys)
-	{
-		return std::ranges::any_of(downVirtualKeys, [&mapping](const auto vk) { return vk == mapping.ButtonVirtualKeycode; });
-	}
+	static_assert(std::movable<GroupActivationInfo>);
+	static_assert(std::copyable<GroupActivationInfo>);
 
 	/**
 	 * \brief	May be used to internally filter the poller's translations in order to apply the overtaking behavior.
@@ -200,13 +199,12 @@ namespace sds
 
 			auto filteredForDown = FilterDownTranslation(stateUpdate);
 
-			auto filteredForUp = FilterUpTranslation(stateUpdate);
+			// There appears to be no reason to report additional VKs that will become 'down' after a key is moved to up,
+			// because for the key to still be in the overtaken queue, it would need to still be 'down' as well, and thus handled
+			// by the down filter.
+			FilterUpTranslation(stateUpdate);
 
 			return filteredForDown;
-			// TODO add more tests, determine if needed.
-			//filteredForDown.append_range(filteredForUp);
-			//const std::set<keyboardtypes::VirtualKey_t> outputSet{ filteredForDown.cbegin(), filteredForDown.cend() };
-			//return { outputSet.cbegin(), outputSet.cend() };
 		}
 
 	private:
@@ -263,19 +261,12 @@ namespace sds
 			// filters for all mappings of interest per the current 'down' VK buffer (the UP mappings in this case).
 			const auto exGroupPred = [](const CBActionMap& currentMapping) { return currentMapping.ExclusivityGrouping.has_value(); };
 			const auto stateUpdateUpPred = [&stateUpdate](const CBActionMap& currentMapping) { return !IsMappingInRange(currentMapping, stateUpdate); };
-			
-			// TODO might use a map instead of O(n^2) iteration if it's faster.
-			keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t> vksToAddRange;
-			auto filteredMappings = m_mappings | filter(exGroupPred) | filter(stateUpdateUpPred);
-			for (const auto& currentMapping : filteredMappings)
+
+			for (const auto& currentMapping : m_mappings | filter(exGroupPred) | filter(stateUpdateUpPred))
 			{
 				auto& currentGroup = m_groupMap[*currentMapping.ExclusivityGrouping];
-				const auto updateResult = currentGroup.UpdateForNewMatchingGroupingUp(currentMapping.ButtonVirtualKeycode);
-				if(updateResult)
-					vksToAddRange.emplace_back(*updateResult);
+				currentGroup.UpdateForNewMatchingGroupingUp(currentMapping.ButtonVirtualKeycode);
 			}
-
-			return vksToAddRange;
 		}
 
 	private:
@@ -334,5 +325,6 @@ namespace sds
 			return stateUpdate;
 		}
 	};
+	static_assert(std::movable<KeyboardOvertakingFilter>);
 
 }

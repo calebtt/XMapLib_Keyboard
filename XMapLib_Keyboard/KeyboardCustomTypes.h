@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #ifndef USERHAS_BOOST
-#define USERHAS_BOOST
+//#define USERHAS_BOOST
 #endif
 
 #include <deque>
