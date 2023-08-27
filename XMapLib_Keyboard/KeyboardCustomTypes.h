@@ -2,9 +2,9 @@
 
 #ifndef USERHAS_BOOST
 #define USERHAS_BOOST
-#include <deque>
 #endif
 
+#include <deque>
 #include <functional>
 #include <optional>
 #include <chrono>
@@ -19,6 +19,7 @@
 
 namespace sds::keyboardtypes
 {
+	static constexpr std::size_t SmallBufferSize{ 32 };
 	using Fn_t = std::function<void()>;
 	using OptFn_t = std::optional<Fn_t>;
 	using NanosDelay_t = std::chrono::nanoseconds;
@@ -35,10 +36,10 @@ namespace sds::keyboardtypes
 
 #ifdef USERHAS_BOOST
 	template<typename From, typename To>
-	using SmallFlatMap_t = boost::container::small_flat_map<From, To, 32>;
+	using SmallFlatMap_t = boost::container::small_flat_map<From, To, SmallBufferSize>;
 
 	template<typename T>
-	using SmallVector_t = boost::container::small_vector<T, 32>;
+	using SmallVector_t = boost::container::small_vector<T, SmallBufferSize>;
 #else
 	template<typename From, typename To>
 	using SmallFlatMap_t = std::map<From, To>;

@@ -7,135 +7,123 @@
 #include <format>
 #include <execution>
 #include <deque>
+#include <set>
+
 #include "ControllerButtonToActionMap.h"
 #include "KeyboardTranslationHelpers.h"
 
 namespace sds
 {
-	//using VkToMappingsTable_t = keyboardtypes::SmallFlatMap_t<keyboardtypes::VirtualKey_t, keyboardtypes::SmallVector_t<keyboardtypes::Index_t>>;
-
 	/**
-	 * \brief	A logical representation of a mapping's exclusivity group activation status, for this setup a single key
-	 *	in the exclusivity group can be 'activated' or have a key-down state at a time. It is exclusively the only key in the group set to down.
-	 * \remarks This abstraction manages the currently activated key being "overtaken" by another key from the same group and causing a key-up to be sent for the currently activated,
+	 * \brief	<para>A logical representation of a mapping's exclusivity group activation status, for this setup a single key in the exclusivity group can be 'activated'
+	 *	or have a key-down state at a time. It is exclusively the only key in the group forwarded to the translator for processing of key-down events.</para>
+	 * <para>Essentially this is used to ensure only a single key per exclusivity grouping is down at a time, and keys can overtake the current down key. </para>
+	 * \remarks This abstraction manages the currently activated key being "overtaken" by another key from the same group and causing a key-up/down to be sent for the currently activated,
 	 *	as well as moving the key in line behind the newly activated key. A much needed abstraction.
 	 */
 	class GroupActivationInfo final
 	{
+		using Elem_t = keyboardtypes::VirtualKey_t;
 	public:
 		// Exclusivity grouping value, mirroring the mapping value used.
 		keyboardtypes::GrpVal_t GroupingValue{};
 	private:
 		// First element of the queue is the activated mapping.
-		std::deque<std::size_t> ActivatedHashes;
+		std::deque<Elem_t> ActivatedValuesQueue;
 	public:
 		/**
-		 * \brief Bool value of the returned pair is whether or not the keydown should be filtered/removed.
-		 *	The optional size_t is (optionally) a hash of the mapping to send a new key-up for.
-		 * \remarks An <b>precondition</b> is that the mapping passed into this matches the exclusivity grouping!
+		 * \brief Boolean of the returned pair is whether or not the keydown should be filtered/removed.
+		 *	The optional value is (optionally) referring to the mapping to send a new key-up for.
+		 * \remarks An <b>precondition</b> is that the mapping's value passed into this has a matching exclusivity grouping!
 		 */
-		[[nodiscard]] auto UpdateForNewMatchingGroupingDown(const std::size_t newDownHash) noexcept -> std::pair<bool, std::optional<std::size_t>>
+		[[nodiscard]] auto UpdateForNewMatchingGroupingDown(const Elem_t newDownVk) noexcept -> std::pair<bool, std::optional<Elem_t>>
 		{
 			// Filter all of the hashes already activated/overtaken.
-			if (IsMappingActivatedOrOvertaken(newDownHash))
-				return std::make_pair(true, std::optional<std::size_t>{});
+			const bool isActivated = IsMappingActivated(newDownVk);
+			const bool isOvertaken = IsMappingOvertaken(newDownVk);
+			if (isOvertaken)
+				return std::make_pair(true, std::optional<Elem_t>{});
+			if(isActivated)
+				return std::make_pair(false, std::optional<Elem_t>{});
 
 			// If any mapping hash is already activated, this new hash will be overtaking it and thus require a key-up for current activated.
-			if(IsAnyMappingActivated())
+			if (IsAnyMappingActivated())
 			{
-				const auto returnedDownHash = ActivatedHashes.front();
-				ActivatedHashes.push_front(newDownHash);
-				return std::make_pair(false, returnedDownHash);
+				const auto currentDownValue = ActivatedValuesQueue.front();
+				ActivatedValuesQueue.push_front(newDownVk);
+				return std::make_pair(false, currentDownValue);
 			}
 
 			// New activated mapping case, add to queue in first position and don't filter. No key-up required.
-			ActivatedHashes.push_front(newDownHash);
-			return std::make_pair(false, std::optional<std::size_t>{});
+			ActivatedValuesQueue.push_front(newDownVk);
+			return std::make_pair(false, std::optional<Elem_t>{});
 		}
 
 		/**
-		 * \brief The optional size_t is (optionally) a hash of the mapping to send a new key-down for,
+		 * \brief The optional value is (optionally) referring to the mapping to send a new key-down for,
 		 *	in the event that the currently activated key is key-up'd and there is an overtaken key waiting behind it in the queue.
-		 * \remarks An <b>precondition</b> is that the mapping passed into this matches the exclusivity grouping!
+		 * \remarks An <b>precondition</b> is that the mapping passed into this has a matching exclusivity grouping!
 		 */
-		[[nodiscard]] auto UpdateForNewMatchingGroupingUp(const std::size_t newUpHash) noexcept -> std::optional<std::size_t>
+		[[nodiscard]] auto UpdateForNewMatchingGroupingUp(const Elem_t newUpVk) noexcept -> std::optional<Elem_t>
 		{
 			// Handle no hashes in queue to update case, and specific new up hash not in queue either.
-			if (!IsAnyMappingActivated() || !IsMappingActivatedOrOvertaken(newUpHash))
+			if (!IsAnyMappingActivated())
 				return {};
 
-			const auto findResult = std::ranges::find(ActivatedHashes, newUpHash);
-			const bool isFound = findResult != std::ranges::cend(ActivatedHashes);
+			const auto findResult = std::ranges::find(ActivatedValuesQueue, newUpVk);
+			const bool isFound = findResult != std::ranges::cend(ActivatedValuesQueue);
 
 			if (isFound)
 			{
-				const bool isInFirstPosition = findResult == ActivatedHashes.cbegin();
+				const bool isInFirstPosition = findResult == ActivatedValuesQueue.cbegin();
 
 				// Case wherein the currently activated mapping is the one getting a key-up.
 				if (isInFirstPosition)
 				{
-					if (ActivatedHashes.size() > 1)
+					if (ActivatedValuesQueue.size() > 1)
 					{
 						// If there is an overtaken queue, key-down the next key in line.
-						ActivatedHashes.pop_front();
+						ActivatedValuesQueue.pop_front();
 						// Return the new front hash to be sent a key-down.
-						return ActivatedHashes.front();
+						return ActivatedValuesQueue.front();
 					}
 				}
 
 				// otherwise, just remove it from the queue because it hasn't been key-down'd (it's one of the overtaken, or size is 1).
-				ActivatedHashes.erase(findResult);
+				ActivatedValuesQueue.erase(findResult);
 			}
-			// TODO add unit test for this class!
+			
 			return {};
 		}
 
-		[[nodiscard]] bool IsMappingActivated(const std::size_t newHash) const noexcept
+		[[nodiscard]] bool IsMappingActivated(const Elem_t vk) const noexcept
 		{
-			if (ActivatedHashes.empty())
+			if (ActivatedValuesQueue.empty())
 				return false;
-			return newHash == ActivatedHashes.front();
+			return vk == ActivatedValuesQueue.front();
 		}
-		[[nodiscard]] bool IsMappingOvertaken(const std::size_t newHash) const noexcept
+		[[nodiscard]] bool IsMappingOvertaken(const Elem_t vk) const noexcept
 		{
-			const bool isCurrentActivation = ActivatedHashes.front() == newHash;
-			const auto findResult = std::ranges::find(ActivatedHashes, newHash);
-			const bool isFound = findResult != std::ranges::cend(ActivatedHashes);
+			if (ActivatedValuesQueue.empty())
+				return false;
+
+			const bool isCurrentActivation = ActivatedValuesQueue.front() == vk;
+			const auto findResult = std::ranges::find(ActivatedValuesQueue, vk);
+			const bool isFound = findResult != std::ranges::cend(ActivatedValuesQueue);
 			return !isCurrentActivation && isFound;
 		}
-		[[nodiscard]] bool IsAnyMappingActivated() const noexcept { return !ActivatedHashes.empty(); }
-		[[nodiscard]] bool IsMappingActivatedOrOvertaken(const std::size_t newHash) const noexcept
+		[[nodiscard]] bool IsAnyMappingActivated() const noexcept { return !ActivatedValuesQueue.empty(); }
+		[[nodiscard]] bool IsMappingActivatedOrOvertaken(const Elem_t vk) const noexcept
 		{
-			const auto findResult = std::ranges::find(ActivatedHashes, newHash);
-			return findResult != std::ranges::cend(ActivatedHashes);
+			const auto findResult = std::ranges::find(ActivatedValuesQueue, vk);
+			return findResult != std::ranges::cend(ActivatedValuesQueue);
 		}
-		[[nodiscard]] auto GetGroupingValue() const noexcept -> keyboardtypes::GrpVal_t { return GroupingValue; }
-		[[nodiscard]] auto GetActivatedHash() const noexcept -> std::size_t
+		[[nodiscard]] auto GetActivatedValue() const noexcept -> Elem_t
 		{
-			assert(!ActivatedHashes.empty());
-			return ActivatedHashes.front();
+			assert(!ActivatedValuesQueue.empty());
+			return ActivatedValuesQueue.front();
 		}
 	};
-
-	//struct FilteredPair
-	//{
-	//	std::optional<TranslationResult> Original;
-	//	std::optional<TranslationResult> Overtaking;
-	//};
-
-	//[[nodiscard]]
-	//constexpr
-	//auto GetActivatedGroupingInfo(const std::span<GroupActivationInfo> groupRange, const std::integral auto groupValue, const std::integral auto hashToMatch)
-	//{
-	//	using std::ranges::find_if, std::ranges::cend;
-	//	const auto findResult = find_if(groupRange, [groupValue, hashToMatch](const GroupActivationInfo& e)
-	//	{
-	//		if (!e.IsAnyMappingActivated())
-	//			return false;
-	//		return e.GetActivatedHash() == hashToMatch && e.GetGroupingValue() == groupValue;
-	//	});
-	//	return std::make_pair(findResult != cend(groupRange), findResult);
-	//}
 
 	/**
 	 * \brief Returns the indices at which a mapping that matches the 'vk' was found.
@@ -157,100 +145,28 @@ namespace sds
 		return static_cast<Index_t>(distance(cbegin(mappingsRange), findResult));
 	}
 
-	//[[nodiscard]]
-	//inline
-	//auto GetGroupInfoForUnsetHashcode(const GroupActivationInfo& existingGroup) -> GroupActivationInfo
-	//{
-	//	return GroupActivationInfo{ existingGroup.GetGroupingValue() };
-	//}
-
-	//[[nodiscard]]
-	//inline
-	//auto GetGroupInfoForNewSetHashcode(const GroupActivationInfo& existingGroup, const std::size_t newlyActivatedHash)
-	//{
-	//	return GroupActivationInfo
-	//	{
-	//		.GroupingValue = existingGroup.GetGroupingValue(),
-	//		.ActivatedMappingHash = newlyActivatedHash
-	//	};
-	//}
-
-	///**
-	// * \brief Performs operations for suppressing a key-down VK in a state update buffer. Involves
-	// *	erasing the VK from the state update buffer, and updating the GroupActivationInfo if necessary.
-	// */
-	//inline
-	//auto SuppressKeyState(
-	//	keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>&& stateUpdate, 
-	//	const std::integral auto buttonVirtualKeycode, 
-	//	GroupActivationInfo& currentGroup, 
-	//	const std::integral auto currentMappingHash,
-	//	const bool isInOvertakenRangeAlready) -> keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>
-	//{
-	//	using std::ranges::find;
-	//	// TODO updating the group info will be handled via it's member funcs, and it will have encapsulated data.
-	//	if(!isInOvertakenRangeAlready)
-	//		currentGroup.OvertakenHashes.emplace_back(currentMappingHash);
-	//	stateUpdate.erase(std::ranges::find(stateUpdate, buttonVirtualKeycode));
-	//	return stateUpdate;
-	//}
-
-	//// Precondition is that VK for associated mapping reported a 'down'.
-	//inline
-	//auto UpdateGroupInfoFor(GroupActivationInfo& currentGroup, const CBActionMap& currentMapping)
-	//{
-	//	using std::ranges::find;
-	//	using std::ranges::cend;
-	//	using std::ranges::views::transform;
-	//	using std::ranges::views::filter;
-	//	using std::erase;
-
-	//	const auto currentMappingHash = hash_value(currentMapping);
-	//	const bool isAnyHashActivated = currentGroup.ActivatedMappingHash != 0;
-	//	const bool isCurrentMappingActivated = currentGroup.ActivatedMappingHash != currentMappingHash;
-	//	const bool isCurrentMappingOvertaken = find(currentGroup.OvertakenHashes, currentMappingHash) != cend(currentGroup.OvertakenHashes);
-	//	// TODO complete this
-	//	if (!isAnyHashActivated)
-	//	{
-	//		// Set as activated
-	//		currentGroup.ActivatedMappingHash = currentMappingHash;
-	//	}
-	//	if (isCurrentMappingOvertaken)
-	//	{
-	//		// No updates to group info necessary
-	//		return;
-	//	}
-	//	if (isAnyHashActivated && !isCurrentMappingActivated)
-	//	{
-
-	//	}
-	//}
-
-	//	// 
-	//	// TODO for this implementation, we will just use the order in which the mappings were added to the array as the priority.
-	//	// TODO actually, best to just use the virtual keycode lowest to highest
-
-
-	//	// TODO to handle multiple exclusivity group holding mapping changes at the same time requires some kind of strict priority ordering imposed on the
-	//	// TODO input polling results.
-
-	//	// TODO as in, if someone presses two exclusivity grouping having buttons at the exact same time and a single state update contains both, which is performed?
-	//	// TODO the arbitrary one that came first in the stream of 'down' virtual keycodes buffer? Then, to change that, someone would have to update GetDownVirtualKeycodesRange(...)
+	[[nodiscard]]
+	constexpr
+	auto IsMappingInRange(const CBActionMap& mapping, const std::span<const keyboardtypes::VirtualKey_t> downVirtualKeys)
+	{
+		return std::ranges::any_of(downVirtualKeys, [&mapping](const auto vk) { return vk == mapping.ButtonVirtualKeycode; });
+	}
 
 	/**
 	 * \brief	May be used to internally filter the poller's translations in order to apply the overtaking behavior.
+	 * \remarks This behavior is deviously complex, and modifications are best done to "GroupActivationInfo" only, if at all possible.
+	 *	In the event that a single state update contains presently un-handled key-downs for mappings with the same exclusivity grouping,
+	 *	it will only process a single overtaking key-down at a time, and will suppress the rest in the state update to be handled on the next iteration.
 	 */
 	class KeyboardOvertakingFilter final
 	{
 		// Mapping of exclusivity grouping value to 
 		using MapType_t = keyboardtypes::SmallFlatMap_t<keyboardtypes::GrpVal_t, GroupActivationInfo>;
 
-		// Constructed from the mapping list, pairs with ex. group data.
-		//keyboardtypes::SmallVector_t<GroupActivationInfo> m_exclusivityGroupInfo;
-
 		// span to mappings
 		std::span<CBActionMap> m_mappings;
-		KeyboardSettingsPack m_settings;
+
+		// map of grouping value to GroupActivationInfo container.
 		MapType_t m_groupMap;
 	public:
 		void SetMappingRange(const std::span<CBActionMap> mappingsList)
@@ -271,20 +187,31 @@ namespace sds
 
 		// This function is used to filter the controller state updates before they are sent to the translator.
 		// It will effect overtaking behavior by modifying the state update buffer, which just contains the virtual keycodes that are reported as down.
-		// TODO complete this
+		[[nodiscard]]
 		auto GetFilteredButtonState(keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>&& stateUpdate) -> keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>
 		{
-			using std::ranges::views::filter;
-			using std::ranges::cend;
-			using std::ranges::find;
-			using std::ranges::find_if;
+			using std::ranges::sort;
 
-			stateUpdate = FilterDownTranslation(std::move(stateUpdate));
+			// Sorting provides an ordering to which down states with an already handled exclusivity grouping get filtered out for this iteration.
+			//sort(stateUpdate, std::ranges::less{}); // TODO <-- problem for the (current) unit testing, optional anyway
 
-			return stateUpdate;
+			//auto stateCopy = stateUpdate;
+			stateUpdate = FilterStateUpdateForUniqueExclusivityGroups(std::move(stateUpdate));
+
+			auto filteredForDown = FilterDownTranslation(stateUpdate);
+
+			auto filteredForUp = FilterUpTranslation(stateUpdate);
+
+			return filteredForDown;
+			// TODO add more tests, determine if needed.
+			//filteredForDown.append_range(filteredForUp);
+			//const std::set<keyboardtypes::VirtualKey_t> outputSet{ filteredForDown.cbegin(), filteredForDown.cend() };
+			//return { outputSet.cbegin(), outputSet.cend() };
 		}
 
-		auto FilterDownTranslation(keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>&& stateUpdate)
+	private:
+		[[nodiscard]]
+		auto FilterDownTranslation(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& stateUpdate)
 		{
 			using std::ranges::find;
 			using std::ranges::cend;
@@ -292,79 +219,64 @@ namespace sds
 			using std::ranges::views::filter;
 			using std::erase;
 
+			auto stateUpdateCopy = stateUpdate;
+
 			// filters for all mappings of interest per the current 'down' VK buffer.
 			const auto exGroupPred = [this](const auto ind) { return GetMappingAt(ind).ExclusivityGrouping.has_value(); };
 			const auto mappingIndexPred = [this](const auto vk) { return GetMappingIndexForVk(vk, m_mappings); };
 
-			for(const auto index : stateUpdate | transform(mappingIndexPred) | filter(exGroupPred))
+			keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t> vksToRemoveRange;
+
+			for(const auto index : stateUpdateCopy | transform(mappingIndexPred) | filter(exGroupPred))
 			{
 				const auto& currentMapping = GetMappingAt(index);
 				auto& currentGroup = m_groupMap[*currentMapping.ExclusivityGrouping];
 
-				//UpdateGroupInfoFor(currentGroup, currentMapping);
-
-				//const auto currentMappingHash = hash_value(currentMapping);
-				//const bool isAnyHashActivated = currentGroup.ActivatedMappingHash != 0;
-				//const bool isCurrentMappingActivated = currentGroup.ActivatedMappingHash != currentMappingHash;
-				//const bool isCurrentMappingOvertaken = find(currentGroup.OvertakenHashes, currentMappingHash) != cend(currentGroup.OvertakenHashes);
+				const auto updateResult = currentGroup.UpdateForNewMatchingGroupingDown(currentMapping.ButtonVirtualKeycode);
+				const bool shouldFilter = std::get<0>(updateResult);
+				const auto upOpt = std::get<1>(updateResult);
+				if(shouldFilter)
+				{
+					vksToRemoveRange.emplace_back(currentMapping.ButtonVirtualKeycode);
+				}
+				if(upOpt)
+				{
+					vksToRemoveRange.emplace_back(*upOpt);
+				}
 			}
-			return stateUpdate;
+			for(const auto vk : vksToRemoveRange)
+			{
+				const auto findResult = find(stateUpdateCopy, vk);
+				if(findResult != cend(stateUpdateCopy))
+					stateUpdateCopy.erase(findResult);
+			}
+
+			return stateUpdateCopy;
 		}
 
-		auto FilterUpTranslation(keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>&& stateUpdate)
+		// it will process only one key per ex. group per iteration. The others will be filtered out and handled on the next iteration.
+		[[nodiscard]]
+		auto FilterUpTranslation(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& stateUpdate)
 		{
-			using std::ranges::find;
-			using std::ranges::cend;
-			using std::ranges::views::transform;
 			using std::ranges::views::filter;
-			using std::erase;
 
-			// filters for all mappings of interest per the current 'down' VK buffer.
-			const auto exGroupPred = [this](const auto ind) { return GetMappingAt(ind).ExclusivityGrouping.has_value(); };
-			const auto mappingIndexPred = [this](const auto vk) { return GetMappingIndexForVk(vk, m_mappings); };
-
-			for (const auto index : stateUpdate | transform(mappingIndexPred) | filter(exGroupPred))
+			// filters for all mappings of interest per the current 'down' VK buffer (the UP mappings in this case).
+			const auto exGroupPred = [](const CBActionMap& currentMapping) { return currentMapping.ExclusivityGrouping.has_value(); };
+			const auto stateUpdateUpPred = [&stateUpdate](const CBActionMap& currentMapping) { return !IsMappingInRange(currentMapping, stateUpdate); };
+			
+			// TODO might use a map instead of O(n^2) iteration if it's faster.
+			keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t> vksToAddRange;
+			auto filteredMappings = m_mappings | filter(exGroupPred) | filter(stateUpdateUpPred);
+			for (const auto& currentMapping : filteredMappings)
 			{
-				const auto& currentMapping = GetMappingAt(index);
 				auto& currentGroup = m_groupMap[*currentMapping.ExclusivityGrouping];
+				const auto updateResult = currentGroup.UpdateForNewMatchingGroupingUp(currentMapping.ButtonVirtualKeycode);
+				if(updateResult)
+					vksToAddRange.emplace_back(*updateResult);
 			}
-			//if (!translation.ExclusivityGrouping)
-			//	return { .Original = translation };
 
-			//const auto groupIndex = GetGroupingInfoIndex(*translation.ExclusivityGrouping);
-			//assert(groupIndex.has_value());
-			//auto& currentGroupInfo = m_exclusivityGroupInfo[*groupIndex];
-
-
-
-			//const auto foundResult = find(currentGroupInfo.OvertakenHashes, translation.MappingHash);
-			//const bool isTranslationAlreadyOvertaken = foundResult != cend(currentGroupInfo.OvertakenHashes);
-			//const bool isTranslationAlreadyActivated = currentGroupInfo.ActivatedMappingHash == translation.MappingHash;
-			//const bool hasWaitingOvertaken = !currentGroupInfo.OvertakenHashes.empty();
-
-			//FilteredPair filteredUp{ .Original = translation };
-			//if (isTranslationAlreadyActivated)
-			//{
-			//	// Remove from activated slot, replace with next in line
-			//	currentGroupInfo.ActivatedMappingHash = {};
-			//	if (hasWaitingOvertaken)
-			//	{
-			//		currentGroupInfo.ActivatedMappingHash = *currentGroupInfo.OvertakenHashes.cbegin();
-			//		currentGroupInfo.OvertakenHashes.erase(currentGroupInfo.OvertakenHashes.cbegin());
-			//		// Prepare key-down for it.
-			//		const auto newDownMappingIndex = GetMappingIndexByHash(currentGroupInfo.ActivatedMappingHash);
-			//		filteredUp.Overtaking = GetInitialKeyDownTranslationResult(m_mappings[newDownMappingIndex]);
-			//	}
-			//}
-			//else if (isTranslationAlreadyOvertaken)
-			//{
-			//	// Does not require sending a key-up for these.
-			//	currentGroupInfo.OvertakenHashes.erase(foundResult);
-			//}
-
-			//return filteredUp;
+			return vksToAddRange;
 		}
-
 
 	private:
 		[[nodiscard]]
@@ -374,92 +286,53 @@ namespace sds
 			return m_mappings[index];
 		}
 
+		/**
+		 * \brief Used to remove VKs with an exclusivity grouping that another state update VK already has. Processed from begin to end, so the first processed VK will be the left-most and
+		 *	duplicates to the right will be removed.
+		 * \remarks This is essential because processing more than one exclusivity grouping having mapping in a single iteration of a filter will mean the first ex. group vks were not actually processed
+		 *	by the translator, yet their state would be updated by the filter incorrectly. Also, VKs in the state update must be unique! One VK per mapping is a hard precondition.
+		 * \return "filtered" state update.
+		 */
 		[[nodiscard]]
-		constexpr
-		auto GetMappingIndexByVk(const keyboardtypes::VirtualKey_t keyCode) const -> std::size_t
+		auto FilterStateUpdateForUniqueExclusivityGroups(keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>&& stateUpdate)
 		{
-			for (std::size_t i{}; i < m_mappings.size(); ++i)
+			using std::ranges::find, std::ranges::cend;
+			using StateRange_t = std::remove_cvref_t<decltype(stateUpdate)>;
+			using VecIt_t = StateRange_t::const_iterator;
+
+			keyboardtypes::SmallVector_t<keyboardtypes::GrpVal_t> groupingValueBuffer;
+			keyboardtypes::SmallVector_t<VecIt_t> positionsToRemove;
+			
+			for (auto vkIt = stateUpdate.cbegin(); vkIt != stateUpdate.cend(); ++vkIt)
 			{
-				if (hash_value(m_mappings[i]) == keyCode)
-					return i;
+				const auto vk = *vkIt;
+				const auto foundMappingForVk = find(m_mappings, vk, &CBActionMap::ButtonVirtualKeycode);
+				if (foundMappingForVk != cend(m_mappings))
+				{
+					if (foundMappingForVk->ExclusivityGrouping)
+					{
+						const auto grpVal = *foundMappingForVk->ExclusivityGrouping;
+						auto& currentGroup = m_groupMap[grpVal];
+						if (!currentGroup.IsMappingActivatedOrOvertaken(vk))
+						{
+							const auto groupingFindResult = find(groupingValueBuffer, grpVal);
+
+							// If already in located, being handled groupings, add to remove buffer.
+							if (groupingFindResult != cend(groupingValueBuffer))
+								positionsToRemove.emplace_back(vkIt);
+							// Otherwise, add this new grouping to the grouping value buffer.
+							else
+								groupingValueBuffer.emplace_back(grpVal);
+						}
+					}
+				}
 			}
-			assert(false);
-			return {};
+
+			for (const auto& it : positionsToRemove)
+				stateUpdate.erase(it);
+
+			return stateUpdate;
 		}
-
-		[[nodiscard]]
-		constexpr
-		auto GetMappingIndexByHash(const std::size_t hash) const -> std::size_t
-		{
-			for (std::size_t i{}; i < m_mappings.size(); ++i)
-			{
-				if (hash_value(m_mappings[i]) == hash)
-					return i;
-			}
-			assert(false);
-			return {};
-		}
-
-		//// Handle not activated grouping (set hash-code as activated for the grouping)
-		//void UpdateGroupInfoForNewDown(const TranslationResult& translation, const std::size_t groupIndex)
-		//{
-		//	m_exclusivityGroupInfo[groupIndex] = GetGroupInfoForNewSetHashcode(m_exclusivityGroupInfo[groupIndex], translation.MappingHash);
-		//}
-
-		//// Handle overtaking down translation
-		//void UpdateGroupInfoForOvertakingDown(const TranslationResult& translation, const std::size_t groupIndex)
-		//{
-		//	auto& currentRange = m_exclusivityGroupInfo[groupIndex].OvertakenHashes;
-		//	currentRange.emplace_back(0);
-		//	std::ranges::shift_right(currentRange, 1);
-		//	currentRange[0] = m_exclusivityGroupInfo[groupIndex].ActivatedMappingHash;
-		//	m_exclusivityGroupInfo[groupIndex].ActivatedMappingHash = translation.MappingHash;
-		//	m_exclusivityGroupInfo[groupIndex].GroupingValue = m_exclusivityGroupInfo[groupIndex].GroupingValue;
-		//}
-
-		//// Handle up translation with matching hash-code set as activated (unset the activated grouping hash-code)
-		//void UpdateGroupInfoForUp(const std::size_t groupIndex)
-		//{
-		//	m_exclusivityGroupInfo[groupIndex] = GetGroupInfoForUnsetHashcode(m_exclusivityGroupInfo[groupIndex]);
-		//}
-
-		//// Handle up translation with matching hash-code set as activated--but also more than one mapping in the overtaken buffer.
-		//void UpdateGroupInfoForUpOfActivatedHash(const std::size_t groupIndex)
-		//{
-		//	using std::ranges::begin,
-		//		std::ranges::cbegin,
-		//		std::ranges::end,
-		//		std::ranges::cend,
-		//		std::ranges::remove;
-
-		//	auto& currentGroupInfo = m_exclusivityGroupInfo[groupIndex];
-		//	GroupActivationInfo newGroup{
-		//		.GroupingValue = currentGroupInfo.GroupingValue,
-		//		.ActivatedMappingHash = {},
-		//		.OvertakenHashes = {}
-		//	};
-
-		//	auto& currentOvertakenBuffer = currentGroupInfo.OvertakenHashes;
-		//	const auto firstElement = cbegin(currentOvertakenBuffer);
-		//	if (firstElement != cend(currentOvertakenBuffer))
-		//	{
-		//		newGroup.ActivatedMappingHash = *firstElement;
-		//		currentOvertakenBuffer.erase(firstElement);
-		//		newGroup.OvertakenHashes = currentOvertakenBuffer;
-		//	}
-
-		//	//auto& currentGroup = m_exclusivityGroupInfo[groupIndex];
-		//	//auto tempGroupInfo = GetGroupInfoForUnsetHashcode(currentGroup);
-		//	//const bool isOvertakenBufferEmpty = currentGroup.OvertakenHashes.empty();
-		//	//if(!isOvertakenBufferEmpty)
-		//	//{
-		//	//	const auto hashedValueForFirstInLine = *currentGroup.OvertakenHashes.begin();
-		//	//	currentGroup.OvertakenHashes.erase(currentGroup.OvertakenHashes.begin());
-		//	//	tempGroupInfo.ActivatedMappingHash = hashedValueForFirstInLine;
-		//	//}
-		//	//tempGroupInfo.OvertakenHashes = m_exclusivityGroupInfo[groupIndex].OvertakenHashes;
-		//	//m_exclusivityGroupInfo[groupIndex] = tempGroupInfo;
-		//}
 	};
 
 }
