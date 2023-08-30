@@ -17,7 +17,6 @@ namespace TestKeyboard
             using namespace std::chrono_literals;
             using namespace std::chrono;
 
-            constexpr sds::KeyboardSettingsPack settingsPack;
             constexpr sds::keyboardtypes::VirtualKey_t buttonA{ XINPUT_GAMEPAD_A };
             constexpr sds::keyboardtypes::VirtualKey_t buttonB{ XINPUT_GAMEPAD_B };
 
@@ -41,11 +40,9 @@ namespace TestKeyboard
 
         TEST_METHOD(OvertakerTest)
         {
-            // TODO finish exclusivity group behavior.
             using namespace std::chrono_literals;
             using namespace std::chrono;
 
-            constexpr sds::KeyboardSettingsPack settingsPack;
             constexpr sds::keyboardtypes::VirtualKey_t buttonA{ XINPUT_GAMEPAD_A };
             constexpr sds::keyboardtypes::VirtualKey_t buttonB{ XINPUT_GAMEPAD_B };
             sds::keyboardtypes::SmallVector_t<sds::keyboardtypes::VirtualKey_t> stateUpdate{ buttonA, buttonB };
@@ -60,8 +57,6 @@ namespace TestKeyboard
             // Set mapping range on the filter (not necessary for normal use).
             filter.SetMappingRange(maps2);
 
-
-            //sds::KeyboardTranslator<> poller{ std::move(maps2), sds::KeyboardOvertakingFilter{} };
             const auto stateUpdatesRange = filter.GetFilteredButtonState(std::move(stateUpdate));
             Assert::IsTrue(stateUpdatesRange.size() == 1, L"State update count not 1.");
 

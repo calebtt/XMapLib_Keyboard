@@ -55,6 +55,19 @@ namespace sds
 	static_assert(std::copyable<MappingStateManager>);
 	static_assert(std::movable<MappingStateManager>);
 
+	
+	/**
+	 * \brief Used to determine if the MappingStateManager is in a state that would require some cleanup before destruction.
+	 * \remarks If you add another state for the mapping, make sure to update this.
+	 * \return True if mapping needs cleanup, false otherwise.
+	 */
+	[[nodiscard]]
+	constexpr
+	bool DoesMappingNeedCleanup(const MappingStateManager& mapping) noexcept
+	{
+		return mapping.IsDown() || mapping.IsRepeating();
+	}
+
 	/**
 	 * \brief	Controller button to action mapping. This is how a mapping of a controller button to an action is described.
 	 */

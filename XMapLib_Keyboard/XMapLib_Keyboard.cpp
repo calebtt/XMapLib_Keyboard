@@ -318,7 +318,7 @@ auto RunTestDriverLoop()
     const auto exitFuture = std::async(std::launch::async, [&]() { gec.GetExitSignal(); });
     while (!gec.IsDone)
     {
-        constexpr auto sleepDelay = std::chrono::nanoseconds{ 500us };
+        constexpr auto sleepDelay = std::chrono::nanoseconds{ 750us };
         const auto translation = translator(sds::GetWrappedLegacyApiStateUpdate(settingsPack));
         translation();
         if(sds::ControllerStatus::IsControllerConnected(settingsPack.PlayerInfo.PlayerId))

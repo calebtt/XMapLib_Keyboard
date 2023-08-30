@@ -230,7 +230,7 @@ namespace sds
 			keyboardtypes::SmallVector_t<TranslationResult> translations;
 			for(auto & mapping : m_mappings)
 			{
-				if(const bool isLastActionDownOrRepeat = mapping.LastAction.IsDown() || mapping.LastAction.IsRepeating())
+				if(DoesMappingNeedCleanup(mapping.LastAction))
 				{
 					translations.emplace_back(GetKeyUpTranslationResult(mapping));
 				}
