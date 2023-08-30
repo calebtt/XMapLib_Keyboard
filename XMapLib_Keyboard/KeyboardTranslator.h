@@ -237,13 +237,6 @@ namespace sds
 			}
 			return translations;
 		}
-
-		// To provide read-only access to the internal mappings buffer.
-		[[nodiscard]]
-		auto GetMappingsRef() const noexcept -> const MappingVector_t&
-		{
-			return m_mappings;
-		}
 	};
 
 	static_assert(InputPoller_c<KeyboardTranslator<>>);
