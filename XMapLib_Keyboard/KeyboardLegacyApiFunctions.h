@@ -10,6 +10,8 @@
 
 #include "KeyboardCustomTypes.h"
 #include "KeyboardSettingsPack.h"
+#include "KeyboardPolarInfo.h"
+#include "KeyboardStickDirection.h"
 
 namespace sds
 {
@@ -44,39 +46,48 @@ namespace sds
 	inline
 	auto GetDownVirtualKeycodesRange(const KeyboardSettings& settingsPack, const XINPUT_STATE& controllerState) -> keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>
 	{
+		// Keys
 		keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t> allKeys{};
 		for (const auto elem : settingsPack.ButtonCodeArray)
 		{
 			if (controllerState.Gamepad.wButtons & elem)
-			{
 				allKeys.emplace_back(elem);
-			}
 		}
 
+		// Triggers
 		if (IsLeftTriggerBeyondThreshold(controllerState.Gamepad.bLeftTrigger, settingsPack.LeftTriggerThreshold))
-			allKeys.emplace_back(settingsPack.LeftTriggerVk);
+			allKeys.emplace_back(settingsPack.LeftTrigger);
 		if (IsRightTriggerBeyondThreshold(controllerState.Gamepad.bRightTrigger, settingsPack.RightTriggerThreshold))
-			allKeys.emplace_back(settingsPack.RightTriggerVk);
+			allKeys.emplace_back(settingsPack.RightTrigger);
 
+		// Stick axes
 		constexpr auto LeftStickDz{ settingsPack.LeftStickDeadzone };
 		constexpr auto RightStickDz{ settingsPack.RightStickDeadzone };
-		if (controllerState.Gamepad.sThumbLX < (-LeftStickDz))
-			allKeys.emplace_back(settingsPack.LeftThumbstickLeft);
-		if (controllerState.Gamepad.sThumbLX > LeftStickDz)
-			allKeys.emplace_back(settingsPack.LeftThumbstickRight);
-		if (controllerState.Gamepad.sThumbLY > LeftStickDz)
-			allKeys.emplace_back(settingsPack.LeftThumbstickUp);
-		if (controllerState.Gamepad.sThumbLY < (-LeftStickDz))
-			allKeys.emplace_back(settingsPack.LeftThumbstickDown);
 
-		if (controllerState.Gamepad.sThumbRX < (-RightStickDz))
-			allKeys.emplace_back(settingsPack.RightThumbstickLeft);
-		if (controllerState.Gamepad.sThumbRX > RightStickDz)
-			allKeys.emplace_back(settingsPack.RightThumbstickRight);
-		if (controllerState.Gamepad.sThumbRY > RightStickDz)
-			allKeys.emplace_back(settingsPack.RightThumbstickUp);
-		if (controllerState.Gamepad.sThumbRY < (-RightStickDz))
-			allKeys.emplace_back(settingsPack.RightThumbstickDown);
+		const auto leftThumbstickX = controllerState.Gamepad.sThumbLX;
+		const auto rightThumbstickX = controllerState.Gamepad.sThumbRX;
+
+		const auto leftThumbstickY = controllerState.Gamepad.sThumbLY;
+		const auto rightThumbstickY = controllerState.Gamepad.sThumbRY;
+
+		const auto leftStickPolarInfo = ComputePolarPair(leftThumbstickX, leftThumbstickY);
+		const auto rightStickPolarInfo = ComputePolarPair(rightThumbstickX, rightThumbstickY);
+
+		const auto leftDirection = GetDirectionForPolarTheta(leftStickPolarInfo.polar_theta_angle);
+		const auto rightDirection = GetDirectionForPolarTheta(rightStickPolarInfo.polar_theta_angle);
+
+		const auto leftThumbstickVk = GetVirtualKeyFromDirection(settingsPack, leftDirection, ControllerStick::LeftStick);
+		const auto rightThumbstickVk = GetVirtualKeyFromDirection(settingsPack, rightDirection, ControllerStick::RightStick);
+
+		// TODO deadzone appears too low on left stick, check this part.
+		const bool leftIsDown = leftStickPolarInfo.polar_radius > LeftStickDz && leftThumbstickVk.has_value();
+		const bool rightIsDown = rightStickPolarInfo.polar_radius > RightStickDz && rightThumbstickVk.has_value();
+
+		if (leftIsDown)
+			allKeys.emplace_back(leftThumbstickVk.value());
+		if (rightIsDown)
+			allKeys.emplace_back(rightThumbstickVk.value());
+
 		return allKeys;
 	}
 

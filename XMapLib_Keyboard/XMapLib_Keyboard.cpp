@@ -58,146 +58,50 @@ auto GetDriverButtonMappings()
     {
         return [=]() { PrintMessageAndTime(keyName + "=[RESET]"); };
     };
-    // These are a good idea in case someone wants this to work for XINPUT_KEYSTROKE instead, just change these to the VK_ ones.
-    constexpr keyboardtypes::VirtualKey_t ButtonA{XINPUT_GAMEPAD_A};
-    constexpr keyboardtypes::VirtualKey_t ButtonB{XINPUT_GAMEPAD_B};
-    constexpr keyboardtypes::VirtualKey_t ButtonX{XINPUT_GAMEPAD_X};
-    constexpr keyboardtypes::VirtualKey_t ButtonY{XINPUT_GAMEPAD_Y};
 
-    constexpr keyboardtypes::VirtualKey_t ButtonStart{XINPUT_GAMEPAD_START};
-    constexpr keyboardtypes::VirtualKey_t ButtonBack{XINPUT_GAMEPAD_BACK};
-    constexpr keyboardtypes::VirtualKey_t ButtonShoulderLeft{XINPUT_GAMEPAD_LEFT_SHOULDER};
-    constexpr keyboardtypes::VirtualKey_t ButtonShoulderRight{XINPUT_GAMEPAD_RIGHT_SHOULDER};
+    const auto GetBuiltMapForKeyNamed = [&](const std::string & keyName, const auto virtualKey, const int exGroup, const auto firstDelay)
+    {
+        return CBActionMap
+        {
+            .ButtonVirtualKeycode = virtualKey,
+            .UsesInfiniteRepeat = true,
+            .ExclusivityGrouping = exGroup,
+            .OnDown = GetDownLambdaForKeyNamed(keyName),
+            .OnUp = GetUpLambdaForKeyNamed(keyName),
+            .OnRepeat = GetRepeatLambdaForKeyNamed(keyName),
+            .OnReset = GetResetLambdaForKeyNamed(keyName),
+            .DelayBeforeFirstRepeat = firstDelay
+        };
+    };
 
-	constexpr keyboardtypes::VirtualKey_t DpadUp{XINPUT_GAMEPAD_DPAD_UP};
-    constexpr keyboardtypes::VirtualKey_t DpadDown{XINPUT_GAMEPAD_DPAD_DOWN};
-    constexpr keyboardtypes::VirtualKey_t DpadLeft{XINPUT_GAMEPAD_DPAD_LEFT};
-    constexpr keyboardtypes::VirtualKey_t DpadRight{XINPUT_GAMEPAD_DPAD_RIGHT};
-
-    constexpr keyboardtypes::VirtualKey_t ThumbLeftClick{XINPUT_GAMEPAD_LEFT_THUMB};
-    constexpr keyboardtypes::VirtualKey_t ThumbRightClick{XINPUT_GAMEPAD_RIGHT_THUMB};
-
-    static constexpr keyboardtypes::VirtualKey_t LeftThumbstickLeft{VK_GAMEPAD_LEFT_THUMBSTICK_LEFT}; // These are represented internally with the VK defines as there is none for the old API.
-    static constexpr keyboardtypes::VirtualKey_t LeftThumbstickRight{VK_GAMEPAD_LEFT_THUMBSTICK_RIGHT};
-    static constexpr keyboardtypes::VirtualKey_t LeftThumbstickUp{VK_GAMEPAD_LEFT_THUMBSTICK_UP};
-    static constexpr keyboardtypes::VirtualKey_t LeftThumbstickDown{VK_GAMEPAD_LEFT_THUMBSTICK_DOWN};
-
-    static constexpr keyboardtypes::VirtualKey_t RightThumbstickLeft{VK_GAMEPAD_RIGHT_THUMBSTICK_LEFT};
-    static constexpr keyboardtypes::VirtualKey_t RightThumbstickRight{VK_GAMEPAD_RIGHT_THUMBSTICK_RIGHT};
-    static constexpr keyboardtypes::VirtualKey_t RightThumbstickUp{VK_GAMEPAD_RIGHT_THUMBSTICK_UP};
-    static constexpr keyboardtypes::VirtualKey_t RightThumbstickDown{VK_GAMEPAD_RIGHT_THUMBSTICK_DOWN};
-
-    static constexpr keyboardtypes::VirtualKey_t TriggerLeft{VK_GAMEPAD_LEFT_TRIGGER};
-    static constexpr keyboardtypes::VirtualKey_t TriggerRight{VK_GAMEPAD_RIGHT_TRIGGER};
+    KeyboardSettings ksp;
 
     vector mapBuffer
     {
-        CBActionMap{
-            .ButtonVirtualKeycode = ButtonA,
-            .UsesInfiniteRepeat = true,
-            .ExclusivityGrouping = PadButtonsGroup,
-            .OnDown = GetDownLambdaForKeyNamed("[PAD_A]"),
-            .OnUp = GetUpLambdaForKeyNamed("[PAD_A]"),
-            .OnRepeat = GetRepeatLambdaForKeyNamed("[PAD_A]"),
-            .DelayBeforeFirstRepeat = 500ms
-        },
-        CBActionMap{
-            .ButtonVirtualKeycode = ButtonB,
-            .UsesInfiniteRepeat = false,
-            .SendsFirstRepeatOnly = true,
-            .ExclusivityGrouping = PadButtonsGroup,
-            .OnDown = GetDownLambdaForKeyNamed("[PAD_B]"),
-            .OnUp = GetUpLambdaForKeyNamed("[PAD_B]"),
-            .OnRepeat = GetRepeatLambdaForKeyNamed("[PAD_B]"),
-            .OnReset = GetResetLambdaForKeyNamed("[PAD_B]"),
-            .DelayBeforeFirstRepeat = 2s
-        },
-    	CBActionMap{
-            .ButtonVirtualKeycode = ButtonX,
-            .UsesInfiniteRepeat = false,
-            .SendsFirstRepeatOnly = true,
-            .ExclusivityGrouping = PadButtonsGroup,
-            .OnDown = GetDownLambdaForKeyNamed("[PAD_X]"),
-            .OnUp = GetUpLambdaForKeyNamed("[PAD_X]"),
-            .OnRepeat = GetRepeatLambdaForKeyNamed("[PAD_X]"),
-            .OnReset = GetResetLambdaForKeyNamed("[PAD_X]"),
-            .DelayBeforeFirstRepeat = 2s
-        },
-        CBActionMap{
-            .ButtonVirtualKeycode = ButtonY,
-            .UsesInfiniteRepeat = false,
-            .SendsFirstRepeatOnly = true,
-            .ExclusivityGrouping = PadButtonsGroup,
-            .OnDown = GetDownLambdaForKeyNamed("[PAD_Y]"),
-            .OnUp = GetUpLambdaForKeyNamed("[PAD_Y]"),
-            .OnRepeat = GetRepeatLambdaForKeyNamed("[PAD_Y]"),
-            .OnReset = GetResetLambdaForKeyNamed("[PAD_Y]"),
-            .DelayBeforeFirstRepeat = 2s
-        },
+        // Pad buttons
+        GetBuiltMapForKeyNamed("[PAD_A]", ksp.ButtonA, PadButtonsGroup, 500ms),
+        GetBuiltMapForKeyNamed("[PAD_B]", ksp.ButtonB, PadButtonsGroup, 500ms),
+        GetBuiltMapForKeyNamed("[PAD_X]", ksp.ButtonX, PadButtonsGroup, 500ms),
+        GetBuiltMapForKeyNamed("[PAD_Y]", ksp.ButtonY, PadButtonsGroup, 500ms),
         // Left thumbstick directional stuff
+        GetBuiltMapForKeyNamed("[LTHUMB_UP]", ksp.LeftThumbstickUp, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_DOWN]", ksp.LeftThumbstickDown, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_RIGHT]", ksp.LeftThumbstickRight, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_LEFT]", ksp.LeftThumbstickLeft, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_DOWN_RIGHT]", ksp.LeftThumbstickDownRight, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_DOWN_LEFT]", ksp.LeftThumbstickDownLeft, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_UP_RIGHT]", ksp.LeftThumbstickUpRight, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_UP_LEFT]", ksp.LeftThumbstickUpLeft, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTRIGGER]", ksp.LeftTrigger, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[RTRIGGER]", ksp.RightTrigger, LeftThumbGroup, 500ms),
+        // Shoulder buttons
         CBActionMap{
-            .ButtonVirtualKeycode = LeftThumbstickUp,
-            .UsesInfiniteRepeat = true,
-            .ExclusivityGrouping = LeftThumbGroup,
-            .OnDown = GetDownLambdaForKeyNamed("[LTHUMB_UP]"),
-            .OnUp = GetUpLambdaForKeyNamed("[LTHUMB_UP]"),
-            .OnRepeat = GetRepeatLambdaForKeyNamed("[LTHUMB_UP]"),
-            .OnReset = GetResetLambdaForKeyNamed("[LTHUMB_UP]"),
-        },
-        CBActionMap{
-            .ButtonVirtualKeycode = LeftThumbstickDown,
-            .UsesInfiniteRepeat = true,
-            .ExclusivityGrouping = LeftThumbGroup,
-            .OnDown = GetDownLambdaForKeyNamed("[LTHUMB_DOWN]"),
-            .OnUp = GetUpLambdaForKeyNamed("[LTHUMB_DOWN]"),
-            .OnRepeat = GetRepeatLambdaForKeyNamed("[LTHUMB_DOWN]"),
-            .OnReset = GetResetLambdaForKeyNamed("[LTHUMB_DOWN]"),
-        },
-        CBActionMap{
-            .ButtonVirtualKeycode = LeftThumbstickRight,
-            .UsesInfiniteRepeat = true,
-            .ExclusivityGrouping = LeftThumbGroup,
-            .OnDown = GetDownLambdaForKeyNamed("[LTHUMB_RIGHT]"),
-            .OnUp = GetUpLambdaForKeyNamed("[LTHUMB_RIGHT]"),
-            .OnRepeat = GetRepeatLambdaForKeyNamed("[LTHUMB_RIGHT]"),
-            .OnReset = GetResetLambdaForKeyNamed("[LTHUMB_RIGHT]"),
-        },
-        CBActionMap{
-            .ButtonVirtualKeycode = LeftThumbstickLeft,
-            .UsesInfiniteRepeat = true,
-            .ExclusivityGrouping = LeftThumbGroup,
-            .OnDown = GetDownLambdaForKeyNamed("[LTHUMB_LEFT]"),
-            .OnUp = GetUpLambdaForKeyNamed("[LTHUMB_LEFT]"),
-            .OnRepeat = GetRepeatLambdaForKeyNamed("[LTHUMB_LEFT]"),
-            .OnReset = GetResetLambdaForKeyNamed("[LTHUMB_LEFT]"),
-        },
-        CBActionMap{
-            .ButtonVirtualKeycode = TriggerLeft,
-            .UsesInfiniteRepeat = false,
-            .ExclusivityGrouping = LeftThumbGroup,
-            .OnDown = GetDownLambdaForKeyNamed("[LTRIGGER]"),
-            .OnUp = GetUpLambdaForKeyNamed("[LTRIGGER]"),
-            .OnReset = GetResetLambdaForKeyNamed("[LTRIGGER]"),
-            .DelayBeforeFirstRepeat = 1ns,
-            .DelayForRepeats = 1ns
-        },
-    	CBActionMap{
-            .ButtonVirtualKeycode = TriggerRight,
-            .UsesInfiniteRepeat = false,
-            .ExclusivityGrouping = LeftThumbGroup,
-            .OnDown = GetDownLambdaForKeyNamed("[RTRIGGER]"),
-            .OnUp = GetUpLambdaForKeyNamed("[RTRIGGER]"),
-            .OnReset = GetResetLambdaForKeyNamed("[RTRIGGER]"),
-            .DelayBeforeFirstRepeat = 1ns,
-            .DelayForRepeats = 1ns
-        },
-        CBActionMap{
-            .ButtonVirtualKeycode = ButtonShoulderRight,
+            .ButtonVirtualKeycode = ksp.ButtonShoulderRight,
             .UsesInfiniteRepeat = false,
             .OnDown = []() { system("cls"); std::cout << "Cleared.\n"; }
         },
     	CBActionMap{
-            .ButtonVirtualKeycode = ButtonShoulderLeft,
+            .ButtonVirtualKeycode = ksp.ButtonShoulderLeft,
             .UsesInfiniteRepeat = false,
             .OnDown = []()
             {
@@ -205,6 +109,7 @@ auto GetDriverButtonMappings()
             }
         },
     };
+
     return mapBuffer;
 }
 
@@ -213,27 +118,17 @@ auto GetDriverMouseMappings()
     using std::vector, std::cout;
     using namespace std::chrono_literals;
     using namespace sds;
-    sds::Utilities::SendMouseInput smi;
+    static constexpr KeyboardSettings ksp{};
+    Utilities::SendMouseInput smi;
     constexpr auto FirstDelay = 0ns; // mouse move delays
     constexpr auto RepeatDelay = 1200us;
     constexpr int MouseExGroup = 102;
-
-    static constexpr keyboardtypes::VirtualKey_t RightThumbstickLeft{VK_GAMEPAD_RIGHT_THUMBSTICK_LEFT};
-    static constexpr keyboardtypes::VirtualKey_t RightThumbstickRight{VK_GAMEPAD_RIGHT_THUMBSTICK_RIGHT};
-    static constexpr keyboardtypes::VirtualKey_t RightThumbstickUp{VK_GAMEPAD_RIGHT_THUMBSTICK_UP};
-    static constexpr keyboardtypes::VirtualKey_t RightThumbstickDown{VK_GAMEPAD_RIGHT_THUMBSTICK_DOWN};
-
-    // Internal reprsentation of these values, not from OS API though it may use a macro from there.
-    static constexpr keyboardtypes::VirtualKey_t RightThumbstickUpRight{KeyboardSettings::RightThumbstickUpRight};
-    static constexpr keyboardtypes::VirtualKey_t RightThumbstickUpLeft{KeyboardSettings::RightThumbstickUpLeft};
-    static constexpr keyboardtypes::VirtualKey_t RightThumbstickDownRight{KeyboardSettings::RightThumbstickDownRight};
-    static constexpr keyboardtypes::VirtualKey_t RightThumbstickDownLeft{KeyboardSettings::RightThumbstickDownLeft};
 
     vector mapBuffer
     {
         // Mouse move stuff
         CBActionMap{
-            .ButtonVirtualKeycode = RightThumbstickUp,
+            .ButtonVirtualKeycode = ksp.RightThumbstickUp,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
             .OnDown = [smi]() mutable
@@ -248,7 +143,37 @@ auto GetDriverMouseMappings()
             .DelayForRepeats = RepeatDelay
         },
         CBActionMap{
-            .ButtonVirtualKeycode = RightThumbstickDown,
+            .ButtonVirtualKeycode = ksp.RightThumbstickUpRight,
+            .UsesInfiniteRepeat = true,
+            .ExclusivityGrouping = MouseExGroup,
+            .OnDown = [smi]() mutable
+            {
+                smi.SendMouseMove(1, 1);
+            },
+            .OnRepeat = [smi]() mutable
+            {
+                smi.SendMouseMove(1, 1);
+            },
+            .DelayBeforeFirstRepeat = FirstDelay,
+            .DelayForRepeats = RepeatDelay
+        },
+        CBActionMap{
+            .ButtonVirtualKeycode = ksp.RightThumbstickUpLeft,
+            .UsesInfiniteRepeat = true,
+            .ExclusivityGrouping = MouseExGroup,
+            .OnDown = [smi]() mutable
+            {
+                smi.SendMouseMove(-1, 1);
+            },
+            .OnRepeat = [smi]() mutable
+            {
+                smi.SendMouseMove(-1, 1);
+            },
+            .DelayBeforeFirstRepeat = FirstDelay,
+            .DelayForRepeats = RepeatDelay
+        },
+        CBActionMap{
+            .ButtonVirtualKeycode = ksp.RightThumbstickDown,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
             .OnDown = [smi]() mutable
@@ -263,7 +188,7 @@ auto GetDriverMouseMappings()
             .DelayForRepeats = RepeatDelay
         },
         CBActionMap{
-            .ButtonVirtualKeycode = RightThumbstickLeft,
+            .ButtonVirtualKeycode = ksp.RightThumbstickLeft,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
             .OnDown = [smi]() mutable
@@ -278,7 +203,7 @@ auto GetDriverMouseMappings()
             .DelayForRepeats = RepeatDelay
         },
         CBActionMap{
-            .ButtonVirtualKeycode = RightThumbstickRight,
+            .ButtonVirtualKeycode = ksp.RightThumbstickRight,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
             .OnDown = [smi]() mutable
@@ -291,9 +216,40 @@ auto GetDriverMouseMappings()
             },
             .DelayBeforeFirstRepeat = FirstDelay,
             .DelayForRepeats = RepeatDelay
-        }
+        },
+        CBActionMap{
+            .ButtonVirtualKeycode = ksp.RightThumbstickDownRight,
+            .UsesInfiniteRepeat = true,
+            .ExclusivityGrouping = MouseExGroup,
+            .OnDown = [smi]() mutable
+            {
+                smi.SendMouseMove(1, -1);
+            },
+            .OnRepeat = [smi]() mutable
+            {
+                smi.SendMouseMove(1, -1);
+            },
+            .DelayBeforeFirstRepeat = FirstDelay,
+            .DelayForRepeats = RepeatDelay
+        },
+        CBActionMap{
+            .ButtonVirtualKeycode = ksp.RightThumbstickDownLeft,
+            .UsesInfiniteRepeat = true,
+            .ExclusivityGrouping = MouseExGroup,
+            .OnDown = [smi]() mutable
+            {
+                smi.SendMouseMove(-1, -1);
+            },
+            .OnRepeat = [smi]() mutable
+            {
+                smi.SendMouseMove(-1, -1);
+            },
+            .DelayBeforeFirstRepeat = FirstDelay,
+            .DelayForRepeats = RepeatDelay
+        },
     };
-    return mapBuffer;
+
+	return mapBuffer;
 }
 
 auto RunTestDriverLoop()
@@ -312,13 +268,13 @@ auto RunTestDriverLoop()
     // The filter is constructed here, to support custom filters with their own construction needs.
     sds::KeyboardOvertakingFilter filter{};
     // Filter is then moved into the poller at construction.
-    sds::KeyboardTranslator translator{std::move(mapBuffer), std::move(filter) };
+    sds::KeyboardTranslator translator{ std::move(mapBuffer), std::move(filter) };
     //sds::KeyboardTranslator translator{std::move(mapBuffer)};
     GetterExitCallable gec;
     const auto exitFuture = std::async(std::launch::async, [&]() { gec.GetExitSignal(); });
     while (!gec.IsDone)
     {
-        constexpr auto sleepDelay = std::chrono::nanoseconds{ 750us };
+        constexpr auto sleepDelay = std::chrono::nanoseconds{ 500us };
         const auto translation = translator(sds::GetWrappedLegacyApiStateUpdate(settingsPack));
         translation();
         if(sds::ControllerStatus::IsControllerConnected(settingsPack.PlayerInfo.PlayerId))

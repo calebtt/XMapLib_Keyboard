@@ -16,14 +16,14 @@
     <Filter Include="Header Files\Keyboard">
       <UniqueIdentifier>{a47992e6-5fdc-4e51-beab-ade5cd4e7e65}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Keyboard\KeyInfoWrappers">
-      <UniqueIdentifier>{b56c2449-2429-4552-aceb-b63de8833d99}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Keyboard\SettingsAndConfig">
       <UniqueIdentifier>{c4b2771a-42ff-42ae-ac75-d8ef12a48cfb}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Keyboard\Filters">
       <UniqueIdentifier>{2f83540b-8c8f-4d59-96ed-de4b91079462}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Keyboard\KeyInfoWrappersAndHelpers">
+      <UniqueIdentifier>{b56c2449-2429-4552-aceb-b63de8833d99}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -33,7 +33,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControllerButtonToActionMap.h">
-      <Filter>Header Files\Keyboard\KeyInfoWrappers</Filter>
+      <Filter>Header Files\Keyboard\KeyInfoWrappersAndHelpers</Filter>
     </ClInclude>
     <ClInclude Include="KeyboardSettingsPack.h">
       <Filter>Header Files\Keyboard\SettingsAndConfig</Filter>
@@ -47,11 +47,17 @@
     <ClInclude Include="KeyboardCustomTypes.h">
       <Filter>Header Files\Keyboard</Filter>
     </ClInclude>
-    <ClInclude Include="KeyboardLegacyApiFunctions.h">
-      <Filter>Header Files\Keyboard</Filter>
-    </ClInclude>
     <ClInclude Include="KeyboardOvertakingFilter.h">
       <Filter>Header Files\Keyboard\Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardPolarInfo.h">
+      <Filter>Header Files\Keyboard\KeyInfoWrappersAndHelpers</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardLegacyApiFunctions.h">
+      <Filter>Header Files\Keyboard\KeyInfoWrappersAndHelpers</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardStickDirection.h">
+      <Filter>Header Files\Keyboard\KeyInfoWrappersAndHelpers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

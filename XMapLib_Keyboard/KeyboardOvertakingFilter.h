@@ -28,6 +28,7 @@ namespace sds
 
 		const auto findResult = find(mappingsRange, vk, &CBActionMap::ButtonVirtualKeycode);
 		assert(findResult != cend(mappingsRange));
+		// TODO change something to work with VKs that don't have a mapping!
 		return static_cast<Index_t>(distance(cbegin(mappingsRange), findResult));
 	}
 
@@ -220,12 +221,17 @@ namespace sds
 			auto stateUpdateCopy = stateUpdate;
 
 			// filters for all mappings of interest per the current 'down' VK buffer.
+			const auto vkHasMappingPred = [this](const auto vk)
+			{
+				const auto findResult = find(m_mappings, vk, &CBActionMap::ButtonVirtualKeycode);
+				return findResult != cend(m_mappings);
+			};
 			const auto exGroupPred = [this](const auto ind) { return GetMappingAt(ind).ExclusivityGrouping.has_value(); };
 			const auto mappingIndexPred = [this](const auto vk) { return GetMappingIndexForVk(vk, m_mappings); };
 
 			keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t> vksToRemoveRange;
 
-			for(const auto index : stateUpdateCopy | transform(mappingIndexPred) | filter(exGroupPred))
+			for(const auto index : stateUpdateCopy | filter(vkHasMappingPred) | transform(mappingIndexPred) | filter(exGroupPred))
 			{
 				const auto& currentMapping = GetMappingAt(index);
 				auto& currentGroup = m_groupMap[*currentMapping.ExclusivityGrouping];
