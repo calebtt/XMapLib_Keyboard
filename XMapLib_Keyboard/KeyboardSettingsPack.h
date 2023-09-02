@@ -148,7 +148,7 @@ namespace sds
 			ThumbLeftClick,
 			ThumbRightClick,
 			ButtonShoulderLeft,
-			ButtonShoulderLeft,
+			ButtonShoulderRight,
 			ButtonA,
 			ButtonB,
 			ButtonX,

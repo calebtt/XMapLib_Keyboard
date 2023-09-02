@@ -73,15 +73,15 @@ namespace sds
 		const auto leftStickPolarInfo = ComputePolarPair(leftThumbstickX, leftThumbstickY);
 		const auto rightStickPolarInfo = ComputePolarPair(rightThumbstickX, rightThumbstickY);
 
-		const auto leftDirection = GetDirectionForPolarTheta(leftStickPolarInfo.polar_theta_angle);
-		const auto rightDirection = GetDirectionForPolarTheta(rightStickPolarInfo.polar_theta_angle);
+		const auto leftDirection = GetDirectionForPolarTheta(leftStickPolarInfo.second);
+		const auto rightDirection = GetDirectionForPolarTheta(rightStickPolarInfo.second);
 
 		const auto leftThumbstickVk = GetVirtualKeyFromDirection(settingsPack, leftDirection, ControllerStick::LeftStick);
 		const auto rightThumbstickVk = GetVirtualKeyFromDirection(settingsPack, rightDirection, ControllerStick::RightStick);
 
 		// TODO deadzone appears too low on left stick, check this part.
-		const bool leftIsDown = leftStickPolarInfo.polar_radius > LeftStickDz && leftThumbstickVk.has_value();
-		const bool rightIsDown = rightStickPolarInfo.polar_radius > RightStickDz && rightThumbstickVk.has_value();
+		const bool leftIsDown = leftStickPolarInfo.first > LeftStickDz && leftThumbstickVk.has_value();
+		const bool rightIsDown = rightStickPolarInfo.first > RightStickDz && rightThumbstickVk.has_value();
 
 		if (leftIsDown)
 			allKeys.emplace_back(leftThumbstickVk.value());
