@@ -64,20 +64,20 @@ namespace sds
 		constexpr auto LeftStickDz{ settingsPack.LeftStickDeadzone };
 		constexpr auto RightStickDz{ settingsPack.RightStickDeadzone };
 
-		const auto leftThumbstickX = controllerState.Gamepad.sThumbLX;
-		const auto rightThumbstickX = controllerState.Gamepad.sThumbRX;
+		const auto leftThumbstickX{ controllerState.Gamepad.sThumbLX };
+		const auto rightThumbstickX{ controllerState.Gamepad.sThumbRX };
 
-		const auto leftThumbstickY = controllerState.Gamepad.sThumbLY;
-		const auto rightThumbstickY = controllerState.Gamepad.sThumbRY;
+		const auto leftThumbstickY{ controllerState.Gamepad.sThumbLY };
+		const auto rightThumbstickY{ controllerState.Gamepad.sThumbRY };
 
-		const auto leftStickPolarInfo = ComputePolarPair(leftThumbstickX, leftThumbstickY);
-		const auto rightStickPolarInfo = ComputePolarPair(rightThumbstickX, rightThumbstickY);
+		const auto leftStickPolarInfo{ ComputePolarPair(leftThumbstickX, leftThumbstickY) };
+		const auto rightStickPolarInfo{ ComputePolarPair(rightThumbstickX, rightThumbstickY) };
 
-		const auto leftDirection = GetDirectionForPolarTheta(leftStickPolarInfo.second);
-		const auto rightDirection = GetDirectionForPolarTheta(rightStickPolarInfo.second);
+		const auto leftDirection{ GetDirectionForPolarTheta(leftStickPolarInfo.second) };
+		const auto rightDirection{ GetDirectionForPolarTheta(rightStickPolarInfo.second) };
 
-		const auto leftThumbstickVk = GetVirtualKeyFromDirection(settingsPack, leftDirection, ControllerStick::LeftStick);
-		const auto rightThumbstickVk = GetVirtualKeyFromDirection(settingsPack, rightDirection, ControllerStick::RightStick);
+		const auto leftThumbstickVk{ GetVirtualKeyFromDirection(settingsPack, leftDirection, ControllerStick::LeftStick) };
+		const auto rightThumbstickVk{ GetVirtualKeyFromDirection(settingsPack, rightDirection, ControllerStick::RightStick) };
 
 		// TODO deadzone appears too low on left stick, check this part.
 		const bool leftIsDown = leftStickPolarInfo.first > LeftStickDz && leftThumbstickVk.has_value();

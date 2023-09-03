@@ -44,9 +44,6 @@
     <ClInclude Include="KeyboardTranslationHelpers.h">
       <Filter>Header Files\Keyboard</Filter>
     </ClInclude>
-    <ClInclude Include="KeyboardCustomTypes.h">
-      <Filter>Header Files\Keyboard</Filter>
-    </ClInclude>
     <ClInclude Include="KeyboardOvertakingFilter.h">
       <Filter>Header Files\Keyboard\Filters</Filter>
     </ClInclude>
@@ -58,6 +55,9 @@
     </ClInclude>
     <ClInclude Include="KeyboardStickDirection.h">
       <Filter>Header Files\Keyboard\KeyInfoWrappersAndHelpers</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardCustomTypes.h">
+      <Filter>Header Files\Keyboard\SettingsAndConfig</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
