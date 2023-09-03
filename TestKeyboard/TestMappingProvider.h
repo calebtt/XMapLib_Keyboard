@@ -4,9 +4,6 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace TestKeyboard
 {
-    /**
-     * \brief A,B,X,Y Buttons are all in ex. group 111, Left thumbstick directions all in group 101.
-     */
     inline
     auto GetDriverButtonMappings()
     {
@@ -14,141 +11,81 @@ namespace TestKeyboard
         using namespace std::chrono_literals;
         using namespace sds;
 
-    	static constexpr KeyboardSettings ksp;
         constexpr int PadButtonsGroup = 111; // Buttons exclusivity grouping.
         constexpr int LeftThumbGroup = 101; // Left thumbstick exclusivity grouping.
         const auto PrintMessageAndTime = [](std::string_view msg)
-        {
-            Logger::WriteMessage(std::vformat("{}\n", std::make_format_args(msg)).c_str());
-        };
+            {
+                Logger::WriteMessage(std::vformat("{}\n", std::make_format_args(msg)).c_str());
+            };
         const auto GetDownLambdaForKeyNamed = [=](const std::string& keyName)
-        {
-            return [=]() { PrintMessageAndTime(keyName + "=[DOWN]"); };
-        };
+            {
+                return [=]() { PrintMessageAndTime(keyName + "=[DOWN]"); };
+            };
         const auto GetUpLambdaForKeyNamed = [=](const std::string& keyName)
-        {
-            return [=]() { PrintMessageAndTime(keyName + "=[UP]"); };
-        };
+            {
+                return [=]() { PrintMessageAndTime(keyName + "=[UP]"); };
+            };
         const auto GetRepeatLambdaForKeyNamed = [=](const std::string& keyName)
-        {
-            return [=]() { PrintMessageAndTime(keyName + "=[REPEAT]"); };
-        };
+            {
+                return [=]() { PrintMessageAndTime(keyName + "=[REPEAT]"); };
+            };
         const auto GetResetLambdaForKeyNamed = [=](const std::string& keyName)
-        {
-            return [=]() { PrintMessageAndTime(keyName + "=[RESET]"); };
-        };
+            {
+                return [=]() { PrintMessageAndTime(keyName + "=[RESET]"); };
+            };
+
+        const auto GetBuiltMapForKeyNamed = [&](const std::string& keyName, const auto virtualKey, const int exGroup)
+            {
+                return CBActionMap
+                {
+                    .ButtonVirtualKeycode = virtualKey,
+                    .UsesInfiniteRepeat = true,
+                    .ExclusivityGrouping = exGroup,
+                    .OnDown = GetDownLambdaForKeyNamed(keyName),
+                    .OnUp = GetUpLambdaForKeyNamed(keyName),
+                    .OnRepeat = GetRepeatLambdaForKeyNamed(keyName),
+                    .OnReset = GetResetLambdaForKeyNamed(keyName),
+                    .DelayBeforeFirstRepeat = 0ns,
+                    .DelayForRepeats = 0ns
+                };
+            };
+
+        KeyboardSettings ksp;
 
         vector mapBuffer
         {
-            CBActionMap{
-                .ButtonVirtualKeycode = ksp.ButtonA,
-                .UsesInfiniteRepeat = true,
-                .ExclusivityGrouping = PadButtonsGroup,
-                .OnDown = GetDownLambdaForKeyNamed("[PAD_A]"),
-                .OnUp = GetUpLambdaForKeyNamed("[PAD_A]"),
-                .OnRepeat = GetRepeatLambdaForKeyNamed("[PAD_A]")
-            },
-            CBActionMap{
-                .ButtonVirtualKeycode = ksp.ButtonB,
-                .UsesInfiniteRepeat = false,
-                .SendsFirstRepeatOnly = true,
-                .ExclusivityGrouping = PadButtonsGroup,
-                .OnDown = GetDownLambdaForKeyNamed("[PAD_B]"),
-                .OnUp = GetUpLambdaForKeyNamed("[PAD_B]"),
-                .OnRepeat = GetRepeatLambdaForKeyNamed("[PAD_B]"),
-                .OnReset = GetResetLambdaForKeyNamed("[PAD_B]")
-            },
-            CBActionMap{
-                .ButtonVirtualKeycode = ksp.ButtonX,
-                .UsesInfiniteRepeat = false,
-                .SendsFirstRepeatOnly = true,
-                .ExclusivityGrouping = PadButtonsGroup,
-                .OnDown = GetDownLambdaForKeyNamed("[PAD_X]"),
-                .OnUp = GetUpLambdaForKeyNamed("[PAD_X]"),
-                .OnRepeat = GetRepeatLambdaForKeyNamed("[PAD_X]"),
-                .OnReset = GetResetLambdaForKeyNamed("[PAD_X]")
-            },
-            CBActionMap{
-                .ButtonVirtualKeycode = ksp.ButtonY,
-                .UsesInfiniteRepeat = false,
-                .SendsFirstRepeatOnly = true,
-                .ExclusivityGrouping = PadButtonsGroup,
-                .OnDown = GetDownLambdaForKeyNamed("[PAD_Y]"),
-                .OnUp = GetUpLambdaForKeyNamed("[PAD_Y]"),
-                .OnRepeat = GetRepeatLambdaForKeyNamed("[PAD_Y]"),
-                .OnReset = GetResetLambdaForKeyNamed("[PAD_Y]")
-            },
+            // Pad buttons
+            GetBuiltMapForKeyNamed("[PAD_A]", ksp.ButtonA, PadButtonsGroup),
+            GetBuiltMapForKeyNamed("[PAD_B]", ksp.ButtonB, PadButtonsGroup),
+            GetBuiltMapForKeyNamed("[PAD_X]", ksp.ButtonX, PadButtonsGroup),
+            GetBuiltMapForKeyNamed("[PAD_Y]", ksp.ButtonY, PadButtonsGroup),
             // Left thumbstick directional stuff
-            CBActionMap{
-                .ButtonVirtualKeycode = ksp.LeftThumbstickUp,
-                .UsesInfiniteRepeat = true,
-                .ExclusivityGrouping = LeftThumbGroup,
-                .OnDown = GetDownLambdaForKeyNamed("[LTHUMB_UP]"),
-                .OnUp = GetUpLambdaForKeyNamed("[LTHUMB_UP]"),
-                .OnRepeat = GetRepeatLambdaForKeyNamed("[LTHUMB_UP]"),
-                .OnReset = GetResetLambdaForKeyNamed("[LTHUMB_UP]"),
-            },
-            CBActionMap{
-                .ButtonVirtualKeycode = ksp.LeftThumbstickDown,
-                .UsesInfiniteRepeat = true,
-                .ExclusivityGrouping = LeftThumbGroup,
-                .OnDown = GetDownLambdaForKeyNamed("[LTHUMB_DOWN]"),
-                .OnUp = GetUpLambdaForKeyNamed("[LTHUMB_DOWN]"),
-                .OnRepeat = GetRepeatLambdaForKeyNamed("[LTHUMB_DOWN]"),
-                .OnReset = GetResetLambdaForKeyNamed("[LTHUMB_DOWN]"),
-            },
-            CBActionMap{
-                .ButtonVirtualKeycode = ksp.LeftThumbstickRight,
-                .UsesInfiniteRepeat = true,
-                .ExclusivityGrouping = LeftThumbGroup,
-                .OnDown = GetDownLambdaForKeyNamed("[LTHUMB_RIGHT]"),
-                .OnUp = GetUpLambdaForKeyNamed("[LTHUMB_RIGHT]"),
-                .OnRepeat = GetRepeatLambdaForKeyNamed("[LTHUMB_RIGHT]"),
-                .OnReset = GetResetLambdaForKeyNamed("[LTHUMB_RIGHT]"),
-            },
-            CBActionMap{
-                .ButtonVirtualKeycode = ksp.LeftThumbstickLeft,
-                .UsesInfiniteRepeat = true,
-                .ExclusivityGrouping = LeftThumbGroup,
-                .OnDown = GetDownLambdaForKeyNamed("[LTHUMB_LEFT]"),
-                .OnUp = GetUpLambdaForKeyNamed("[LTHUMB_LEFT]"),
-                .OnRepeat = GetRepeatLambdaForKeyNamed("[LTHUMB_LEFT]"),
-                .OnReset = GetResetLambdaForKeyNamed("[LTHUMB_LEFT]"),
-            },
-            CBActionMap{
-                .ButtonVirtualKeycode = ksp.LeftTrigger,
-                .UsesInfiniteRepeat = false,
-                .ExclusivityGrouping = LeftThumbGroup,
-                .OnDown = GetDownLambdaForKeyNamed("[LTRIGGER]"),
-                .OnUp = GetUpLambdaForKeyNamed("[LTRIGGER]"),
-                .OnReset = GetResetLambdaForKeyNamed("[LTRIGGER]"),
-                .DelayBeforeFirstRepeat = 1ns,
-                .DelayForRepeats = 1ns
-            },
-            CBActionMap{
-                .ButtonVirtualKeycode = ksp.RightTrigger,
-                .UsesInfiniteRepeat = false,
-                .ExclusivityGrouping = LeftThumbGroup,
-                .OnDown = GetDownLambdaForKeyNamed("[RTRIGGER]"),
-                .OnUp = GetUpLambdaForKeyNamed("[RTRIGGER]"),
-                .OnReset = GetResetLambdaForKeyNamed("[RTRIGGER]"),
-                .DelayBeforeFirstRepeat = 1ns,
-                .DelayForRepeats = 1ns
-            },
+            GetBuiltMapForKeyNamed("[LTHUMB_UP]", ksp.LeftThumbstickUp, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_DOWN]", ksp.LeftThumbstickDown, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_RIGHT]", ksp.LeftThumbstickRight, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_LEFT]", ksp.LeftThumbstickLeft, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_DOWN_RIGHT]", ksp.LeftThumbstickDownRight, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_DOWN_LEFT]", ksp.LeftThumbstickDownLeft, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_UP_RIGHT]", ksp.LeftThumbstickUpRight, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_UP_LEFT]", ksp.LeftThumbstickUpLeft, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTRIGGER]", ksp.LeftTrigger, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[RTRIGGER]", ksp.RightTrigger, LeftThumbGroup),
+            // Shoulder buttons
             CBActionMap{
                 .ButtonVirtualKeycode = ksp.ButtonShoulderRight,
                 .UsesInfiniteRepeat = false,
-                .OnDown = [=]() { PrintMessageAndTime("Cleared.\n"); }
+                .OnDown = []() { system("cls"); std::cout << "Cleared.\n"; }
             },
             CBActionMap{
                 .ButtonVirtualKeycode = ksp.ButtonShoulderLeft,
                 .UsesInfiniteRepeat = false,
                 .OnDown = []()
                 {
-                    // Add impl for something to do here
-                }
-            },
+                // Add impl for something to do here
+            }
+        },
         };
+
         return mapBuffer;
     }
 

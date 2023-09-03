@@ -174,7 +174,7 @@ namespace sds
 		using MapType_t = keyboardtypes::SmallFlatMap_t<keyboardtypes::GrpVal_t, GroupActivationInfo>;
 
 		// span to mappings
-		std::span<CBActionMap> m_mappings;
+		std::span<const CBActionMap> m_mappings;
 
 		// map of grouping value to GroupActivationInfo container.
 		MapType_t m_groupMap;

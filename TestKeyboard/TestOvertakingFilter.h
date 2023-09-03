@@ -138,53 +138,44 @@ namespace TestKeyboard
 
 			auto translator = GetBuiltTranslator();
 
-			// A and B are in the same ex. group, it should filter it so only ButtonA will be sent a down.
 			Logger::WriteMessage("A and B are in the same ex. group, it should filter it so that only ButtonA will be sent a down.\n");
 			auto translationPack = translator({ ksp.ButtonA, ksp.ButtonB });
 			translationPack();
 			Assert::IsTrue(translationPack.DownRequests.size() == 1);
-			// Post: B overtaken, A down.
 
-			Logger::WriteMessage("A and B again, it should filter it so that only ButtonB will be sent a down after A goes up.\n");
+			Logger::WriteMessage("B overtakes A, it should filter it so that only ButtonB will be sent a down, A is overtaken.\n");
 			translationPack = translator({ ksp.ButtonA, ksp.ButtonB });
 			translationPack();
 			Assert::IsTrue(translationPack.DownRequests.size() == 1);
 			Assert::IsTrue(translationPack.UpRequests.size() == 1);
-			// Post: B overtook A, so B is next-state and A is overtaken (key-up)
 
-			// X and B are in the same ex. group, it should filter it so only ButtonX will be sent a down.
-			Logger::WriteMessage("X and B are in the same ex. group, it should filter it so that only ksp.ButtonX will be sent a down after B goes up.\n");
-			translationPack = translator({ ksp.ButtonX, ksp.ButtonB });
+			Logger::WriteMessage("Y overtakes B, it should filter it so that only ButtonY will be sent a down, B is overtaken.\n");
+			translationPack = translator({ ksp.ButtonA, ksp.ButtonB, ksp.ButtonY });
 			translationPack();
 			Assert::IsTrue(translationPack.DownRequests.size() == 1);
 			Assert::IsTrue(translationPack.UpRequests.size() == 1);
 
-			// now we will remove ButtonX and see that ButtonB has replaced it and needs a key-down.
-			// TODO I think it's counting the absence of ButtonX as a state update for the ex. group and filtering out the ButtonB.
-			Logger::WriteMessage("It should filter it so that only ButtonB will be sent a down after X goes up.\n");
-			translationPack = translator({ ksp.ButtonB });
+			// Note that multiple keys in the overtaken queue can be removed from the overtaken queue in one iteration, plus the single modification for their group.
+			Logger::WriteMessage("A,B removed from overtaken queue, Y still activated (no change to activated key).\n");
+			translationPack = translator({ ksp.ButtonY });
 			translationPack();
-			Assert::IsTrue( translationPack.DownRequests.size() == 1);
+			Assert::IsTrue(translationPack.DownRequests.empty());
+			Assert::IsTrue(translationPack.UpRequests.empty());
+
+			Logger::WriteMessage("A few iterations to set the state for next test...\n");
+			// Add buttons A,B back to the overtaken queue with Y activated.
+			translator({  })();
+			translator({ ksp.ButtonA })();
+			translator({ ksp.ButtonA, ksp.ButtonB })();
+			translator({ ksp.ButtonA, ksp.ButtonB, ksp.ButtonY })();
+
+			// Note that multiple keys in the overtaken queue can be removed from the overtaken queue in one iteration, plus the single modification for their group.
+			Logger::WriteMessage("With Y activated, A,B overtaken\n");
+			Logger::WriteMessage("X overtakes Y, it should filter it so that only X will be sent a down, Y is overtaken. A,B are removed from overtaken queue.\n");
+			translationPack = translator({ ksp.ButtonY, ksp.ButtonX });
+			translationPack();
+			Assert::IsTrue(translationPack.DownRequests.size() == 1);
 			Assert::IsTrue(translationPack.UpRequests.size() == 1);
-
-			//// for this case, buttonB is activated, buttonX overtakes it, and buttonY is just a duplicate (with a matching group) that gets filtered.
-			//translationPack = translator({ ButtonB, ButtonX, ButtonY });
-			//Assert::AreEqual(1ull, translationPack.size());
-			//Assert::AreEqual(ButtonX, translationPack.front());
-
-			//// Same as last state, different ordering, and this time it will process the next overtaking.
-			//translationPack = translator({ ButtonB, ButtonX, ButtonY });
-			//Assert::AreEqual(1ull, translationPack.size());
-			//Assert::AreEqual(ButtonY, translationPack.front());
-			//// Post: ButtonY activated, X and B overtaken.
-
-			//translationPack = translator({ ButtonX, ButtonY, ButtonB });
-			//Assert::AreEqual(1ull, translationPack.size());
-			//Assert::AreEqual(ButtonY, translationPack.front());
-
-			//translationPack = translator({ ButtonB, ButtonX, ButtonY, ButtonA });
-			//Assert::AreEqual(1ull, translationPack.size());
-			//Assert::AreEqual(ButtonA, translationPack.front());
 		}
 	};
 }
