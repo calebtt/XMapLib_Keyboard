@@ -40,6 +40,8 @@ namespace sds
 
 	/**
 	 * \brief	TranslationPack is a pack of ranges containing individual TranslationResult structs for processing state changes.
+	 * \remarks		If using the provided call operator, it will prioritize key-up requests, then key-down requests, then repeat requests, then updates.
+	 *	I figure it should process key-ups and new key-downs with the highest priority, after that keys doing a repeat, and lastly updates.
 	 */
 	struct TranslationPack final
 	{
@@ -47,17 +49,21 @@ namespace sds
 		{
 			// Note that there will be a function called if there is a state change,
 			// it just may not have any custom behavior attached to it.
-			for (const auto& elem : UpdateRequests)
+			for (const auto& elem : UpRequests)
+				elem();
+			for (const auto& elem : DownRequests)
 				elem();
 			for (const auto& elem : RepeatRequests)
 				elem();
-			for (const auto& elem : NextStateRequests)
+			for (const auto& elem : UpdateRequests)
 				elem();
 		}
+
+		keyboardtypes::SmallVector_t<TranslationResult> UpRequests{}; // key-ups
+		keyboardtypes::SmallVector_t<TranslationResult> DownRequests{}; // key-downs
+		keyboardtypes::SmallVector_t<TranslationResult> RepeatRequests{}; // repeats
+		keyboardtypes::SmallVector_t<TranslationResult> UpdateRequests{}; // resets
 		// TODO might wrap the vectors in a struct with a call operator to have individual call operators for range of TranslationResult.
-		keyboardtypes::SmallVector_t<TranslationResult> UpdateRequests{};
-		keyboardtypes::SmallVector_t<TranslationResult> RepeatRequests{};
-		keyboardtypes::SmallVector_t<TranslationResult> NextStateRequests{};
 	};
 
 	static_assert(std::copyable<TranslationPack>);

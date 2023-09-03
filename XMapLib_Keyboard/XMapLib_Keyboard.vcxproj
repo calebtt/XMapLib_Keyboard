@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClInclude Include="ControllerButtonToActionMap.h" />
     <ClInclude Include="KeyboardCustomTypes.h" />
+    <ClInclude Include="KeyboardMappingBuilders.h" />
     <ClInclude Include="KeyboardOvertakingFilter.h" />
     <ClInclude Include="KeyboardPolarInfo.h" />
     <ClInclude Include="KeyboardStickDirection.h" />

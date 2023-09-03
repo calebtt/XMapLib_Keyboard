@@ -5,6 +5,9 @@
 #include <numeric>
 #include <execution>
 #include <deque>
+#include <format>
+#include <source_location>
+#include <stacktrace>
 
 #include "ControllerButtonToActionMap.h"
 #include "KeyboardTranslationHelpers.h"
@@ -12,10 +15,11 @@
 namespace sds
 {
 	/**
-	 * \brief Returns the indices at which a mapping that matches the 'vk' was found.
-	 * \param vk Virtual keycode of the presumably 'down' key with which to match CBActionMap mappings.
-	 * \param mappingsRange The range of CBActionMap mappings for which to return the indices of matching mappings.
-	 */
+	* \brief Returns the indices at which a mapping that matches the 'vk' was found.
+	* \param vk Virtual keycode of the presumably 'down' key with which to match CBActionMap mappings.
+	* \param mappingsRange The range of CBActionMap mappings for which to return the indices of matching mappings.
+	* \remarks PRECONDITION: A mapping with the specified VK does exist in the mappingsRange!
+	*/
 	[[nodiscard]]
 	inline
 	auto GetMappingIndexForVk(const keyboardtypes::VirtualKey_t vk, const std::span<const CBActionMap> mappingsRange) -> keyboardtypes::Index_t
@@ -25,10 +29,16 @@ namespace sds
 		using std::ranges::cbegin;
 		using std::ranges::distance;
 		using keyboardtypes::Index_t;
-
 		const auto findResult = find(mappingsRange, vk, &CBActionMap::ButtonVirtualKeycode);
-		assert(findResult != cend(mappingsRange));
-		// TODO change something to work with VKs that don't have a mapping!
+		const bool didFindResult = findResult != cend(mappingsRange);
+
+		if (!didFindResult)
+		{
+			throw std::runtime_error(
+				std::vformat("Did not find mapping with vk: {} in mappings range.\nLocation:\n{}\n\n",
+					std::make_format_args(vk, std::source_location::current().function_name())));
+		}
+
 		return static_cast<Index_t>(distance(cbegin(mappingsRange), findResult));
 	}
 

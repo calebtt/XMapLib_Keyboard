@@ -4,39 +4,6 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace TestKeyboard
 {
-    // These are a good idea in case someone wants this to work for XINPUT_KEYSTROKE instead, just change these to the VK_ ones.
-    constexpr sds::keyboardtypes::VirtualKey_t ButtonA{ XINPUT_GAMEPAD_A };
-    constexpr sds::keyboardtypes::VirtualKey_t ButtonB{ XINPUT_GAMEPAD_B };
-    constexpr sds::keyboardtypes::VirtualKey_t ButtonX{ XINPUT_GAMEPAD_X };
-    constexpr sds::keyboardtypes::VirtualKey_t ButtonY{ XINPUT_GAMEPAD_Y };
-
-    constexpr sds::keyboardtypes::VirtualKey_t ButtonStart{ XINPUT_GAMEPAD_START };
-    constexpr sds::keyboardtypes::VirtualKey_t ButtonBack{ XINPUT_GAMEPAD_BACK };
-    constexpr sds::keyboardtypes::VirtualKey_t ButtonShoulderLeft{ XINPUT_GAMEPAD_LEFT_SHOULDER };
-    constexpr sds::keyboardtypes::VirtualKey_t ButtonShoulderRight{ XINPUT_GAMEPAD_RIGHT_SHOULDER };
-
-    constexpr sds::keyboardtypes::VirtualKey_t DpadUp{ XINPUT_GAMEPAD_DPAD_UP };
-    constexpr sds::keyboardtypes::VirtualKey_t DpadDown{ XINPUT_GAMEPAD_DPAD_DOWN };
-    constexpr sds::keyboardtypes::VirtualKey_t DpadLeft{ XINPUT_GAMEPAD_DPAD_LEFT };
-    constexpr sds::keyboardtypes::VirtualKey_t DpadRight{ XINPUT_GAMEPAD_DPAD_RIGHT };
-
-    constexpr sds::keyboardtypes::VirtualKey_t ThumbLeftClick{ XINPUT_GAMEPAD_LEFT_THUMB };
-    constexpr sds::keyboardtypes::VirtualKey_t ThumbRightClick{ XINPUT_GAMEPAD_RIGHT_THUMB };
-
-    static constexpr sds::keyboardtypes::VirtualKey_t LeftThumbstickLeft{ VK_GAMEPAD_LEFT_THUMBSTICK_LEFT }; // These are represented internally with the VK defines as there is none for the old API.
-    static constexpr sds::keyboardtypes::VirtualKey_t LeftThumbstickRight{ VK_GAMEPAD_LEFT_THUMBSTICK_RIGHT };
-    static constexpr sds::keyboardtypes::VirtualKey_t LeftThumbstickUp{ VK_GAMEPAD_LEFT_THUMBSTICK_UP };
-    static constexpr sds::keyboardtypes::VirtualKey_t LeftThumbstickDown{ VK_GAMEPAD_LEFT_THUMBSTICK_DOWN };
-
-    static constexpr sds::keyboardtypes::VirtualKey_t RightThumbstickLeft{ VK_GAMEPAD_RIGHT_THUMBSTICK_LEFT };
-    static constexpr sds::keyboardtypes::VirtualKey_t RightThumbstickRight{ VK_GAMEPAD_RIGHT_THUMBSTICK_RIGHT };
-    static constexpr sds::keyboardtypes::VirtualKey_t RightThumbstickUp{ VK_GAMEPAD_RIGHT_THUMBSTICK_UP };
-    static constexpr sds::keyboardtypes::VirtualKey_t RightThumbstickDown{ VK_GAMEPAD_RIGHT_THUMBSTICK_DOWN };
-
-    static constexpr sds::keyboardtypes::VirtualKey_t TriggerLeft{ VK_GAMEPAD_LEFT_TRIGGER };
-    static constexpr sds::keyboardtypes::VirtualKey_t TriggerRight{ VK_GAMEPAD_RIGHT_TRIGGER };
-
-
     /**
      * \brief A,B,X,Y Buttons are all in ex. group 111, Left thumbstick directions all in group 101.
      */
@@ -47,6 +14,7 @@ namespace TestKeyboard
         using namespace std::chrono_literals;
         using namespace sds;
 
+    	static constexpr KeyboardSettings ksp;
         constexpr int PadButtonsGroup = 111; // Buttons exclusivity grouping.
         constexpr int LeftThumbGroup = 101; // Left thumbstick exclusivity grouping.
         const auto PrintMessageAndTime = [](std::string_view msg)
@@ -73,7 +41,7 @@ namespace TestKeyboard
         vector mapBuffer
         {
             CBActionMap{
-                .ButtonVirtualKeycode = ButtonA,
+                .ButtonVirtualKeycode = ksp.ButtonA,
                 .UsesInfiniteRepeat = true,
                 .ExclusivityGrouping = PadButtonsGroup,
                 .OnDown = GetDownLambdaForKeyNamed("[PAD_A]"),
@@ -81,7 +49,7 @@ namespace TestKeyboard
                 .OnRepeat = GetRepeatLambdaForKeyNamed("[PAD_A]")
             },
             CBActionMap{
-                .ButtonVirtualKeycode = ButtonB,
+                .ButtonVirtualKeycode = ksp.ButtonB,
                 .UsesInfiniteRepeat = false,
                 .SendsFirstRepeatOnly = true,
                 .ExclusivityGrouping = PadButtonsGroup,
@@ -91,7 +59,7 @@ namespace TestKeyboard
                 .OnReset = GetResetLambdaForKeyNamed("[PAD_B]")
             },
             CBActionMap{
-                .ButtonVirtualKeycode = ButtonX,
+                .ButtonVirtualKeycode = ksp.ButtonX,
                 .UsesInfiniteRepeat = false,
                 .SendsFirstRepeatOnly = true,
                 .ExclusivityGrouping = PadButtonsGroup,
@@ -101,7 +69,7 @@ namespace TestKeyboard
                 .OnReset = GetResetLambdaForKeyNamed("[PAD_X]")
             },
             CBActionMap{
-                .ButtonVirtualKeycode = ButtonY,
+                .ButtonVirtualKeycode = ksp.ButtonY,
                 .UsesInfiniteRepeat = false,
                 .SendsFirstRepeatOnly = true,
                 .ExclusivityGrouping = PadButtonsGroup,
@@ -112,7 +80,7 @@ namespace TestKeyboard
             },
             // Left thumbstick directional stuff
             CBActionMap{
-                .ButtonVirtualKeycode = LeftThumbstickUp,
+                .ButtonVirtualKeycode = ksp.LeftThumbstickUp,
                 .UsesInfiniteRepeat = true,
                 .ExclusivityGrouping = LeftThumbGroup,
                 .OnDown = GetDownLambdaForKeyNamed("[LTHUMB_UP]"),
@@ -121,7 +89,7 @@ namespace TestKeyboard
                 .OnReset = GetResetLambdaForKeyNamed("[LTHUMB_UP]"),
             },
             CBActionMap{
-                .ButtonVirtualKeycode = LeftThumbstickDown,
+                .ButtonVirtualKeycode = ksp.LeftThumbstickDown,
                 .UsesInfiniteRepeat = true,
                 .ExclusivityGrouping = LeftThumbGroup,
                 .OnDown = GetDownLambdaForKeyNamed("[LTHUMB_DOWN]"),
@@ -130,7 +98,7 @@ namespace TestKeyboard
                 .OnReset = GetResetLambdaForKeyNamed("[LTHUMB_DOWN]"),
             },
             CBActionMap{
-                .ButtonVirtualKeycode = LeftThumbstickRight,
+                .ButtonVirtualKeycode = ksp.LeftThumbstickRight,
                 .UsesInfiniteRepeat = true,
                 .ExclusivityGrouping = LeftThumbGroup,
                 .OnDown = GetDownLambdaForKeyNamed("[LTHUMB_RIGHT]"),
@@ -139,7 +107,7 @@ namespace TestKeyboard
                 .OnReset = GetResetLambdaForKeyNamed("[LTHUMB_RIGHT]"),
             },
             CBActionMap{
-                .ButtonVirtualKeycode = LeftThumbstickLeft,
+                .ButtonVirtualKeycode = ksp.LeftThumbstickLeft,
                 .UsesInfiniteRepeat = true,
                 .ExclusivityGrouping = LeftThumbGroup,
                 .OnDown = GetDownLambdaForKeyNamed("[LTHUMB_LEFT]"),
@@ -148,7 +116,7 @@ namespace TestKeyboard
                 .OnReset = GetResetLambdaForKeyNamed("[LTHUMB_LEFT]"),
             },
             CBActionMap{
-                .ButtonVirtualKeycode = TriggerLeft,
+                .ButtonVirtualKeycode = ksp.LeftTrigger,
                 .UsesInfiniteRepeat = false,
                 .ExclusivityGrouping = LeftThumbGroup,
                 .OnDown = GetDownLambdaForKeyNamed("[LTRIGGER]"),
@@ -158,7 +126,7 @@ namespace TestKeyboard
                 .DelayForRepeats = 1ns
             },
             CBActionMap{
-                .ButtonVirtualKeycode = TriggerRight,
+                .ButtonVirtualKeycode = ksp.RightTrigger,
                 .UsesInfiniteRepeat = false,
                 .ExclusivityGrouping = LeftThumbGroup,
                 .OnDown = GetDownLambdaForKeyNamed("[RTRIGGER]"),
@@ -168,12 +136,12 @@ namespace TestKeyboard
                 .DelayForRepeats = 1ns
             },
             CBActionMap{
-                .ButtonVirtualKeycode = ButtonShoulderRight,
+                .ButtonVirtualKeycode = ksp.ButtonShoulderRight,
                 .UsesInfiniteRepeat = false,
                 .OnDown = [=]() { PrintMessageAndTime("Cleared.\n"); }
             },
             CBActionMap{
-                .ButtonVirtualKeycode = ButtonShoulderLeft,
+                .ButtonVirtualKeycode = ksp.ButtonShoulderLeft,
                 .UsesInfiniteRepeat = false,
                 .OnDown = []()
                 {

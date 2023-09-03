@@ -206,11 +206,11 @@ namespace sds
 				else if (const auto initialToDown = GetButtonTranslationForInitialToDown(stateUpdate, mapping))
 				{
 					// Advance to next state.
-					translations.NextStateRequests.emplace_back(*initialToDown);
+					translations.DownRequests.emplace_back(*initialToDown);
 				}
 				else if (const auto downToFirstRepeat = GetButtonTranslationForDownToRepeat(stateUpdate, mapping))
 				{
-					translations.NextStateRequests.emplace_back(*downToFirstRepeat);
+					translations.RepeatRequests.emplace_back(*downToFirstRepeat);
 				}
 				else if (const auto repeatToRepeat = GetButtonTranslationForRepeatToRepeat(stateUpdate, mapping))
 				{
@@ -218,7 +218,7 @@ namespace sds
 				}
 				else if (const auto repeatToUp = GetButtonTranslationForDownOrRepeatToUp(stateUpdate, mapping))
 				{
-					translations.NextStateRequests.emplace_back(*repeatToUp);
+					translations.UpRequests.emplace_back(*repeatToUp);
 				}
 			}
 			return translations;

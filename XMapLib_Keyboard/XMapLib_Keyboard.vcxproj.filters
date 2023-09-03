@@ -59,5 +59,8 @@
     <ClInclude Include="KeyboardCustomTypes.h">
       <Filter>Header Files\Keyboard\SettingsAndConfig</Filter>
     </ClInclude>
+    <ClInclude Include="KeyboardMappingBuilders.h">
+      <Filter>Header Files\Keyboard\KeyInfoWrappersAndHelpers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
