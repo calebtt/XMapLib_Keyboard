@@ -14,41 +14,41 @@ namespace TestKeyboard
         constexpr int PadButtonsGroup = 111; // Buttons exclusivity grouping.
         constexpr int LeftThumbGroup = 101; // Left thumbstick exclusivity grouping.
         const auto PrintMessageAndTime = [](std::string_view msg)
-            {
-                Logger::WriteMessage(std::vformat("{}\n", std::make_format_args(msg)).c_str());
-            };
+        {
+            Logger::WriteMessage(std::vformat("{}\n", std::make_format_args(msg)).c_str());
+        };
         const auto GetDownLambdaForKeyNamed = [=](const std::string& keyName)
-            {
-                return [=]() { PrintMessageAndTime(keyName + "=[DOWN]"); };
-            };
+        {
+            return [=]() { PrintMessageAndTime(keyName + "=[DOWN]"); };
+        };
         const auto GetUpLambdaForKeyNamed = [=](const std::string& keyName)
-            {
-                return [=]() { PrintMessageAndTime(keyName + "=[UP]"); };
-            };
+        {
+            return [=]() { PrintMessageAndTime(keyName + "=[UP]"); };
+        };
         const auto GetRepeatLambdaForKeyNamed = [=](const std::string& keyName)
-            {
-                return [=]() { PrintMessageAndTime(keyName + "=[REPEAT]"); };
-            };
+        {
+            return [=]() { PrintMessageAndTime(keyName + "=[REPEAT]"); };
+        };
         const auto GetResetLambdaForKeyNamed = [=](const std::string& keyName)
-            {
-                return [=]() { PrintMessageAndTime(keyName + "=[RESET]"); };
-            };
+        {
+            return [=]() { PrintMessageAndTime(keyName + "=[RESET]"); };
+        };
 
         const auto GetBuiltMapForKeyNamed = [&](const std::string& keyName, const auto virtualKey, const int exGroup)
+        {
+            return CBActionMap
             {
-                return CBActionMap
-                {
-                    .ButtonVirtualKeycode = virtualKey,
-                    .UsesInfiniteRepeat = true,
-                    .ExclusivityGrouping = exGroup,
-                    .OnDown = GetDownLambdaForKeyNamed(keyName),
-                    .OnUp = GetUpLambdaForKeyNamed(keyName),
-                    .OnRepeat = GetRepeatLambdaForKeyNamed(keyName),
-                    .OnReset = GetResetLambdaForKeyNamed(keyName),
-                    .DelayBeforeFirstRepeat = 0ns,
-                    .DelayForRepeats = 0ns
-                };
+                .ButtonVirtualKeycode = virtualKey,
+                .UsesInfiniteRepeat = true,
+                .ExclusivityGrouping = exGroup,
+                .OnDown = GetDownLambdaForKeyNamed(keyName),
+                .OnUp = GetUpLambdaForKeyNamed(keyName),
+                .OnRepeat = GetRepeatLambdaForKeyNamed(keyName),
+                .OnReset = GetResetLambdaForKeyNamed(keyName),
+                .DelayBeforeFirstRepeat = 0ns,
+                .DelayForRepeats = 0ns
             };
+        };
 
         KeyboardSettings ksp;
 

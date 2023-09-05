@@ -179,7 +179,7 @@ namespace sds
 		// map of grouping value to GroupActivationInfo container.
 		MapType_t m_groupMap;
 	public:
-		void SetMappingRange(const std::span<CBActionMap> mappingsList)
+		void SetMappingRange(const std::span<const CBActionMap> mappingsList)
 		{
 			m_mappings = mappingsList;
 			m_groupMap = {};
@@ -205,7 +205,6 @@ namespace sds
 			// Sorting provides an ordering to which down states with an already handled exclusivity grouping get filtered out for this iteration.
 			//sort(stateUpdate, std::ranges::less{}); // TODO <-- problem for the (current) unit testing, optional anyway
 
-			//auto stateCopy = stateUpdate;
 			stateUpdate = FilterStateUpdateForUniqueExclusivityGroups(std::move(stateUpdate));
 
 			auto filteredForDown = FilterDownTranslation(stateUpdate);

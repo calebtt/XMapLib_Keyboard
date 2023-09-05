@@ -119,7 +119,6 @@ auto GetDriverMouseMappings()
     using namespace std::chrono_literals;
     using namespace sds;
     static constexpr KeyboardSettings ksp{};
-    Utilities::SendMouseInput smi;
     constexpr auto FirstDelay = 0ns; // mouse move delays
     constexpr auto RepeatDelay = 1200us;
     constexpr int MouseExGroup = 102;
@@ -131,13 +130,13 @@ auto GetDriverMouseMappings()
             .ButtonVirtualKeycode = ksp.RightThumbstickUp,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
-            .OnDown = [smi]() mutable
+            .OnDown = []()
             {
-                smi.SendMouseMove(0, 1);
+                Utilities::SendMouseMove(0, 1);
             },
-            .OnRepeat = [smi]() mutable
+            .OnRepeat = []()
             {
-                smi.SendMouseMove(0, 1);
+                Utilities::SendMouseMove(0, 1);
             },
             .DelayBeforeFirstRepeat = FirstDelay,
             .DelayForRepeats = RepeatDelay
@@ -146,13 +145,13 @@ auto GetDriverMouseMappings()
             .ButtonVirtualKeycode = ksp.RightThumbstickUpRight,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
-            .OnDown = [smi]() mutable
+            .OnDown = []()
             {
-                smi.SendMouseMove(1, 1);
+                Utilities::SendMouseMove(1, 1);
             },
-            .OnRepeat = [smi]() mutable
+            .OnRepeat = []()
             {
-                smi.SendMouseMove(1, 1);
+                Utilities::SendMouseMove(1, 1);
             },
             .DelayBeforeFirstRepeat = FirstDelay,
             .DelayForRepeats = RepeatDelay
@@ -161,13 +160,13 @@ auto GetDriverMouseMappings()
             .ButtonVirtualKeycode = ksp.RightThumbstickUpLeft,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
-            .OnDown = [smi]() mutable
+            .OnDown = []()
             {
-                smi.SendMouseMove(-1, 1);
+                Utilities::SendMouseMove(-1, 1);
             },
-            .OnRepeat = [smi]() mutable
+            .OnRepeat = []()
             {
-                smi.SendMouseMove(-1, 1);
+                Utilities::SendMouseMove(-1, 1);
             },
             .DelayBeforeFirstRepeat = FirstDelay,
             .DelayForRepeats = RepeatDelay
@@ -176,13 +175,13 @@ auto GetDriverMouseMappings()
             .ButtonVirtualKeycode = ksp.RightThumbstickDown,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
-            .OnDown = [smi]() mutable
+            .OnDown = []()
             {
-                smi.SendMouseMove(0, -1);
+                Utilities::SendMouseMove(0, -1);
             },
-            .OnRepeat = [smi]() mutable
+            .OnRepeat = []()
             {
-                smi.SendMouseMove(0, -1);
+                Utilities::SendMouseMove(0, -1);
             },
             .DelayBeforeFirstRepeat = FirstDelay,
             .DelayForRepeats = RepeatDelay
@@ -191,13 +190,13 @@ auto GetDriverMouseMappings()
             .ButtonVirtualKeycode = ksp.RightThumbstickLeft,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
-            .OnDown = [smi]() mutable
+            .OnDown = []()
             {
-                smi.SendMouseMove(-1, 0);
+                Utilities::SendMouseMove(-1, 0);
             },
-            .OnRepeat = [smi]() mutable
+            .OnRepeat = []()
             {
-                smi.SendMouseMove(-1, 0);
+                Utilities::SendMouseMove(-1, 0);
             },
             .DelayBeforeFirstRepeat = FirstDelay,
             .DelayForRepeats = RepeatDelay
@@ -206,13 +205,13 @@ auto GetDriverMouseMappings()
             .ButtonVirtualKeycode = ksp.RightThumbstickRight,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
-            .OnDown = [smi]() mutable
+            .OnDown = []()
             {
-                smi.SendMouseMove(1, 0);
+                Utilities::SendMouseMove(1, 0);
             },
-            .OnRepeat = [smi]() mutable
+            .OnRepeat = []()
             {
-                smi.SendMouseMove(1, 0);
+                Utilities::SendMouseMove(1, 0);
             },
             .DelayBeforeFirstRepeat = FirstDelay,
             .DelayForRepeats = RepeatDelay
@@ -221,13 +220,13 @@ auto GetDriverMouseMappings()
             .ButtonVirtualKeycode = ksp.RightThumbstickDownRight,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
-            .OnDown = [smi]() mutable
+            .OnDown = []()
             {
-                smi.SendMouseMove(1, -1);
+                Utilities::SendMouseMove(1, -1);
             },
-            .OnRepeat = [smi]() mutable
+            .OnRepeat = []()
             {
-                smi.SendMouseMove(1, -1);
+                Utilities::SendMouseMove(1, -1);
             },
             .DelayBeforeFirstRepeat = FirstDelay,
             .DelayForRepeats = RepeatDelay
@@ -236,13 +235,13 @@ auto GetDriverMouseMappings()
             .ButtonVirtualKeycode = ksp.RightThumbstickDownLeft,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
-            .OnDown = [smi]() mutable
+            .OnDown = []()
             {
-                smi.SendMouseMove(-1, -1);
+                Utilities::SendMouseMove(-1, -1);
             },
-            .OnRepeat = [smi]() mutable
+            .OnRepeat = []()
             {
-                smi.SendMouseMove(-1, -1);
+                Utilities::SendMouseMove(-1, -1);
             },
             .DelayBeforeFirstRepeat = FirstDelay,
             .DelayForRepeats = RepeatDelay
