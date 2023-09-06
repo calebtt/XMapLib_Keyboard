@@ -24,7 +24,7 @@ namespace sds
 		// Function to advance the button mapping to the next state (after operation has been performed)
 		keyboardtypes::Fn_t AdvanceStateFn;
 		// Hash of the mapping it refers to
-		std::size_t MappingHash{};
+		keyboardtypes::VirtualKey_t MappingVk{};
 		// Exclusivity grouping value, if any
 		keyboardtypes::OptGrp_t ExclusivityGrouping;
 		// Call operator, calls op fn then advances the state
@@ -96,7 +96,7 @@ namespace sds
 				currentMapping.LastAction.SetInitial();
 				currentMapping.LastAction.LastSentTime.Reset();
 			},
-			.MappingHash = hash_value(currentMapping),
+			.MappingVk = currentMapping.ButtonVirtualKeycode,
 			.ExclusivityGrouping = currentMapping.ExclusivityGrouping
 		};
 	}
@@ -115,7 +115,7 @@ namespace sds
 			.AdvanceStateFn = [&currentMapping]() {
 				currentMapping.LastAction.SetRepeat();
 			},
-			.MappingHash = hash_value(currentMapping),
+			.MappingVk = currentMapping.ButtonVirtualKeycode,
 			.ExclusivityGrouping = currentMapping.ExclusivityGrouping
 		};
 	}
@@ -135,7 +135,7 @@ namespace sds
 			{
 				overtakenMapping.LastAction.SetUp();
 			},
-			.MappingHash = hash_value(overtakenMapping),
+			.MappingVk = overtakenMapping.ButtonVirtualKeycode,
 			.ExclusivityGrouping = overtakenMapping.ExclusivityGrouping
 		};
 	}
@@ -155,7 +155,7 @@ namespace sds
 			{
 				currentMapping.LastAction.SetUp();
 			},
-			.MappingHash = hash_value(currentMapping),
+			.MappingVk = currentMapping.ButtonVirtualKeycode,
 			.ExclusivityGrouping = currentMapping.ExclusivityGrouping
 		};
 	}
@@ -178,7 +178,7 @@ namespace sds
 			{
 				currentMapping.LastAction.SetDown();
 			},
-			.MappingHash = hash_value(currentMapping),
+			.MappingVk = currentMapping.ButtonVirtualKeycode,
 			.ExclusivityGrouping = currentMapping.ExclusivityGrouping
 		};
 	}

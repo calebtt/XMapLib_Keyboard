@@ -10,7 +10,7 @@
 #include "../XMapLib_Utils/ControllerStatus.h"
 
 #include <iostream>
-
+#include <print>
 
 // Crude mechanism to keep the loop running until [enter] is pressed.
 struct GetterExitCallable final
@@ -259,8 +259,7 @@ auto RunTestDriverLoop()
     auto mapBuffer = GetDriverButtonMappings();
     mapBuffer.append_range(GetDriverMouseMappings());
 
-    for (auto& e : mapBuffer)
-        std::cout << hash_value(e) << '\n';
+    std::cout << std::vformat("Created mappings buffer with {} mappings. Total size: {} bytes.\n", std::make_format_args(mapBuffer.size(), sizeof(mapBuffer.front())*mapBuffer.size()));
 
     // Creating a few polling/translation related types
     sds::KeyboardSettingsPack settingsPack{};

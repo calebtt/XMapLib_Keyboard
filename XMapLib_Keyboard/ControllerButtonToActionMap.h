@@ -73,15 +73,6 @@ namespace sds
 	 */
 	struct CBActionMap final
 	{
-		friend auto hash_value(const CBActionMap& obj) noexcept -> std::size_t
-		{
-			std::size_t seed = 0x070B3753;
-			seed ^= (seed << 6) + (seed >> 2) + 0x339B9BA7 + static_cast<std::size_t>(obj.ButtonVirtualKeycode);
-			seed ^= (seed << 6) + (seed >> 2) + 0x30EE2596 + static_cast<std::size_t>(obj.UsesInfiniteRepeat);
-			seed ^= (seed << 6) + (seed >> 2) + 0x2BC605F1 + static_cast<std::size_t>(obj.SendsFirstRepeatOnly);
-			return seed;
-		}
-
 		/**
 		 * \brief	Controller button Virtual Keycode. Can be platform dependent or custom mapping, depends on input poller behavior.
 		 */

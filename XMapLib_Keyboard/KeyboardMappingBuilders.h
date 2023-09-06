@@ -22,8 +22,9 @@ namespace sds
      * \param delayBeforeFirstRepeat    This delay is used after an initial key-down, before the first time it starts repeating.
      * \return  The built mapping.
      */
+    inline
     auto GetBuiltMappingInfiniteRepeatNoCustomDelay(
-        std::integral auto virtualKey,
+        const keyboardtypes::VirtualKey_t virtualKey,
         std::function<void()> onDown = {},
         std::function<void()> onUp = {},
         std::function<void()> onRepeat = {},
