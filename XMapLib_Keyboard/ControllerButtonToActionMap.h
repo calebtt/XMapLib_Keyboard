@@ -25,14 +25,6 @@ namespace sds
 		ActionState m_currentValue{ ActionState::INIT };
 		KeyboardSettings m_keyDefaults{};
 	public:
-		friend auto hash_value(const MappingStateManager& obj) -> std::size_t
-		{
-			std::size_t seed = 0x577FCF44;
-			seed ^= (seed << 6) + (seed >> 2) + 0x6E3C77E8 + static_cast<std::size_t>(obj.m_currentValue);
-			seed ^= (seed << 6) + (seed >> 2) + 0x6FEC6714 + hash_value(obj.m_keyDefaults);
-			return seed;
-		}
-	public:
 		/**
 		 * \brief	This delay is mostly used for in-between key-repeats, but could also be in between other state transitions.
 		 */

@@ -14,8 +14,10 @@
 
 namespace sds
 {
+	// A translator type, wherein you can call GetUpdatedState with a range of virtual keycode integral values,
+	// and get a TranslationPack as a result.
 	template<typename Poller_t>
-	concept InputPoller_c = requires(Poller_t & t)
+	concept InputTranslator_c = requires(Poller_t & t)
 	{
 		{ t.GetUpdatedState({ 1, 2, 3 }) } -> std::convertible_to<TranslationPack>;
 	};
@@ -128,7 +130,7 @@ namespace sds
 	}
 
 	/**
-	 * \brief Encapsulates the mapping buffer, processes wrapped controller state updates, returns translation packs.
+	 * \brief Encapsulates the mapping buffer, processes controller state updates, returns translation packs.
 	 * \remarks If, before destruction, the mappings are in a state other than initial or awaiting reset, then you may wish to
 	 *	make use of the <c>GetCleanupActions()</c> function. Not copyable. Is movable.
 	 *	<p></p>
@@ -239,7 +241,8 @@ namespace sds
 		}
 	};
 
-	static_assert(InputPoller_c<KeyboardTranslator<>>);
+	static_assert(InputTranslator_c<KeyboardTranslator<>>);
 	static_assert(std::movable<KeyboardTranslator<>>);
+	static_assert(std::copyable<KeyboardTranslator<>> == false);
 
 }
