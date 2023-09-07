@@ -197,6 +197,8 @@ namespace sds
 		[[nodiscard]]
 		auto GetUpdatedState(keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>&& stateUpdate) noexcept -> TranslationPack
 		{
+			auto stateUpdateFiltered = m_filter.has_value() ? m_filter->GetFilteredButtonState(std::move(stateUpdate)) : std::move(stateUpdate);
+
 			TranslationPack translations;
 			for(std::size_t i{}; i < m_mappings.size(); ++i)
 			{
@@ -205,20 +207,20 @@ namespace sds
 				{
 					translations.UpdateRequests.emplace_back(*upToInitial);
 				}
-				else if (const auto initialToDown = GetButtonTranslationForInitialToDown(stateUpdate, mapping))
+				else if (const auto initialToDown = GetButtonTranslationForInitialToDown(stateUpdateFiltered, mapping))
 				{
 					// Advance to next state.
 					translations.DownRequests.emplace_back(*initialToDown);
 				}
-				else if (const auto downToFirstRepeat = GetButtonTranslationForDownToRepeat(stateUpdate, mapping))
+				else if (const auto downToFirstRepeat = GetButtonTranslationForDownToRepeat(stateUpdateFiltered, mapping))
 				{
 					translations.RepeatRequests.emplace_back(*downToFirstRepeat);
 				}
-				else if (const auto repeatToRepeat = GetButtonTranslationForRepeatToRepeat(stateUpdate, mapping))
+				else if (const auto repeatToRepeat = GetButtonTranslationForRepeatToRepeat(stateUpdateFiltered, mapping))
 				{
 					translations.RepeatRequests.emplace_back(*repeatToRepeat);
 				}
-				else if (const auto repeatToUp = GetButtonTranslationForDownOrRepeatToUp(stateUpdate, mapping))
+				else if (const auto repeatToUp = GetButtonTranslationForDownOrRepeatToUp(stateUpdateFiltered, mapping))
 				{
 					translations.UpRequests.emplace_back(*repeatToUp);
 				}

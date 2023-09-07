@@ -273,7 +273,7 @@ auto RunTestDriverLoop()
     while (!gec.IsDone)
     {
         constexpr auto sleepDelay = std::chrono::nanoseconds{ 500us };
-        const auto translation = translator(sds::GetWrappedLegacyApiStateUpdate(settingsPack));
+        const auto translation = translator.GetUpdatedState(sds::GetWrappedLegacyApiStateUpdate(settingsPack));
         translation();
         if(sds::ControllerStatus::IsControllerConnected(settingsPack.PlayerInfo.PlayerId))
             nanotime_sleep(sleepDelay.count());
