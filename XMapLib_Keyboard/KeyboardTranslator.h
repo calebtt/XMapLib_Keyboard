@@ -191,7 +191,7 @@ namespace sds
 		[[nodiscard]]
 		auto operator()(keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>&& stateUpdate) noexcept -> TranslationPack
 		{
-			return m_filter.has_value() ? GetUpdatedState(m_filter->GetFilteredButtonState(std::move(stateUpdate))) : GetUpdatedState(std::move(stateUpdate));
+			return GetUpdatedState(std::move(stateUpdate));
 		}
 
 		[[nodiscard]]
