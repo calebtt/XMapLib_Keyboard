@@ -36,7 +36,7 @@ namespace TestKeyboard
         TEST_METHOD(TestMovingTranslator)
 		{
             auto translator = GetBuiltTranslator();
-            auto movedIntoTranslator = std::move(translator);
+            auto movedIntoTranslator{ std::move(translator) };
 
             movedIntoTranslator = GetBuiltTranslator();
 		}
