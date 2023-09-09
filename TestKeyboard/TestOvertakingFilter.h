@@ -2,7 +2,6 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "TestMappingProvider.h"
-#include "TestPollProvider.h"
 #include "../XMapLib_Keyboard/KeyboardOvertakingFilter.h"
 
 #include <filesystem>

@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "TestMappingProvider.h"
-#include "TestPollProvider.h"
 #include "TestOvertakingFilter.h"
 #include "TestGroupActivationInfo.h"
 #include <filesystem>
@@ -32,6 +31,14 @@ namespace TestKeyboard
             const auto translations2 = poller( {} );
             Assert::IsTrue(translations2.UpRequests.size() == 2, L"Empty state not creating 2 translations after down.");
             translations2();
+		}
+
+        TEST_METHOD(TestMovingTranslator)
+		{
+            auto translator = GetBuiltTranslator();
+            auto movedIntoTranslator = std::move(translator);
+
+            movedIntoTranslator = GetBuiltTranslator();
 		}
 
         // Short test of filter without translator.
