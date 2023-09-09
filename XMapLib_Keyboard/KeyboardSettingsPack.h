@@ -178,11 +178,7 @@ namespace sds
 		KeyboardPlayerInfo PlayerInfo;
 		KeyboardSettings Settings;
 	};
-	
-	// MagnitudeSentinel is used to trim the adjusted magnitude values from the thumbstick, max on my hardware close to 32k.
-	static constexpr int MagnitudeSentinel{ 32'766 };
-	// number of coordinate plane quadrants (obviously 4)
-	static constexpr auto NumQuadrants = 4;
+
 	static constexpr keyboardtypes::ComputationFloat_t MY_PI{ std::numbers::pi_v<keyboardtypes::ComputationFloat_t> };
 	static constexpr keyboardtypes::ComputationFloat_t MY_PI2{ std::numbers::pi_v<keyboardtypes::ComputationFloat_t> / keyboardtypes::ComputationFloat_t{2} };
 	static constexpr keyboardtypes::ComputationFloat_t MY_PI8{ std::numbers::pi_v<keyboardtypes::ComputationFloat_t> / keyboardtypes::ComputationFloat_t{8} };
