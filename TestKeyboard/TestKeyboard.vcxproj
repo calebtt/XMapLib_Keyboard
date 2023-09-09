@@ -179,7 +179,6 @@
     <ClInclude Include="TestGroupActivationInfo.h" />
     <ClInclude Include="TestMappingProvider.h" />
     <ClInclude Include="TestOvertakingFilter.h" />
-    <ClInclude Include="TestPollProvider.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XMapLib_Keyboard\XMapLib_Keyboard.vcxproj">

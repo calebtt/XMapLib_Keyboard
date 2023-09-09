@@ -7,6 +7,8 @@
 
 #include <filesystem>
 
+#include "../XMapLib_Keyboard/KeyboardMappingBuilders.h"
+
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace TestKeyboard
@@ -176,6 +178,27 @@ namespace TestKeyboard
 			translationPack();
 			Assert::IsTrue(translationPack.DownRequests.size() == 1);
 			Assert::IsTrue(translationPack.UpRequests.size() == 1);
+		}
+
+		TEST_METHOD(TestCopyAndMovingTheFilter)
+		{
+			sds::KeyboardOvertakingFilter filt;
+			auto mappings = GetDriverButtonMappings();
+			filt.SetMappingRange(mappings);
+
+			sds::KeyboardOvertakingFilter secondFilt;
+			auto secondMappings = GetDriverButtonMappings();
+			secondFilt.SetMappingRange(secondMappings);
+
+			// copy
+			filt = secondFilt;
+
+			// move-assign
+			filt = std::move(secondFilt);
+
+			// move
+			auto newFilt = std::move(filt);
+
 		}
 	};
 }

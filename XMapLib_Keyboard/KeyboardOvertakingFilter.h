@@ -340,6 +340,7 @@ namespace sds
 			return stateUpdate;
 		}
 	};
+	static_assert(std::copyable<KeyboardOvertakingFilter>);
 	static_assert(std::movable<KeyboardOvertakingFilter>);
 
 }
