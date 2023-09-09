@@ -165,7 +165,7 @@ namespace sds
 
 		/**
 		 * \brief Mapping Vector move Ctor, throws on exclusivity group error, initializes the timers with the custom timer values.
-		 * \param keyMappings Forwarding ref to a mapping vector type.
+		 * \param keyMappings Rv ref to a mapping vector type.
 		 * \exception std::runtime_error on exclusivity group error during construction
 		 */
 		explicit KeyboardTranslator(MappingVector_t&& keyMappings )
