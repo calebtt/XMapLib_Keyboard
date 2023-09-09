@@ -32,7 +32,7 @@ namespace sds
 
 	// Concept for a filter class, used to apply a specific "overtaking" behavior (exclusivity grouping behavior) implementation.
 	template<typename FilterType_t>
-	concept ValidFilterType = requires(FilterType_t & t)
+	concept ValidFilterType_c = requires(FilterType_t & t)
 	{
 		{ t.SetMappingRange(std::span<CBActionMap>{}) };
 		{ t.GetFilteredButtonState({1,2,3}) } -> std::convertible_to<keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>>;
@@ -136,7 +136,7 @@ namespace sds
 	 *	<p></p>
 	 *	<p>An invariant exists such that: <b>There must be only one mapping per virtual keycode.</b></p>
 	 */
-	template<ValidFilterType OvertakingFilter_t = KeyboardOvertakingFilter>
+	template<ValidFilterType_c OvertakingFilter_t = KeyboardOvertakingFilter>
 	class KeyboardTranslator final
 	{
 		using MappingVector_t = std::vector<CBActionMap>;
