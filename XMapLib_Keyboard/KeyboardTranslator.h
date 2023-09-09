@@ -150,7 +150,7 @@ namespace sds
 		~KeyboardTranslator() = default;
 
 		KeyboardTranslator(KeyboardTranslator&& other) noexcept // implemented move
-			: m_mappings(std::move(other.m_mappings)), m_filter(other.m_filter)
+			: m_mappings(std::move(other.m_mappings)), m_filter(std::move(other.m_filter))
 		{
 		}
 
@@ -159,7 +159,7 @@ namespace sds
 			if (this == &other)
 				return *this;
 			m_mappings = std::move(other.m_mappings);
-			m_filter = other.m_filter;
+			m_filter = std::move(other.m_filter);
 			return *this;
 		}
 
