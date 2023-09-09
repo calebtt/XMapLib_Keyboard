@@ -13,7 +13,7 @@ namespace TestKeyboard
 	TEST_CLASS(TestKeyboard)
 	{
         // Test translator with no exclusivity group filter.
-		TEST_METHOD(PollerTest)
+		TEST_METHOD(TranslatorTest)
 		{
             using namespace std::chrono_literals;
             using namespace std::chrono;
