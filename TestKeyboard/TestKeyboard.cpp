@@ -52,7 +52,7 @@ namespace TestKeyboard
             auto maps1 = GetMapping(buttonA, 101);
             auto maps2 = GetMapping(buttonB, 101);
             maps2.append_range(maps1);
-            // Set mapping range on the filter (not necessary for normal use).
+            // Set mapping range on the filter (not necessary for normal use aka moved into the translator).
             filter.SetMappingRange(maps2);
 
             const auto stateUpdatesRange = filter.GetFilteredButtonState({ buttonA, buttonB });
