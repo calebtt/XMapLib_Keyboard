@@ -37,7 +37,7 @@ namespace sds
 		template struct IsDirection<StickUpRight, ThumbstickDirection::UpRight>;
 		template struct IsDirection<StickUp, ThumbstickDirection::Up>;
 		template struct IsDirection<StickUpLeft, ThumbstickDirection::LeftUp>;
-		// This specialization requires custom logic in the call operator to work.
+		// This specialization requires custom logic in the IsItThisDirection() to work.
 		template<> struct IsDirection<StickLeft, ThumbstickDirection::Left>
 		{
 			static constexpr ThumbstickDirection Direction{ ThumbstickDirection::Left };
