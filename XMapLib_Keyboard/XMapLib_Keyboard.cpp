@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <print>
+#include <chrono>
 
 // Crude mechanism to keep the loop running until [enter] is pressed.
 struct GetterExitCallable final
@@ -251,6 +252,15 @@ auto GetDriverMouseMappings()
 	return mapBuffer;
 }
 
+inline
+void TranslationLoop(const sds::KeyboardSettingsPack& settingsPack, sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
+{
+    using namespace std::chrono_literals;
+	const auto translation = translator.GetUpdatedState(GetWrappedLegacyApiStateUpdate(settingsPack));
+	translation();
+	nanotime_sleep(sleepDelay.count());
+}
+
 auto RunTestDriverLoop()
 {
     using namespace std::chrono_literals;
@@ -265,24 +275,38 @@ auto RunTestDriverLoop()
     sds::KeyboardSettingsPack settingsPack{};
     // The filter is constructed here, to support custom filters with their own construction needs.
     sds::KeyboardOvertakingFilter filter{};
-    // Filter is then moved into the poller at construction.
+    // Filter is then moved into the translator at construction.
     sds::KeyboardTranslator translator{ std::move(mapBuffer), std::move(filter) };
-    //sds::KeyboardTranslator translator{std::move(mapBuffer)};
+
+    constexpr auto SleepDelay = std::chrono::nanoseconds{ 500us };
+    static constexpr std::size_t IterationsForTiming{ 10'000 };
+    std::size_t iterationCount{};
+    auto startTime{ std::chrono::steady_clock::now() };
+    const auto updateLoopTimer = [&startTime, &iterationCount](const std::chrono::nanoseconds sleepDelay)
+    {
+        ++iterationCount;
+        if(iterationCount >= IterationsForTiming)
+        {
+            const auto endTime = std::chrono::steady_clock::now();
+            const auto diffTime = endTime - startTime;
+            const auto timePerIter = std::chrono::duration_cast<std::chrono::microseconds>(diffTime / IterationsForTiming - sleepDelay);
+            std::cout << "Average time over " << IterationsForTiming << " iterations, per iteration: " << timePerIter << '\n';
+
+            iterationCount = {};
+            startTime = std::chrono::steady_clock::now();
+        }
+    };
+
     GetterExitCallable gec;
     const auto exitFuture = std::async(std::launch::async, [&]() { gec.GetExitSignal(); });
     while (!gec.IsDone)
     {
-        constexpr auto sleepDelay = std::chrono::nanoseconds{ 500us };
-        const auto translation = translator.GetUpdatedState(sds::GetWrappedLegacyApiStateUpdate(settingsPack));
-        translation();
-        if(sds::ControllerStatus::IsControllerConnected(settingsPack.PlayerInfo.PlayerId))
-            nanotime_sleep(sleepDelay.count());
-        else
-            nanotime_sleep(sleepDelay.count()*2);
+        TranslationLoop(settingsPack, translator, SleepDelay);
+        updateLoopTimer(SleepDelay);
     }
     std::cout << "Performing cleanup actions...\n";
-    const auto cleanupTranslation = translator.GetCleanupActions();
-    for (auto& cleanupAction : cleanupTranslation)
+    const auto cleanupTranslations = translator.GetCleanupActions();
+    for (auto& cleanupAction : cleanupTranslations)
         cleanupAction();
 
     exitFuture.wait();

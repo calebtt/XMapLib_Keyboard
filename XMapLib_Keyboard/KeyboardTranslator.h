@@ -147,26 +147,15 @@ namespace sds
 		KeyboardTranslator() = delete; // no default
 		KeyboardTranslator(const KeyboardTranslator& other) = delete; // no copy
 		auto operator=(const KeyboardTranslator& other)->KeyboardTranslator & = delete; // no copy-assign
+
+		KeyboardTranslator(KeyboardTranslator&& other) = default; // move-construct
+		auto operator=(KeyboardTranslator&& other) -> KeyboardTranslator& = default; // move-assign
 		~KeyboardTranslator() = default;
 
-		KeyboardTranslator(KeyboardTranslator&& other) noexcept // implemented move
-			: m_mappings(std::move(other.m_mappings)), m_filter(std::move(other.m_filter))
-		{
-		}
-
-		auto operator=(KeyboardTranslator&& other) noexcept -> KeyboardTranslator& // implemented move-assign
-		{
-			if (this == &other)
-				return *this;
-			m_mappings = std::move(other.m_mappings);
-			m_filter = std::move(other.m_filter);
-			return *this;
-		}
-
 		/**
-		 * \brief Mapping Vector move Ctor, throws on exclusivity group error, initializes the timers with the custom timer values.
+		 * \brief Mapping Vector move Ctor, may throw on exclusivity group error, OR more than one mapping per VK.
 		 * \param keyMappings Rv ref to a mapping vector type.
-		 * \exception std::runtime_error on exclusivity group error during construction
+		 * \exception std::runtime_error on exclusivity group error during construction, OR more than one mapping per VK.
 		 */
 		explicit KeyboardTranslator(MappingVector_t&& keyMappings )
 		: m_mappings(std::move(keyMappings))
@@ -177,7 +166,12 @@ namespace sds
 				throw std::runtime_error("Exception: More than 1 mapping per VK!");
 		}
 
-		// Ctor for adding a filter.
+		/**
+		 * \brief Constructor used with adding a filter, note both params expect arguments std::move'd in.
+		 * \param keyMappings Rv ref to a mapping vector type.
+		 * \param filter Rv ref to a filter type.
+		 * \exception std::runtime_error on exclusivity group error during construction, OR more than one mapping per VK.
+		 */
 		KeyboardTranslator(MappingVector_t&& keyMappings, OvertakingFilter_t&& filter)
 			: m_mappings(std::move(keyMappings)), m_filter(std::move(filter))
 		{

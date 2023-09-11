@@ -300,18 +300,18 @@ namespace sds
 		 * \return "filtered" state update.
 		 */
 		[[nodiscard]]
-		auto FilterStateUpdateForUniqueExclusivityGroups(keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>&& stateUpdate)
+		auto FilterStateUpdateForUniqueExclusivityGroups(keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>&& stateUpdate) -> keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>
 		{
 			using std::ranges::find, std::ranges::cend;
 			using StateRange_t = std::remove_cvref_t<decltype(stateUpdate)>;
-			using VecIt_t = StateRange_t::const_iterator;
 
 			keyboardtypes::SmallVector_t<keyboardtypes::GrpVal_t> groupingValueBuffer;
-			keyboardtypes::SmallVector_t<VecIt_t> positionsToRemove;
+			StateRange_t virtualKeycodesToRemove;
+			groupingValueBuffer.reserve(stateUpdate.size());
+			virtualKeycodesToRemove.reserve(stateUpdate.size());
 			
-			for (auto vkIt = stateUpdate.cbegin(); vkIt != stateUpdate.cend(); ++vkIt)
+			for (const auto vk : stateUpdate)
 			{
-				const auto vk = *vkIt;
 				const auto foundMappingForVk = find(m_mappings, vk, &CBActionMap::ButtonVirtualKeycode);
 				if (foundMappingForVk != cend(m_mappings))
 				{
@@ -325,7 +325,7 @@ namespace sds
 
 							// If already in located, being handled groupings, add to remove buffer.
 							if (groupingFindResult != cend(groupingValueBuffer))
-								positionsToRemove.emplace_back(vkIt);
+								virtualKeycodesToRemove.emplace_back(vk);
 							// Otherwise, add this new grouping to the grouping value buffer.
 							else
 								groupingValueBuffer.emplace_back(grpVal);
@@ -334,8 +334,8 @@ namespace sds
 				}
 			}
 
-			for (const auto& it : positionsToRemove)
-				stateUpdate.erase(it);
+			for (const auto vk : virtualKeycodesToRemove)
+				std::erase(stateUpdate, vk);
 
 			return stateUpdate;
 		}
