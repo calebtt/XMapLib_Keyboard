@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <concepts>
 #include <map>
+#include "../XMapLib_Utils/Flux.hpp"
 
 namespace sds
 {
@@ -213,6 +214,6 @@ namespace sds
 	inline
 	bool AreMappingVksNonZero(const std::span<const CBActionMap> mappingsList) noexcept
 	{
-		return ! std::ranges::any_of(mappingsList, [](const auto vk) { return vk == 0; }, &CBActionMap::ButtonVirtualKeycode);
+		return flux::all(mappingsList, flux::proj(flux::pred::nonzero, &CBActionMap::ButtonVirtualKeycode));
 	}
 }

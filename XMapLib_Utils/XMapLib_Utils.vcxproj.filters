@@ -16,6 +16,9 @@
     <Filter Include="Header Files\IOHelpers">
       <UniqueIdentifier>{9cde9328-3b2a-44af-8211-c4781b638a59}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Algorithmic">
+      <UniqueIdentifier>{5e2e0d50-7680-4757-bf71-19c8c75a1601}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControllerStatus.h">
@@ -35,6 +38,9 @@
     </ClInclude>
     <ClInclude Include="nanotime.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Flux.hpp">
+      <Filter>Header Files\Algorithmic</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

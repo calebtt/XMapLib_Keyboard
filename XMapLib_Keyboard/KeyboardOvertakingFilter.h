@@ -11,6 +11,7 @@
 
 #include "ControllerButtonToActionMap.h"
 #include "KeyboardTranslationHelpers.h"
+#include "../XMapLib_Utils/Flux.hpp"
 
 namespace sds
 {
@@ -24,13 +25,14 @@ namespace sds
 	inline
 	auto GetMappingIndexForVk(const keyboardtypes::VirtualKey_t vk, const std::span<const CBActionMap> mappingsRange) -> keyboardtypes::Index_t
 	{
-		using std::ranges::find;
-		using std::ranges::cend;
-		using std::ranges::cbegin;
-		using std::ranges::distance;
+		using flux::find_if;
+		using flux::last;
+		using flux::first;
+		using flux::distance;
 		using keyboardtypes::Index_t;
-		const auto findResult = find(mappingsRange, vk, &CBActionMap::ButtonVirtualKeycode);
-		const bool didFindResult = findResult != cend(mappingsRange);
+
+		const auto findResult = find_if(mappingsRange, flux::proj{ [vk](const auto e) { return e == vk; }, &CBActionMap::ButtonVirtualKeycode });
+		const bool didFindResult = findResult != last(mappingsRange);
 
 		if (!didFindResult)
 		{
@@ -38,15 +40,27 @@ namespace sds
 				std::vformat("Did not find mapping with vk: {} in mappings range.\nLocation:\n{}\n\n",
 					std::make_format_args(vk, std::source_location::current().function_name())));
 		}
-
-		return static_cast<Index_t>(distance(cbegin(mappingsRange), findResult));
+		return static_cast<keyboardtypes::Index_t>(findResult);
+		//return static_cast<Index_t>(distance(mappingsRange, first(mappingsRange), findResult));
 	}
 
 	[[nodiscard]]
 	constexpr
 	auto IsMappingInRange(const CBActionMap& mapping, const std::span<const keyboardtypes::VirtualKey_t> downVirtualKeys)
 	{
-		return std::ranges::any_of(downVirtualKeys, [&mapping](const auto vk) { return vk == mapping.ButtonVirtualKeycode; });
+		return flux::ref(downVirtualKeys).any([&mapping](const auto vk) { return vk == mapping.ButtonVirtualKeycode; });
+		//return std::ranges::any_of(downVirtualKeys, [&mapping](const auto vk) { return vk == mapping.ButtonVirtualKeycode; });
+	}
+
+	constexpr
+	void EraseValuesFromRange(std::ranges::range auto& theRange, const std::ranges::range auto& theValues)
+	{
+		for(const auto& elem: theValues)
+		{
+			const auto foundPosition = std::ranges::find(theRange, elem);
+			if (foundPosition != std::ranges::cend(theRange))
+				theRange.erase(foundPosition);
+		}
 	}
 
 	/**
@@ -221,8 +235,9 @@ namespace sds
 		[[nodiscard]]
 		auto FilterDownTranslation(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& stateUpdate)
 		{
-			using std::ranges::find;
-			using std::ranges::cend;
+			using flux::find;
+			using flux::find_if;
+			using flux::last;
 			using std::ranges::views::transform;
 			using std::ranges::views::filter;
 			using std::erase;
@@ -232,15 +247,15 @@ namespace sds
 			// filters for all mappings of interest per the current 'down' VK buffer.
 			const auto vkHasMappingPred = [this](const auto vk)
 			{
-				const auto findResult = find(m_mappings, vk, &CBActionMap::ButtonVirtualKeycode);
-				return findResult != cend(m_mappings);
+				const auto findResult = find_if(m_mappings, flux::proj{ [vk](const auto e) { return e == vk; }, &CBActionMap::ButtonVirtualKeycode });
+				return findResult != last(m_mappings);
 			};
 			const auto exGroupPred = [this](const auto ind) { return GetMappingAt(ind).ExclusivityGrouping.has_value(); };
 			const auto mappingIndexPred = [this](const auto vk) { return GetMappingIndexForVk(vk, m_mappings); };
 
 			keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t> vksToRemoveRange;
-
-			for(const auto index : stateUpdateCopy | filter(vkHasMappingPred) | transform(mappingIndexPred) | filter(exGroupPred))
+			const auto filteredBuf = flux::ref(stateUpdateCopy).filter(vkHasMappingPred).map(mappingIndexPred).filter(exGroupPred);
+			for(const auto index : filteredBuf)
 			{
 				const auto& currentMapping = GetMappingAt(index);
 				auto& currentGroup = m_groupMap[*currentMapping.ExclusivityGrouping];
@@ -257,12 +272,8 @@ namespace sds
 					vksToRemoveRange.emplace_back(*upOpt);
 				}
 			}
-			for(const auto vk : vksToRemoveRange)
-			{
-				const auto findResult = find(stateUpdateCopy, vk);
-				if(findResult != cend(stateUpdateCopy))
-					stateUpdateCopy.erase(findResult);
-			}
+
+			EraseValuesFromRange(stateUpdateCopy, vksToRemoveRange);
 
 			return stateUpdateCopy;
 		}
@@ -276,8 +287,8 @@ namespace sds
 			// filters for all mappings of interest per the current 'down' VK buffer (the UP mappings in this case).
 			const auto exGroupPred = [](const CBActionMap& currentMapping) { return currentMapping.ExclusivityGrouping.has_value(); };
 			const auto stateUpdateUpPred = [&stateUpdate](const CBActionMap& currentMapping) { return !IsMappingInRange(currentMapping, stateUpdate); };
-
-			for (const auto& currentMapping : m_mappings | filter(exGroupPred) | filter(stateUpdateUpPred))
+			const auto filteredBuf = flux::ref(m_mappings).filter(exGroupPred).filter(stateUpdateUpPred);
+			for (const auto& currentMapping : filteredBuf)
 			{
 				auto& currentGroup = m_groupMap[*currentMapping.ExclusivityGrouping];
 				currentGroup.UpdateForNewMatchingGroupingUp(currentMapping.ButtonVirtualKeycode);
@@ -302,7 +313,7 @@ namespace sds
 		[[nodiscard]]
 		auto FilterStateUpdateForUniqueExclusivityGroups(keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>&& stateUpdate) -> keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>
 		{
-			using std::ranges::find, std::ranges::cend;
+			using flux::find, flux::last, flux::find_if;
 			using StateRange_t = std::remove_cvref_t<decltype(stateUpdate)>;
 
 			keyboardtypes::SmallVector_t<keyboardtypes::GrpVal_t> groupingValueBuffer;
@@ -312,19 +323,20 @@ namespace sds
 			
 			for (const auto vk : stateUpdate)
 			{
-				const auto foundMappingForVk = find(m_mappings, vk, &CBActionMap::ButtonVirtualKeycode);
-				if (foundMappingForVk != cend(m_mappings))
+				auto foundMappingForVk = find_if(m_mappings, flux::proj{ [vk](const auto e) { return e == vk; }, &CBActionMap::ButtonVirtualKeycode });
+				if (foundMappingForVk != last(m_mappings))
 				{
-					if (foundMappingForVk->ExclusivityGrouping)
+					auto& foundMapping = m_mappings[foundMappingForVk];
+					if (foundMapping.ExclusivityGrouping)
 					{
-						const auto grpVal = *foundMappingForVk->ExclusivityGrouping;
+						const auto grpVal = *foundMapping.ExclusivityGrouping;
 						auto& currentGroup = m_groupMap[grpVal];
 						if (!currentGroup.IsMappingActivatedOrOvertaken(vk))
 						{
 							const auto groupingFindResult = find(groupingValueBuffer, grpVal);
 
 							// If already in located, being handled groupings, add to remove buffer.
-							if (groupingFindResult != cend(groupingValueBuffer))
+							if (groupingFindResult != last(groupingValueBuffer))
 								virtualKeycodesToRemove.emplace_back(vk);
 							// Otherwise, add this new grouping to the grouping value buffer.
 							else
@@ -333,9 +345,7 @@ namespace sds
 					}
 				}
 			}
-
-			for (const auto vk : virtualKeycodesToRemove)
-				std::erase(stateUpdate, vk);
+			EraseValuesFromRange(stateUpdate, virtualKeycodesToRemove);
 
 			return stateUpdate;
 		}

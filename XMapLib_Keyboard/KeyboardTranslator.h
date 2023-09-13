@@ -7,6 +7,7 @@
 #include "KeyboardCustomTypes.h"
 #include "KeyboardTranslationHelpers.h"
 #include "KeyboardOvertakingFilter.h"
+#include "../XMapLib_Utils/Flux.hpp"
 
 /*
  *	Note: There are some static sized arrays used here with capacity defined in customtypes.
@@ -55,14 +56,14 @@ namespace sds
 	auto GetButtonTranslationForInitialToDown(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
 		using
-		std::ranges::find,
-		std::ranges::end;
+		flux::find,
+		flux::last;
 
 		if (singleButton.LastAction.IsInitialState())
 		{
 			const auto findResult = find(downKeys, singleButton.ButtonVirtualKeycode);
 			// If VK *is* found in the down list, create the down translation.
-			if(findResult != end(downKeys))
+			if(findResult != last(downKeys))
 				return GetInitialKeyDownTranslationResult(singleButton);
 		}
 		return {};
@@ -72,14 +73,14 @@ namespace sds
 	inline
 	auto GetButtonTranslationForDownToRepeat(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
-		using std::ranges::find, std::ranges::end;
+		using flux::find, flux::last;
 		const bool isDownAndUsesRepeat = singleButton.LastAction.IsDown() && (singleButton.UsesInfiniteRepeat || singleButton.SendsFirstRepeatOnly);
 		const bool isDelayElapsed = singleButton.LastAction.DelayBeforeFirstRepeat.IsElapsed();
 		if (isDownAndUsesRepeat && isDelayElapsed)
 		{
 			const auto findResult = find(downKeys, singleButton.ButtonVirtualKeycode);
 			// If VK *is* found in the down list, create the repeat translation.
-			if (findResult != end(downKeys))
+			if (findResult != last(downKeys))
 				return GetRepeatTranslationResult(singleButton);
 		}
 		return {};
@@ -89,13 +90,13 @@ namespace sds
 	inline
 	auto GetButtonTranslationForRepeatToRepeat(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
-		using std::ranges::find, std::ranges::end;
+		using flux::find, flux::last;
 		const bool isRepeatAndUsesInfinite = singleButton.LastAction.IsRepeating() && singleButton.UsesInfiniteRepeat;
 		if (isRepeatAndUsesInfinite && singleButton.LastAction.LastSentTime.IsElapsed())
 		{
 			const auto findResult = find(downKeys, singleButton.ButtonVirtualKeycode);
 			// If VK *is* found in the down list, create the repeat translation.
-			if (findResult != end(downKeys))
+			if (findResult != last(downKeys))
 				return GetRepeatTranslationResult(singleButton);
 		}
 		return {};
@@ -105,12 +106,12 @@ namespace sds
 	inline
 	auto GetButtonTranslationForDownOrRepeatToUp(const keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
-		using std::ranges::find, std::ranges::end;
+		using flux::find, flux::last;
 		if (singleButton.LastAction.IsDown() || singleButton.LastAction.IsRepeating())
 		{
 			const auto findResult = find(downKeys, singleButton.ButtonVirtualKeycode);
 			// If VK is not found in the down list, create the up translation.
-			if(findResult == end(downKeys))
+			if(findResult == last(downKeys))
 				return GetKeyUpTranslationResult(singleButton);
 		}
 		return {};
