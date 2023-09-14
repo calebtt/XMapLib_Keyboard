@@ -49,6 +49,17 @@ namespace sds
 		return std::ranges::any_of(downVirtualKeys, [&mapping](const auto vk) { return vk == mapping.ButtonVirtualKeycode; });
 	}
 
+	constexpr
+	void EraseValuesFromRange(std::ranges::range auto& theRange, const std::ranges::range auto& theValues)
+	{
+		for (const auto& elem : theValues)
+		{
+			const auto foundPosition = std::ranges::find(theRange, elem);
+			if (foundPosition != std::ranges::cend(theRange))
+				theRange.erase(foundPosition);
+		}
+	}
+
 	/**
 	 * \brief	<para>A logical representation of a mapping's exclusivity group activation status, for this setup a single key in the exclusivity group can be 'activated'
 	 *	or have a key-down state at a time. It is exclusively the only key in the group forwarded to the translator for processing of key-down events.</para>
@@ -257,12 +268,8 @@ namespace sds
 					vksToRemoveRange.emplace_back(*upOpt);
 				}
 			}
-			for(const auto vk : vksToRemoveRange)
-			{
-				const auto findResult = find(stateUpdateCopy, vk);
-				if(findResult != cend(stateUpdateCopy))
-					stateUpdateCopy.erase(findResult);
-			}
+
+			EraseValuesFromRange(stateUpdateCopy, vksToRemoveRange);
 
 			return stateUpdateCopy;
 		}
@@ -334,8 +341,7 @@ namespace sds
 				}
 			}
 
-			for (const auto vk : virtualKeycodesToRemove)
-				std::erase(stateUpdate, vk);
+			EraseValuesFromRange(stateUpdate, virtualKeycodesToRemove);
 
 			return stateUpdate;
 		}
