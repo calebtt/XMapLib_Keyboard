@@ -194,9 +194,8 @@ namespace sds
 			auto stateUpdateFiltered = m_filter.has_value() ? m_filter->GetFilteredButtonState(std::move(stateUpdate)) : std::move(stateUpdate);
 
 			TranslationPack translations;
-			for(std::size_t i{}; i < m_mappings.size(); ++i)
+			for(auto& mapping : m_mappings)
 			{
-				auto& mapping = m_mappings[i];
 				if (const auto upToInitial = GetButtonTranslationForUpToInitial(mapping))
 				{
 					translations.UpdateRequests.emplace_back(*upToInitial);

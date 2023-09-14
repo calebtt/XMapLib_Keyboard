@@ -256,9 +256,7 @@ namespace sds
 				const auto& currentMapping = GetMappingAt(index);
 				auto& currentGroup = m_groupMap[*currentMapping.ExclusivityGrouping];
 
-				const auto updateResult = currentGroup.UpdateForNewMatchingGroupingDown(currentMapping.ButtonVirtualKeycode);
-				const bool shouldFilter = std::get<0>(updateResult);
-				const auto upOpt = std::get<1>(updateResult);
+				const auto& [shouldFilter, upOpt] = currentGroup.UpdateForNewMatchingGroupingDown(currentMapping.ButtonVirtualKeycode);
 				if(shouldFilter)
 				{
 					vksToRemoveRange.emplace_back(currentMapping.ButtonVirtualKeycode);
