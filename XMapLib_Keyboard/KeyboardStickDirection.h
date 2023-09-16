@@ -7,67 +7,54 @@ namespace sds
 {
 	namespace detail
 	{
-		// Direction boundary value pairs, with diagonals.
-		static constexpr auto StickRight{ std::make_pair(-MY_PI8, MY_PI8) };
-		static constexpr auto StickUpRight{ std::make_pair(MY_PI8, 3 * MY_PI8) };
-		static constexpr auto StickUp{ std::make_pair(3 * MY_PI8, 5 * MY_PI8) };
-		static constexpr auto StickUpLeft{ std::make_pair(5 * MY_PI8, 7 * MY_PI8) };
-
-		static constexpr auto StickDownRight{ std::make_pair(3 * -MY_PI8, -MY_PI8) };
-		static constexpr auto StickDown{ std::make_pair(5 * -MY_PI8, 3 * -MY_PI8) };
-		static constexpr auto StickDownLeft{ std::make_pair(7 * -MY_PI, 5 * -MY_PI8) };
-		static constexpr auto StickLeft{ std::make_pair(7 * MY_PI8, 7 * -MY_PI8) };
-
-		// Primary template for a directional bounds checker.
-		template<keyboardtypes::CompFloatPair_t bounds, ThumbstickDirection direction>
-		struct IsDirection
+		// Apparently std::tuple can't be used for non-type template param
+		struct DirectionTuple
 		{
-			static constexpr ThumbstickDirection Direction{ direction };
-
-			static
-			constexpr
-			bool IsItThisDirection(const keyboardtypes::ComputationFloat_t theta) noexcept
-			{
-				return theta >= bounds.first && theta <= bounds.second;
-			}
+			keyboardtypes::ComputationFloat_t Low;
+			keyboardtypes::ComputationFloat_t High;
+			ThumbstickDirection Direction;
+			constexpr DirectionTuple(keyboardtypes::ComputationFloat_t low, keyboardtypes::ComputationFloat_t high, ThumbstickDirection dir) noexcept
+				: Low(low), High(high), Direction(dir) { }
 		};
+
+		using DirectionTuple_t = DirectionTuple;
+
+		// Direction boundary value tuples, with diagonal directions, and translation.
+		static constexpr auto StickRight{ DirectionTuple_t(-MY_PI8, MY_PI8, ThumbstickDirection::Right) };
+		static constexpr auto StickUpRight{ DirectionTuple_t(MY_PI8, 3 * MY_PI8, ThumbstickDirection::UpRight) };
+		static constexpr auto StickUp{ DirectionTuple_t(3 * MY_PI8, 5 * MY_PI8, ThumbstickDirection::Up) };
+		static constexpr auto StickUpLeft{ DirectionTuple_t(5 * MY_PI8, 7 * MY_PI8, ThumbstickDirection::LeftUp) };
+
+		static constexpr auto StickDownRight{ DirectionTuple_t(3 * -MY_PI8, -MY_PI8, ThumbstickDirection::RightDown) };
+		static constexpr auto StickDown{ DirectionTuple_t(5 * -MY_PI8, 3 * -MY_PI8, ThumbstickDirection::Down) };
+		static constexpr auto StickDownLeft{ DirectionTuple_t(7 * -MY_PI, 5 * -MY_PI8, ThumbstickDirection::DownLeft) };
+		static constexpr auto StickLeft{ DirectionTuple_t(7 * MY_PI8, 7 * -MY_PI8, ThumbstickDirection::Left) };
+
+		// Primary function template for a directional bounds checker.
+		template<DirectionTuple_t bounds>
+		constexpr auto GetDirection(const keyboardtypes::ComputationFloat_t theta) noexcept -> std::optional<ThumbstickDirection>
+		{
+			return (theta >= bounds.Low && theta <= bounds.High) ? bounds.Direction : std::optional<ThumbstickDirection>{};
+		}
 
 		// Explicit instantiations for specific boundary pair and direction type.
-		template struct IsDirection<StickRight, ThumbstickDirection::Right>;
-		template struct IsDirection<StickUpRight, ThumbstickDirection::UpRight>;
-		template struct IsDirection<StickUp, ThumbstickDirection::Up>;
-		template struct IsDirection<StickUpLeft, ThumbstickDirection::LeftUp>;
-		// This specialization requires custom logic in the IsItThisDirection() to work.
-		template<> struct IsDirection<StickLeft, ThumbstickDirection::Left>
+		template auto GetDirection<StickRight>(const keyboardtypes::ComputationFloat_t theta) noexcept -> std::optional<ThumbstickDirection>;
+		template auto GetDirection<StickUpRight>(const keyboardtypes::ComputationFloat_t theta) noexcept -> std::optional<ThumbstickDirection>;
+		template auto GetDirection<StickUp>(const keyboardtypes::ComputationFloat_t theta) noexcept -> std::optional<ThumbstickDirection>;
+		template auto GetDirection<StickUpLeft>(const keyboardtypes::ComputationFloat_t theta) noexcept -> std::optional<ThumbstickDirection>;
+
+		// This specialization requires custom logic in the bounds check to work.
+		template<>
+		constexpr auto GetDirection<StickLeft>(const keyboardtypes::ComputationFloat_t theta) noexcept -> std::optional<ThumbstickDirection>
 		{
-			static constexpr ThumbstickDirection Direction{ ThumbstickDirection::Left };
+			const bool isThetaPositive = theta >= decltype(theta){};
+			const bool isWithinBounds = isThetaPositive ? theta >= StickLeft.Low : theta <= StickLeft.High;
+			return isWithinBounds ? StickLeft.Direction : std::optional<ThumbstickDirection>{};
+		}
 
-			static
-			constexpr
-			bool IsItThisDirection(const keyboardtypes::ComputationFloat_t theta) noexcept
-			{
-				const bool isThetaPositive = theta >= decltype(theta){};
-				return isThetaPositive ? theta >= StickLeft.first : theta <= StickLeft.second;
-			}
-		};
-		template struct IsDirection<StickDownLeft, ThumbstickDirection::DownLeft>;
-		template struct IsDirection<StickDown, ThumbstickDirection::Down>;
-		template struct IsDirection<StickDownRight, ThumbstickDirection::RightDown>;
-
-		// Type aliases for the instantiations/specializations provided.
-		using DirectionFuncRight = IsDirection<StickRight, ThumbstickDirection::Right>;
-		using DirectionFuncUpRight = IsDirection<StickUpRight, ThumbstickDirection::UpRight>;
-		using DirectionFuncRightUp = DirectionFuncUpRight;
-		using DirectionFuncUp = IsDirection<StickUp, ThumbstickDirection::Up>;
-		using DirectionFuncUpLeft = IsDirection<StickUpLeft, ThumbstickDirection::LeftUp>;
-		using DirectionFuncLeftUp = DirectionFuncUpLeft;
-		using DirectionFuncLeft = IsDirection<StickLeft, ThumbstickDirection::Left>;
-		using DirectionFuncDownLeft = IsDirection<StickDownLeft, ThumbstickDirection::DownLeft>;
-		using DirectionFuncLeftDown = DirectionFuncDownLeft;
-		using DirectionFuncDown = IsDirection<StickDown, ThumbstickDirection::Down>;
-		using DirectionFuncDownRight = IsDirection<StickDownRight, ThumbstickDirection::RightDown>;
-		using DirectionFuncRightDown = DirectionFuncDownRight;
-
+		template auto GetDirection<StickDownLeft>(const keyboardtypes::ComputationFloat_t theta) noexcept -> std::optional<ThumbstickDirection>;
+		template auto GetDirection<StickDown>(const keyboardtypes::ComputationFloat_t theta) noexcept -> std::optional<ThumbstickDirection>;
+		template auto GetDirection<StickDownRight>(const keyboardtypes::ComputationFloat_t theta) noexcept -> std::optional<ThumbstickDirection>;
 	}
 
 	[[nodiscard]]
@@ -75,25 +62,15 @@ namespace sds
 	auto GetDirectionForPolarTheta(const keyboardtypes::ComputationFloat_t theta) noexcept -> ThumbstickDirection
 	{
 		using namespace detail;
-
-		if (DirectionFuncRight::IsItThisDirection(theta))
-			return DirectionFuncRight::Direction;
-		if (DirectionFuncRightUp::IsItThisDirection(theta))
-			return DirectionFuncRightUp::Direction;
-		if (DirectionFuncUp::IsItThisDirection(theta))
-			return DirectionFuncUp::Direction;
-		if (DirectionFuncUpLeft::IsItThisDirection(theta))
-			return DirectionFuncUpLeft::Direction;
-		if (DirectionFuncLeft::IsItThisDirection(theta))
-			return DirectionFuncLeft::Direction;
-		if (DirectionFuncLeftDown::IsItThisDirection(theta))
-			return DirectionFuncLeftDown::Direction;
-		if (DirectionFuncDown::IsItThisDirection(theta))
-			return DirectionFuncDown::Direction;
-		if (DirectionFuncDownRight::IsItThisDirection(theta))
-			return DirectionFuncDownRight::Direction;
-
-		return ThumbstickDirection::Invalid;
+		const auto dir = GetDirection<StickRight>(theta)
+			.or_else([theta]() { return GetDirection<StickUpRight>(theta); })
+			.or_else([theta]() { return GetDirection<StickUp>(theta); })
+			.or_else([theta]() { return GetDirection<StickUpLeft>(theta); })
+			.or_else([theta]() { return GetDirection<StickLeft>(theta); })
+			.or_else([theta]() { return GetDirection<StickDownLeft>(theta); })
+			.or_else([theta]() { return GetDirection<StickDown>(theta); })
+			.or_else([theta]() { return GetDirection<StickDownRight>(theta); });
+		return dir.value_or(ThumbstickDirection::Invalid);
 	}
 
 	[[nodiscard]]
