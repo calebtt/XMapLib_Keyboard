@@ -60,6 +60,7 @@ namespace sds
 	inline
 	auto GetSFMLApiStateUpdate(const int playerId = 0) noexcept -> uint32_t
 	{
+		// TODO doesn't work yet.
 		using Stick = sf::Joystick;
 		using std::numeric_limits;
 		using std::cout;

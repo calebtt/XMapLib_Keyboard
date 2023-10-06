@@ -22,14 +22,6 @@ namespace sds
 		{ t.GetUpdatedState( {VirtualButtons::A, VirtualButtons::X, VirtualButtons::Y} ) } -> std::convertible_to<TranslationPack>;
 	};
 
-	// Concept for range of CBActionMap type that provides random access.
-	template<typename T>
-	concept MappingRange_c = requires (T & t)
-	{
-		{ std::same_as<typename T::value_type, CBActionMap> == true };
-		{ std::ranges::random_access_range<T> == true };
-	};
-
 	// Concept for a filter class, used to apply a specific "overtaking" behavior (exclusivity grouping behavior) implementation.
 	template<typename FilterType_t>
 	concept ValidFilterType_c = requires(FilterType_t & t)

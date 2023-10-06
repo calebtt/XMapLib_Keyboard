@@ -108,4 +108,11 @@ namespace sds
 	static_assert(std::copyable<CBActionMap>);
 	static_assert(std::movable<CBActionMap>);
 
+	// Concept for range of CBActionMap type that provides random access.
+	template<typename T>
+	concept MappingRange_c = requires (T & t)
+	{
+		{ std::same_as<typename T::value_type, CBActionMap> == true };
+		{ std::ranges::random_access_range<T> == true };
+	};
 }
