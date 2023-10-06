@@ -19,6 +19,11 @@ namespace sds
 
 		using DirectionTuple_t = DirectionTuple;
 
+		// Some values used for polar direction computations
+		static constexpr keyboardtypes::ComputationFloat_t MY_PI{ std::numbers::pi_v<keyboardtypes::ComputationFloat_t> };
+		static constexpr keyboardtypes::ComputationFloat_t MY_PI2{ std::numbers::pi_v<keyboardtypes::ComputationFloat_t> / keyboardtypes::ComputationFloat_t{2} };
+		static constexpr keyboardtypes::ComputationFloat_t MY_PI8{ std::numbers::pi_v<keyboardtypes::ComputationFloat_t> / keyboardtypes::ComputationFloat_t{8} };
+
 		// Direction boundary value tuples, with diagonal directions, and translation.
 		static constexpr auto StickRight{ DirectionTuple_t(-MY_PI8, MY_PI8, ThumbstickDirection::Right) };
 		static constexpr auto StickUpRight{ DirectionTuple_t(MY_PI8, 3 * MY_PI8, ThumbstickDirection::UpRight) };
@@ -57,6 +62,11 @@ namespace sds
 		template auto GetDirection<StickDownRight>(const keyboardtypes::ComputationFloat_t theta) noexcept -> std::optional<ThumbstickDirection>;
 	}
 
+
+	/**
+	 * \brief  Returns ThumbstickDirection enum for the polar theta angle given (values from 0.0 to 3.14 approx)
+	 * \param theta  Polar theta angular value (float).
+	 */
 	[[nodiscard]]
 	constexpr
 	auto GetDirectionForPolarTheta(const keyboardtypes::ComputationFloat_t theta) noexcept -> ThumbstickDirection
@@ -73,22 +83,29 @@ namespace sds
 		return dir.value_or(ThumbstickDirection::Invalid);
 	}
 
+	/**
+	 * \brief  Gets the internal use virtual keycode matching the direction.
+	 * \param direction  Direction enum.
+	 * \param whichStick  Left or right stick will determine the result.
+	 */
 	[[nodiscard]]
 	constexpr
-	auto GetVirtualKeyFromDirection(const KeyboardSettings& settingsPack, const ThumbstickDirection direction, const ControllerStick whichStick) -> std::optional<keyboardtypes::VirtualKey_t>
+	auto GetVirtualKeyFromDirection(const ThumbstickDirection direction, const ControllerStick whichStick) -> std::optional<VirtualButtons>
 	{
+		using namespace detail;
+		using enum VirtualButtons;
 		const bool isLeftStick = whichStick == ControllerStick::LeftStick;
 
 		switch (direction)
 		{
-		case ThumbstickDirection::Up: return isLeftStick ? settingsPack.LeftThumbstickUp : settingsPack.RightThumbstickUp;
-		case ThumbstickDirection::UpRight: return isLeftStick ? settingsPack.LeftThumbstickUpRight : settingsPack.RightThumbstickUpRight;
-		case ThumbstickDirection::Right: return isLeftStick ? settingsPack.LeftThumbstickRight : settingsPack.RightThumbstickRight;
-		case ThumbstickDirection::RightDown:  return isLeftStick ? settingsPack.LeftThumbstickDownRight : settingsPack.RightThumbstickDownRight;
-		case ThumbstickDirection::Down: return isLeftStick ? settingsPack.LeftThumbstickDown : settingsPack.RightThumbstickDown;
-		case ThumbstickDirection::DownLeft: return isLeftStick ? settingsPack.LeftThumbstickDownLeft : settingsPack.RightThumbstickDownLeft;
-		case ThumbstickDirection::Left: return isLeftStick ? settingsPack.LeftThumbstickLeft : settingsPack.RightThumbstickLeft;
-		case ThumbstickDirection::LeftUp: return isLeftStick ? settingsPack.LeftThumbstickUpLeft : settingsPack.RightThumbstickUpLeft;
+		case ThumbstickDirection::Up: return isLeftStick ? LeftThumbstickUp : RightThumbstickUp;
+		case ThumbstickDirection::UpRight: return isLeftStick ? LeftThumbstickUpRight : RightThumbstickUpRight;
+		case ThumbstickDirection::Right: return isLeftStick ? LeftThumbstickRight : RightThumbstickRight;
+		case ThumbstickDirection::RightDown:  return isLeftStick ? LeftThumbstickDownRight : RightThumbstickDownRight;
+		case ThumbstickDirection::Down: return isLeftStick ? LeftThumbstickDown : RightThumbstickDown;
+		case ThumbstickDirection::DownLeft: return isLeftStick ? LeftThumbstickDownLeft : RightThumbstickDownLeft;
+		case ThumbstickDirection::Left: return isLeftStick ? LeftThumbstickLeft : RightThumbstickLeft;
+		case ThumbstickDirection::LeftUp: return isLeftStick ? LeftThumbstickUpLeft : RightThumbstickUpLeft;
 		case ThumbstickDirection::Invalid: return {};
 		default:
 		{

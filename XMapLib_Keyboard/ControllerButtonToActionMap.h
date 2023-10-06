@@ -23,7 +23,7 @@ namespace sds
 	class MappingStateManager final
 	{
 		ActionState m_currentValue{ ActionState::INIT };
-		KeyboardSettings m_keyDefaults{};
+		KeyboardSettingsXInput m_keyDefaults{};
 	public:
 		/**
 		 * \brief	This delay is mostly used for in-between key-repeats, but could also be in between other state transitions.
@@ -68,7 +68,7 @@ namespace sds
 		/**
 		 * \brief	Controller button Virtual Keycode. Can be platform dependent or custom mapping, depends on input poller behavior.
 		 */
-		keyboardtypes::VirtualKey_t ButtonVirtualKeycode{};
+		VirtualButtons ButtonVirtualKeycode{};
 
 		/**
 		 * \brief	If 'true', upon the button being held down, will translate to the key-repeat function activating repeatedly

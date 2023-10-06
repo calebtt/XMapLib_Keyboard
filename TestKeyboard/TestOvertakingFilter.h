@@ -6,8 +6,6 @@
 
 #include <filesystem>
 
-#include "../XMapLib_Keyboard/KeyboardMappingBuilders.h"
-
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace TestKeyboard
@@ -23,14 +21,14 @@ namespace TestKeyboard
 
 	TEST_CLASS(TestOvertakingFilter)
 	{
-		static constexpr sds::KeyboardSettings ksp;
+		static constexpr sds::KeyboardSettingsXInput ksp{};
 	public:
 		TEST_METHOD(TestFreeFuncs)
 		{
 			auto mappings = GetDriverButtonMappings();
 
-			const auto indexA = sds::GetMappingIndexForVk(ksp.ButtonA, mappings);
-			const auto indexB = sds::GetMappingIndexForVk(ksp.ButtonB, mappings);
+			const auto indexA = sds::GetMappingIndexForVk(sds::VirtualButtons::A, mappings);
+			const auto indexB = sds::GetMappingIndexForVk(sds::VirtualButtons::B, mappings);
 			Assert::IsTrue(indexA == 0);
 			Assert::IsTrue(indexB == 1);
 		}
@@ -50,38 +48,38 @@ namespace TestKeyboard
 			const auto startTime = steady_clock::now();
 
 			// A and B are in the same ex. group, it should filter it so only ButtonA will be sent a down.
-			auto filteredState = filt.GetFilteredButtonState({ ksp.ButtonA, ksp.ButtonB });
+			auto filteredState = filt.GetFilteredButtonState({sds::VirtualButtons::A, sds::VirtualButtons::B });
 			Assert::AreEqual(1ull, filteredState.size());
-			Assert::AreEqual(ksp.ButtonA, filteredState.front());
+			Assert::AreEqual((int)sds::VirtualButtons::A, (int)filteredState.front());
 
 			// X and B are in the same ex. group, it should filter it so only ButtonX will be sent a down.
-			filteredState = filt.GetFilteredButtonState({ ksp.ButtonX, ksp.ButtonB });
+			filteredState = filt.GetFilteredButtonState({ sds::VirtualButtons::X, sds::VirtualButtons::B });
 			Assert::AreEqual(1ull, filteredState.size());
-			Assert::AreEqual(ksp.ButtonX, filteredState.front());
+			Assert::AreEqual((int)sds::VirtualButtons::X, (int)filteredState.front());
 
 			// now we will remove ButtonX and see that ButtonB has replaced it and needs a key-down.
-			filteredState = filt.GetFilteredButtonState({ ksp.ButtonB });
+			filteredState = filt.GetFilteredButtonState({ sds::VirtualButtons::B });
 			Assert::AreEqual(1ull, filteredState.size());
-			Assert::AreEqual(ksp.ButtonB, filteredState.front());
+			Assert::AreEqual((int)sds::VirtualButtons::B, (int)filteredState.front());
 
 			// for this case, buttonB is activated, buttonX overtakes it, and buttonY is just a duplicate (with a matching group) that gets filtered.
-			filteredState = filt.GetFilteredButtonState({ ksp.ButtonB, ksp.ButtonX, ksp.ButtonY });
+			filteredState = filt.GetFilteredButtonState({ sds::VirtualButtons::B, sds::VirtualButtons::X, sds::VirtualButtons::Y });
 			Assert::AreEqual(1ull, filteredState.size());
-			Assert::AreEqual(ksp.ButtonX, filteredState.front());
+			Assert::AreEqual((int)sds::VirtualButtons::X, (int)filteredState.front());
 
 			// Same as last state, different ordering, and this time it will process the next overtaking.
-			filteredState = filt.GetFilteredButtonState({ ksp.ButtonB, ksp.ButtonX, ksp.ButtonY });
+			filteredState = filt.GetFilteredButtonState({ sds::VirtualButtons::B, sds::VirtualButtons::X, sds::VirtualButtons::Y });
 			Assert::AreEqual(1ull, filteredState.size());
-			Assert::AreEqual( ksp.ButtonY, filteredState.front());
+			Assert::AreEqual( (int)sds::VirtualButtons::Y, (int)filteredState.front());
 			// Post: ButtonY activated, X and B overtaken.
 
-			filteredState = filt.GetFilteredButtonState({ ksp.ButtonX, ksp.ButtonY, ksp.ButtonB });
+			filteredState = filt.GetFilteredButtonState({ sds::VirtualButtons::X, sds::VirtualButtons::Y, sds::VirtualButtons::B });
 			Assert::AreEqual( 1ull, filteredState.size());
-			Assert::AreEqual(ksp.ButtonY, filteredState.front());
+			Assert::AreEqual((int)sds::VirtualButtons::Y, (int)filteredState.front());
 
-			filteredState = filt.GetFilteredButtonState({ ksp.ButtonB, ksp.ButtonX, ksp.ButtonY, ksp.ButtonA });
+			filteredState = filt.GetFilteredButtonState({ sds::VirtualButtons::B, sds::VirtualButtons::X, sds::VirtualButtons::Y, sds::VirtualButtons::A });
 			Assert::AreEqual(1ull, filteredState.size());
-			Assert::AreEqual(ksp.ButtonA, filteredState.front());
+			Assert::AreEqual((int)sds::VirtualButtons::A, (int)filteredState.front());
 
 
 			const auto totalTime = steady_clock::now() - startTime;
@@ -98,13 +96,13 @@ namespace TestKeyboard
 
 			// A and B are in the same ex. group, it should filter it so only ksp.ButtonA will be sent a down.
 			Logger::WriteMessage("A and B are in the same ex. group, it should filter it so that only ButtonA will be sent a down.\n");
-			auto translationPack = translator({ ksp.ButtonA, ksp.ButtonB });
+			auto translationPack = translator({ sds::VirtualButtons::A, sds::VirtualButtons::B });
 			translationPack();
 			Assert::IsTrue(translationPack.DownRequests.size() == 1);
 			// Post: B overtaken, A down.
 
 			Logger::WriteMessage("A and B again, it should filter it so that only ButtonB will be sent a down after A goes up.\n");
-			translationPack = translator({ ksp.ButtonA, ksp.ButtonB });
+			translationPack = translator({ sds::VirtualButtons::A, sds::VirtualButtons::B });
 			translationPack();
 			Assert::IsTrue(translationPack.UpRequests.size() == 1);
 			Assert::IsTrue(translationPack.DownRequests.size() == 1);
@@ -112,19 +110,19 @@ namespace TestKeyboard
 
 			// X and B are in the same ex. group, it should filter it so only ButtonX will be sent a down.
 			Logger::WriteMessage("X and B are in the same ex. group, it should filter it so that only ButtonX will be sent a down after B goes up.\n");
-			translationPack = translator({ ksp.ButtonX, ksp.ButtonB });
+			translationPack = translator({ sds::VirtualButtons::X, sds::VirtualButtons::B });
 			translationPack();
 			Assert::IsTrue(translationPack.DownRequests.size() == 1);
 			Assert::IsTrue(translationPack.UpRequests.size() == 1);
 
 			Logger::WriteMessage("X, B, Y, A are in the same ex. group, it should filter it so that only ButtonY will be sent a down after X goes up.\n");
-			translationPack = translator({ ksp.ButtonX, ksp.ButtonB, ksp.ButtonY, ksp.ButtonA });
+			translationPack = translator({ sds::VirtualButtons::X, sds::VirtualButtons::B, sds::VirtualButtons::Y, sds::VirtualButtons::A });
 			translationPack();
 			Assert::IsTrue(translationPack.DownRequests.size() == 1);
 			Assert::IsTrue(translationPack.UpRequests.size() == 1);
 
 			Logger::WriteMessage("X, B, Y, A are in the same ex. group, it should filter it so that only ButtonA will be sent a down after Y goes up.\n");
-			translationPack = translator({ ksp.ButtonX, ksp.ButtonB, ksp.ButtonY, ksp.ButtonA });
+			translationPack = translator({ sds::VirtualButtons::X, sds::VirtualButtons::B, sds::VirtualButtons::Y, sds::VirtualButtons::A });
 			translationPack();
 			Assert::IsTrue(translationPack.DownRequests.size() == 1);
 			Assert::IsTrue(translationPack.UpRequests.size() == 1);
@@ -140,25 +138,25 @@ namespace TestKeyboard
 			auto translator = GetBuiltTranslator();
 
 			Logger::WriteMessage("A and B are in the same ex. group, it should filter it so that only ButtonA will be sent a down.\n");
-			auto translationPack = translator({ ksp.ButtonA, ksp.ButtonB });
+			auto translationPack = translator({ sds::VirtualButtons::A, sds::VirtualButtons::B });
 			translationPack();
 			Assert::IsTrue(translationPack.DownRequests.size() == 1);
 
 			Logger::WriteMessage("B overtakes A, it should filter it so that only ButtonB will be sent a down, A is overtaken.\n");
-			translationPack = translator({ ksp.ButtonA, ksp.ButtonB });
+			translationPack = translator({ sds::VirtualButtons::A, sds::VirtualButtons::B });
 			translationPack();
 			Assert::IsTrue(translationPack.DownRequests.size() == 1);
 			Assert::IsTrue(translationPack.UpRequests.size() == 1);
 
 			Logger::WriteMessage("Y overtakes B, it should filter it so that only ButtonY will be sent a down, B is overtaken.\n");
-			translationPack = translator({ ksp.ButtonA, ksp.ButtonB, ksp.ButtonY });
+			translationPack = translator({ sds::VirtualButtons::A, sds::VirtualButtons::B, sds::VirtualButtons::Y });
 			translationPack();
 			Assert::IsTrue(translationPack.DownRequests.size() == 1);
 			Assert::IsTrue(translationPack.UpRequests.size() == 1);
 
 			// Note that multiple keys in the overtaken queue can be removed from the overtaken queue in one iteration, plus the single modification for their group.
 			Logger::WriteMessage("A,B removed from overtaken queue, Y still activated (no change to activated key).\n");
-			translationPack = translator({ ksp.ButtonY });
+			translationPack = translator({ sds::VirtualButtons::Y });
 			translationPack();
 			Assert::IsTrue(translationPack.DownRequests.empty());
 			Assert::IsTrue(translationPack.UpRequests.empty());
@@ -166,14 +164,14 @@ namespace TestKeyboard
 			Logger::WriteMessage("A few iterations to set the state for next test...\n");
 			// Add buttons A,B back to the overtaken queue with Y activated.
 			translator({  })();
-			translator({ ksp.ButtonA })();
-			translator({ ksp.ButtonA, ksp.ButtonB })();
-			translator({ ksp.ButtonA, ksp.ButtonB, ksp.ButtonY })();
+			translator({ sds::VirtualButtons::A })();
+			translator({ sds::VirtualButtons::A, sds::VirtualButtons::B })();
+			translator({ sds::VirtualButtons::A, sds::VirtualButtons::B, sds::VirtualButtons::Y })();
 
 			// Note that multiple keys in the overtaken queue can be removed from the overtaken queue in one iteration, plus the single modification for their group.
 			Logger::WriteMessage("With Y activated, A,B overtaken\n");
 			Logger::WriteMessage("X overtakes Y, it should filter it so that only X will be sent a down, Y is overtaken. A,B are removed from overtaken queue.\n");
-			translationPack = translator({ ksp.ButtonY, ksp.ButtonX });
+			translationPack = translator({ sds::VirtualButtons::Y, sds::VirtualButtons::X });
 			translationPack();
 			Assert::IsTrue(translationPack.DownRequests.size() == 1);
 			Assert::IsTrue(translationPack.UpRequests.size() == 1);

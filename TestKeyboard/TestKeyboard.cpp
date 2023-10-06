@@ -17,14 +17,11 @@ namespace TestKeyboard
             using namespace std::chrono_literals;
             using namespace std::chrono;
 
-            constexpr sds::keyboardtypes::VirtualKey_t buttonA{ XINPUT_GAMEPAD_A };
-            constexpr sds::keyboardtypes::VirtualKey_t buttonB{ XINPUT_GAMEPAD_B };
-
-            auto maps1 = GetMapping(buttonA);
-            auto maps2 = GetMapping(buttonB);
+            auto maps1 = GetMapping(sds::VirtualButtons::A);
+            auto maps2 = GetMapping(sds::VirtualButtons::B);
             maps2.append_range(maps1);
             sds::KeyboardTranslator poller{ std::move(maps2) };
-            const auto translations1 = poller( {buttonA, buttonB} );
+            const auto translations1 = poller( {sds::VirtualButtons::A, sds::VirtualButtons::B} );
             Assert::IsTrue(translations1.DownRequests.size() == 2, L"Translation count not 2.");
             translations1();
 
@@ -47,11 +44,11 @@ namespace TestKeyboard
             using namespace std::chrono_literals;
             using namespace std::chrono;
 
-            constexpr sds::keyboardtypes::VirtualKey_t buttonA{ XINPUT_GAMEPAD_A };
-            constexpr sds::keyboardtypes::VirtualKey_t buttonB{ XINPUT_GAMEPAD_B };
+            constexpr auto buttonA{ sds::VirtualButtons::A };
+            constexpr auto buttonB{ sds::VirtualButtons::B };
 
-            sds::keyboardtypes::SmallVector_t<sds::keyboardtypes::VirtualKey_t> stateUpdate{ buttonA, buttonB };
-            sds::keyboardtypes::SmallVector_t<sds::keyboardtypes::VirtualKey_t> emptyState{};
+            sds::keyboardtypes::SmallVector_t<sds::VirtualButtons> stateUpdate{ buttonA, buttonB };
+            sds::keyboardtypes::SmallVector_t<sds::VirtualButtons> emptyState{};
 
             // Make the filter type.
             sds::KeyboardOvertakingFilter filter;

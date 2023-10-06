@@ -13,26 +13,68 @@
 #include "KeyboardPolarInfo.h"
 #include "KeyboardStickDirection.h"
 
-namespace sds
+namespace sds::XInput
 {
-	// TODO for thumbstick and trigger magnitudes.
-	//struct DownKeyInfo
-	//{
-	//	keyboardtypes::VirtualKey_t VirtualCode;
-	//	int Magnitude;
-	//};
-
-	/**
-	 * \brief The wButtons member of the OS API struct is ONLY for the buttons, triggers are not set there on a key-down.
-	 */
-	[[nodiscard]] constexpr bool IsLeftTriggerBeyondThreshold(const keyboardtypes::TriggerValue_t triggerValue, const keyboardtypes::TriggerValue_t triggerThreshold) noexcept
+	// detail, locally used items.
+	namespace detail
 	{
-		return triggerValue > triggerThreshold;
-	}
+		// Platform specific Controller button codes, these belong here closer to where they are used--
+		// They are not configurable, and not relevant to the configuration.
+		static constexpr keyboardtypes::VirtualKey_t ButtonA{ XINPUT_GAMEPAD_A };
+		static constexpr keyboardtypes::VirtualKey_t ButtonB{ XINPUT_GAMEPAD_B };
+		static constexpr keyboardtypes::VirtualKey_t ButtonX{ XINPUT_GAMEPAD_X };
+		static constexpr keyboardtypes::VirtualKey_t ButtonY{ XINPUT_GAMEPAD_Y };
 
-	[[nodiscard]] constexpr bool IsRightTriggerBeyondThreshold(const keyboardtypes::TriggerValue_t triggerValue, const keyboardtypes::TriggerValue_t triggerThreshold) noexcept
-	{
-		return triggerValue > triggerThreshold;
+		static constexpr keyboardtypes::VirtualKey_t ButtonStart{ XINPUT_GAMEPAD_START };
+		static constexpr keyboardtypes::VirtualKey_t ButtonBack{ XINPUT_GAMEPAD_BACK };
+		static constexpr keyboardtypes::VirtualKey_t ButtonShoulderLeft{ XINPUT_GAMEPAD_LEFT_SHOULDER };
+		static constexpr keyboardtypes::VirtualKey_t ButtonShoulderRight{ XINPUT_GAMEPAD_RIGHT_SHOULDER };
+		static constexpr keyboardtypes::VirtualKey_t ThumbLeftClick{ XINPUT_GAMEPAD_LEFT_THUMB };
+		static constexpr keyboardtypes::VirtualKey_t ThumbRightClick{ XINPUT_GAMEPAD_RIGHT_THUMB };
+
+		// Dpad
+		static constexpr keyboardtypes::VirtualKey_t DpadUp{ XINPUT_GAMEPAD_DPAD_UP };
+		static constexpr keyboardtypes::VirtualKey_t DpadDown{ XINPUT_GAMEPAD_DPAD_DOWN };
+		static constexpr keyboardtypes::VirtualKey_t DpadLeft{ XINPUT_GAMEPAD_DPAD_LEFT };
+		static constexpr keyboardtypes::VirtualKey_t DpadRight{ XINPUT_GAMEPAD_DPAD_RIGHT };
+
+		// Library/mapping use codes, non-platform.
+		static constexpr keyboardtypes::VirtualKey_t LeftTrigger{ 201 };
+		static constexpr keyboardtypes::VirtualKey_t RightTrigger{ 202 };
+
+		/**
+		 * \brief The button virtual keycodes as a flat array.
+		 */
+		static constexpr std::array<std::pair<keyboardtypes::VirtualKey_t, VirtualButtons>, 14> ApiCodeToVirtualButtonArray
+		{ {
+			{DpadUp, VirtualButtons::DpadUp},
+			{DpadDown, VirtualButtons::DpadDown},
+			{DpadLeft, VirtualButtons::DpadLeft},
+			{DpadRight, VirtualButtons::DpadRight},
+			{ButtonStart, VirtualButtons::Start},
+			{ButtonBack, VirtualButtons::Back},
+			{ThumbLeftClick, VirtualButtons::LeftStickClick},
+			{ThumbRightClick, VirtualButtons::RightStickClick},
+			{ButtonShoulderLeft, VirtualButtons::ShoulderLeft},
+			{ButtonShoulderRight, VirtualButtons::ShoulderRight},
+			{ButtonA, VirtualButtons::A},
+			{ButtonB, VirtualButtons::B},
+			{ButtonX, VirtualButtons::X},
+			{ButtonY, VirtualButtons::Y}
+		} };
+
+		/**
+		 * \brief The wButtons member of the OS API struct is ONLY for the buttons, triggers are not set there on a key-down.
+		 */
+		[[nodiscard]] constexpr bool IsLeftTriggerBeyondThreshold(const keyboardtypes::TriggerValue_t triggerValue, const keyboardtypes::TriggerValue_t triggerThreshold) noexcept
+		{
+			return triggerValue > triggerThreshold;
+		}
+
+		[[nodiscard]] constexpr bool IsRightTriggerBeyondThreshold(const keyboardtypes::TriggerValue_t triggerValue, const keyboardtypes::TriggerValue_t triggerThreshold) noexcept
+		{
+			return triggerValue > triggerThreshold;
+		}
 	}
 
 	/**
@@ -44,21 +86,22 @@ namespace sds
 	 */
 	[[nodiscard]]
 	inline
-	auto GetDownVirtualKeycodesRange(const KeyboardSettings& settingsPack, const XINPUT_STATE& controllerState) -> keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>
+	auto GetDownVirtualKeycodesRange(const KeyboardSettingsXInput& settingsPack, const XINPUT_STATE& controllerState) -> keyboardtypes::SmallVector_t<VirtualButtons>
 	{
+		using namespace detail;
 		// Keys
-		keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t> allKeys{};
-		for (const auto elem : settingsPack.ButtonCodeArray)
+		keyboardtypes::SmallVector_t<VirtualButtons> allKeys{};
+		for (const auto& [elem, virtualCode] : ApiCodeToVirtualButtonArray)
 		{
 			if (controllerState.Gamepad.wButtons & elem)
-				allKeys.emplace_back(elem);
+				allKeys.push_back(virtualCode);
 		}
 
 		// Triggers
 		if (IsLeftTriggerBeyondThreshold(controllerState.Gamepad.bLeftTrigger, settingsPack.LeftTriggerThreshold))
-			allKeys.emplace_back(settingsPack.LeftTrigger);
+			allKeys.emplace_back(VirtualButtons::LeftTrigger);
 		if (IsRightTriggerBeyondThreshold(controllerState.Gamepad.bRightTrigger, settingsPack.RightTriggerThreshold))
-			allKeys.emplace_back(settingsPack.RightTrigger);
+			allKeys.emplace_back(VirtualButtons::RightTrigger);
 
 		// Stick axes
 		constexpr auto LeftStickDz{ settingsPack.LeftStickDeadzone };
@@ -76,8 +119,8 @@ namespace sds
 		const auto leftDirection{ GetDirectionForPolarTheta(leftStickPolarInfo.second) };
 		const auto rightDirection{ GetDirectionForPolarTheta(rightStickPolarInfo.second) };
 
-		const auto leftThumbstickVk{ GetVirtualKeyFromDirection(settingsPack, leftDirection, ControllerStick::LeftStick) };
-		const auto rightThumbstickVk{ GetVirtualKeyFromDirection(settingsPack, rightDirection, ControllerStick::RightStick) };
+		const auto leftThumbstickVk{ GetVirtualKeyFromDirection(leftDirection, ControllerStick::LeftStick) };
+		const auto rightThumbstickVk{ GetVirtualKeyFromDirection(rightDirection, ControllerStick::RightStick) };
 
 		// TODO deadzone appears too low on left stick, check this part.
 		const bool leftIsDown = leftStickPolarInfo.first > LeftStickDz && leftThumbstickVk.has_value();
@@ -112,7 +155,7 @@ namespace sds
 	 */
 	[[nodiscard]]
 	inline
-	auto GetWrappedLegacyApiStateUpdate(const KeyboardSettingsPack& settingsPack) noexcept -> keyboardtypes::SmallVector_t<keyboardtypes::VirtualKey_t>
+	auto GetWrappedLegacyApiStateUpdate(const KeyboardSettingsPack& settingsPack) noexcept -> keyboardtypes::SmallVector_t<VirtualButtons>
 	{
 		return GetDownVirtualKeycodesRange(settingsPack.Settings, GetLegacyApiStateUpdate(settingsPack.PlayerInfo.PlayerId));
 	}

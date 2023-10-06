@@ -5,6 +5,8 @@
 #include "KeyboardTranslator.h"
 #include "KeyboardLegacyApiFunctions.h"
 #include "KeyboardOvertakingFilter.h"
+#include "KeyboardSFMLController.h"
+
 #include "../XMapLib_Utils/nanotime.h"
 #include "../XMapLib_Utils/SendMouseInput.h"
 #include "../XMapLib_Utils/ControllerStatus.h"
@@ -12,6 +14,9 @@
 #include <iostream>
 #include <print>
 #include <chrono>
+#include <format>
+#include <thread>
+#include <mutex>
 
 // Crude mechanism to keep the loop running until [enter] is pressed.
 struct GetterExitCallable final
@@ -75,34 +80,32 @@ auto GetDriverButtonMappings()
         };
     };
 
-    KeyboardSettings ksp;
-
     vector mapBuffer
     {
         // Pad buttons
-        GetBuiltMapForKeyNamed("[PAD_A]", ksp.ButtonA, PadButtonsGroup, 500ms),
-        GetBuiltMapForKeyNamed("[PAD_B]", ksp.ButtonB, PadButtonsGroup, 500ms),
-        GetBuiltMapForKeyNamed("[PAD_X]", ksp.ButtonX, PadButtonsGroup, 500ms),
-        GetBuiltMapForKeyNamed("[PAD_Y]", ksp.ButtonY, PadButtonsGroup, 500ms),
+        GetBuiltMapForKeyNamed("[PAD_A]", VirtualButtons::A, PadButtonsGroup, 500ms),
+        GetBuiltMapForKeyNamed("[PAD_B]", VirtualButtons::B, PadButtonsGroup, 500ms),
+        GetBuiltMapForKeyNamed("[PAD_X]", VirtualButtons::X, PadButtonsGroup, 500ms),
+        GetBuiltMapForKeyNamed("[PAD_Y]", VirtualButtons::Y, PadButtonsGroup, 500ms),
         // Left thumbstick directional stuff
-        GetBuiltMapForKeyNamed("[LTHUMB_UP]", ksp.LeftThumbstickUp, LeftThumbGroup, 500ms),
-        GetBuiltMapForKeyNamed("[LTHUMB_DOWN]", ksp.LeftThumbstickDown, LeftThumbGroup, 500ms),
-        GetBuiltMapForKeyNamed("[LTHUMB_RIGHT]", ksp.LeftThumbstickRight, LeftThumbGroup, 500ms),
-        GetBuiltMapForKeyNamed("[LTHUMB_LEFT]", ksp.LeftThumbstickLeft, LeftThumbGroup, 500ms),
-        GetBuiltMapForKeyNamed("[LTHUMB_DOWN_RIGHT]", ksp.LeftThumbstickDownRight, LeftThumbGroup, 500ms),
-        GetBuiltMapForKeyNamed("[LTHUMB_DOWN_LEFT]", ksp.LeftThumbstickDownLeft, LeftThumbGroup, 500ms),
-        GetBuiltMapForKeyNamed("[LTHUMB_UP_RIGHT]", ksp.LeftThumbstickUpRight, LeftThumbGroup, 500ms),
-        GetBuiltMapForKeyNamed("[LTHUMB_UP_LEFT]", ksp.LeftThumbstickUpLeft, LeftThumbGroup, 500ms),
-        GetBuiltMapForKeyNamed("[LTRIGGER]", ksp.LeftTrigger, LeftThumbGroup, 500ms),
-        GetBuiltMapForKeyNamed("[RTRIGGER]", ksp.RightTrigger, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_UP]", VirtualButtons::LeftThumbstickUp, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_DOWN]", VirtualButtons::LeftThumbstickDown, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_RIGHT]", VirtualButtons::LeftThumbstickRight, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_LEFT]", VirtualButtons::LeftThumbstickLeft, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_DOWN_RIGHT]", VirtualButtons::LeftThumbstickDownRight, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_DOWN_LEFT]", VirtualButtons::LeftThumbstickDownLeft, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_UP_RIGHT]", VirtualButtons::LeftThumbstickUpRight, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTHUMB_UP_LEFT]", VirtualButtons::LeftThumbstickUpLeft, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[LTRIGGER]", VirtualButtons::LeftTrigger, LeftThumbGroup, 500ms),
+        GetBuiltMapForKeyNamed("[RTRIGGER]", VirtualButtons::RightTrigger, LeftThumbGroup, 500ms),
         // Shoulder buttons
         CBActionMap{
-            .ButtonVirtualKeycode = ksp.ButtonShoulderRight,
+            .ButtonVirtualKeycode = VirtualButtons::ShoulderRight,
             .UsesInfiniteRepeat = false,
             .OnDown = []() { system("cls"); std::cout << "Cleared.\n"; }
         },
     	CBActionMap{
-            .ButtonVirtualKeycode = ksp.ButtonShoulderLeft,
+            .ButtonVirtualKeycode = VirtualButtons::ShoulderLeft,
             .UsesInfiniteRepeat = false,
             .OnDown = []()
             {
@@ -119,7 +122,8 @@ auto GetDriverMouseMappings()
     using std::vector, std::cout;
     using namespace std::chrono_literals;
     using namespace sds;
-    static constexpr KeyboardSettings ksp{};
+    using enum sds::VirtualButtons;
+
     constexpr auto FirstDelay = 0ns; // mouse move delays
     constexpr auto RepeatDelay = 1200us;
     constexpr int MouseExGroup = 102;
@@ -128,7 +132,7 @@ auto GetDriverMouseMappings()
     {
         // Mouse move stuff
         CBActionMap{
-            .ButtonVirtualKeycode = ksp.RightThumbstickUp,
+            .ButtonVirtualKeycode = RightThumbstickUp,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
             .OnDown = []()
@@ -143,7 +147,7 @@ auto GetDriverMouseMappings()
             .DelayForRepeats = RepeatDelay
         },
         CBActionMap{
-            .ButtonVirtualKeycode = ksp.RightThumbstickUpRight,
+            .ButtonVirtualKeycode = RightThumbstickUpRight,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
             .OnDown = []()
@@ -158,7 +162,7 @@ auto GetDriverMouseMappings()
             .DelayForRepeats = RepeatDelay
         },
         CBActionMap{
-            .ButtonVirtualKeycode = ksp.RightThumbstickUpLeft,
+            .ButtonVirtualKeycode = RightThumbstickUpLeft,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
             .OnDown = []()
@@ -173,7 +177,7 @@ auto GetDriverMouseMappings()
             .DelayForRepeats = RepeatDelay
         },
         CBActionMap{
-            .ButtonVirtualKeycode = ksp.RightThumbstickDown,
+            .ButtonVirtualKeycode = RightThumbstickDown,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
             .OnDown = []()
@@ -188,7 +192,7 @@ auto GetDriverMouseMappings()
             .DelayForRepeats = RepeatDelay
         },
         CBActionMap{
-            .ButtonVirtualKeycode = ksp.RightThumbstickLeft,
+            .ButtonVirtualKeycode = RightThumbstickLeft,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
             .OnDown = []()
@@ -203,7 +207,7 @@ auto GetDriverMouseMappings()
             .DelayForRepeats = RepeatDelay
         },
         CBActionMap{
-            .ButtonVirtualKeycode = ksp.RightThumbstickRight,
+            .ButtonVirtualKeycode = RightThumbstickRight,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
             .OnDown = []()
@@ -218,7 +222,7 @@ auto GetDriverMouseMappings()
             .DelayForRepeats = RepeatDelay
         },
         CBActionMap{
-            .ButtonVirtualKeycode = ksp.RightThumbstickDownRight,
+            .ButtonVirtualKeycode = RightThumbstickDownRight,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
             .OnDown = []()
@@ -233,7 +237,7 @@ auto GetDriverMouseMappings()
             .DelayForRepeats = RepeatDelay
         },
         CBActionMap{
-            .ButtonVirtualKeycode = ksp.RightThumbstickDownLeft,
+            .ButtonVirtualKeycode = RightThumbstickDownLeft,
             .UsesInfiniteRepeat = true,
             .ExclusivityGrouping = MouseExGroup,
             .OnDown = []()
@@ -256,7 +260,7 @@ inline
 void TranslationLoop(const sds::KeyboardSettingsPack& settingsPack, sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
 {
     using namespace std::chrono_literals;
-	const auto translation = translator.GetUpdatedState(GetWrappedLegacyApiStateUpdate(settingsPack));
+	const auto translation = translator.GetUpdatedState(sds::XInput::GetWrappedLegacyApiStateUpdate(settingsPack));
 	translation();
 	nanotime_sleep(sleepDelay.count());
 }
@@ -290,7 +294,8 @@ auto RunTestDriverLoop()
             const auto endTime = std::chrono::steady_clock::now();
             const auto diffTime = endTime - startTime;
             const auto timePerIter = std::chrono::duration_cast<std::chrono::microseconds>(diffTime / IterationsForTiming - sleepDelay);
-            std::cout << "Average time over " << IterationsForTiming << " iterations, per iteration: " << timePerIter << '\n';
+            const auto millisPerIter = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(timePerIter);
+            std::cout << "Average time over " << IterationsForTiming << " iterations, per iteration: " << timePerIter << " -or- " << millisPerIter << '\n';
 
             iterationCount = {};
             startTime = std::chrono::steady_clock::now();

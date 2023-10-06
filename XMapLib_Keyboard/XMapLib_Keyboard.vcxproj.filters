@@ -25,6 +25,9 @@
     <Filter Include="Header Files\Keyboard\KeyInfoWrappersAndHelpers">
       <UniqueIdentifier>{b56c2449-2429-4552-aceb-b63de8833d99}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Keyboard\ControllerIO">
+      <UniqueIdentifier>{9b3e1d20-b70a-401f-9d65-3c85880ead1f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="XMapLib_Keyboard.cpp">
@@ -50,17 +53,17 @@
     <ClInclude Include="KeyboardPolarInfo.h">
       <Filter>Header Files\Keyboard\KeyInfoWrappersAndHelpers</Filter>
     </ClInclude>
-    <ClInclude Include="KeyboardLegacyApiFunctions.h">
-      <Filter>Header Files\Keyboard\KeyInfoWrappersAndHelpers</Filter>
-    </ClInclude>
     <ClInclude Include="KeyboardStickDirection.h">
       <Filter>Header Files\Keyboard\KeyInfoWrappersAndHelpers</Filter>
     </ClInclude>
     <ClInclude Include="KeyboardCustomTypes.h">
       <Filter>Header Files\Keyboard\SettingsAndConfig</Filter>
     </ClInclude>
-    <ClInclude Include="KeyboardMappingBuilders.h">
-      <Filter>Header Files\Keyboard\KeyInfoWrappersAndHelpers</Filter>
+    <ClInclude Include="KeyboardLegacyApiFunctions.h">
+      <Filter>Header Files\Keyboard\ControllerIO</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardSFMLController.h">
+      <Filter>Header Files\Keyboard\ControllerIO</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

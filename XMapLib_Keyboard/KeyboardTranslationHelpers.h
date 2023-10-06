@@ -24,7 +24,7 @@ namespace sds
 		// Function to advance the button mapping to the next state (after operation has been performed)
 		keyboardtypes::Fn_t AdvanceStateFn;
 		// Hash of the mapping it refers to
-		keyboardtypes::VirtualKey_t MappingVk{};
+		VirtualButtons MappingVk{};
 		// Exclusivity grouping value, if any
 		keyboardtypes::OptGrp_t ExclusivityGrouping;
 		// Call operator, calls op fn then advances the state
@@ -192,7 +192,7 @@ namespace sds
 	inline
 	bool AreMappingsUniquePerVk(const std::span<const CBActionMap> mappingsList) noexcept
 	{
-		keyboardtypes::SmallFlatMap_t<keyboardtypes::VirtualKey_t, bool> mappingTable;
+		keyboardtypes::SmallFlatMap_t<VirtualButtons, bool> mappingTable;
 		for(const auto& e : mappingsList)
 		{
 			if(mappingTable[e.ButtonVirtualKeycode])
@@ -213,6 +213,6 @@ namespace sds
 	inline
 	bool AreMappingVksNonZero(const std::span<const CBActionMap> mappingsList) noexcept
 	{
-		return ! std::ranges::any_of(mappingsList, [](const auto vk) { return vk == 0; }, &CBActionMap::ButtonVirtualKeycode);
+		return ! std::ranges::any_of(mappingsList, [](const auto vk) { return vk == VirtualButtons::NotSet; }, &CBActionMap::ButtonVirtualKeycode);
 	}
 }

@@ -1,5 +1,7 @@
 #pragma once
 #include "pch.h"
+#include "../XMapLib_Keyboard/KeyboardLegacyApiFunctions.h"
+
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace TestKeyboard
@@ -50,50 +52,50 @@ namespace TestKeyboard
             };
         };
 
-        KeyboardSettings ksp;
-
         vector mapBuffer
         {
             // Pad buttons
-            GetBuiltMapForKeyNamed("[PAD_A]", ksp.ButtonA, PadButtonsGroup),
-            GetBuiltMapForKeyNamed("[PAD_B]", ksp.ButtonB, PadButtonsGroup),
-            GetBuiltMapForKeyNamed("[PAD_X]", ksp.ButtonX, PadButtonsGroup),
-            GetBuiltMapForKeyNamed("[PAD_Y]", ksp.ButtonY, PadButtonsGroup),
+            GetBuiltMapForKeyNamed("[PAD_A]", VirtualButtons::A, PadButtonsGroup),
+            GetBuiltMapForKeyNamed("[PAD_B]", VirtualButtons::B, PadButtonsGroup),
+            GetBuiltMapForKeyNamed("[PAD_X]", VirtualButtons::X, PadButtonsGroup),
+            GetBuiltMapForKeyNamed("[PAD_Y]", VirtualButtons::Y, PadButtonsGroup),
             // Left thumbstick directional stuff
-            GetBuiltMapForKeyNamed("[LTHUMB_UP]", ksp.LeftThumbstickUp, LeftThumbGroup),
-            GetBuiltMapForKeyNamed("[LTHUMB_DOWN]", ksp.LeftThumbstickDown, LeftThumbGroup),
-            GetBuiltMapForKeyNamed("[LTHUMB_RIGHT]", ksp.LeftThumbstickRight, LeftThumbGroup),
-            GetBuiltMapForKeyNamed("[LTHUMB_LEFT]", ksp.LeftThumbstickLeft, LeftThumbGroup),
-            GetBuiltMapForKeyNamed("[LTHUMB_DOWN_RIGHT]", ksp.LeftThumbstickDownRight, LeftThumbGroup),
-            GetBuiltMapForKeyNamed("[LTHUMB_DOWN_LEFT]", ksp.LeftThumbstickDownLeft, LeftThumbGroup),
-            GetBuiltMapForKeyNamed("[LTHUMB_UP_RIGHT]", ksp.LeftThumbstickUpRight, LeftThumbGroup),
-            GetBuiltMapForKeyNamed("[LTHUMB_UP_LEFT]", ksp.LeftThumbstickUpLeft, LeftThumbGroup),
-            GetBuiltMapForKeyNamed("[LTRIGGER]", ksp.LeftTrigger, LeftThumbGroup),
-            GetBuiltMapForKeyNamed("[RTRIGGER]", ksp.RightTrigger, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_UP]", VirtualButtons::LeftThumbstickUp, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_DOWN]", VirtualButtons::LeftThumbstickDown, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_RIGHT]", VirtualButtons::LeftThumbstickRight, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_LEFT]", VirtualButtons::LeftThumbstickLeft, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_DOWN_RIGHT]", VirtualButtons::LeftThumbstickDownRight, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_DOWN_LEFT]", VirtualButtons::LeftThumbstickDownLeft, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_UP_RIGHT]", VirtualButtons::LeftThumbstickUpRight, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTHUMB_UP_LEFT]", VirtualButtons::LeftThumbstickUpLeft, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[LTRIGGER]", VirtualButtons::LeftTrigger, LeftThumbGroup),
+            GetBuiltMapForKeyNamed("[RTRIGGER]", VirtualButtons::RightTrigger, LeftThumbGroup),
             // Shoulder buttons
-            CBActionMap{
-                .ButtonVirtualKeycode = ksp.ButtonShoulderRight,
+            CBActionMap
+        	{
+                .ButtonVirtualKeycode = VirtualButtons::ShoulderRight,
                 .UsesInfiniteRepeat = false,
                 .OnDown = []() { system("cls"); std::cout << "Cleared.\n"; }
             },
-            CBActionMap{
-                .ButtonVirtualKeycode = ksp.ButtonShoulderLeft,
+            CBActionMap
+        	{
+                .ButtonVirtualKeycode = VirtualButtons::ShoulderLeft,
                 .UsesInfiniteRepeat = false,
                 .OnDown = []()
                 {
                 // Add impl for something to do here
-            }
-        },
+                }
+        	},
         };
 
         return mapBuffer;
     }
 
     inline
-    auto GetMapping(const unsigned short newVk, std::optional<int> exGroup = {})
+    auto GetMapping(const sds::VirtualButtons newVk, std::optional<int> exGroup = {})
     {
         using namespace sds;
-        const std::string vkString = "Vk:[" + std::to_string(newVk) + "]\n";
+        const std::string vkString = "Vk:[" + std::to_string((int)newVk) + "]\n";
         const std::string downMessage = "Action:[Down] " + vkString;
         const std::string upMessage = "Action:[Up] " + vkString;
         const std::string repeatMessage = "Action:[Repeat] " + vkString;
