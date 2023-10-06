@@ -78,6 +78,20 @@ namespace sds::XInput
 	}
 
 	/**
+	 * \brief Some constants that are configurable.
+	 * \remarks A person will wish to construct one of these for use with GetWrappedLegacyApiStateUpdate
+	 */
+	struct KeyboardSettingsXInput
+	{
+		keyboardtypes::ThumbstickValue_t LeftStickDeadzone{ XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE };
+		keyboardtypes::ThumbstickValue_t RightStickDeadzone{ XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE };
+
+		keyboardtypes::TriggerValue_t LeftTriggerThreshold{ XINPUT_GAMEPAD_TRIGGER_THRESHOLD };
+		keyboardtypes::TriggerValue_t RightTriggerThreshold{ XINPUT_GAMEPAD_TRIGGER_THRESHOLD };
+	};
+	static_assert(std::copyable<KeyboardSettingsXInput>);
+
+	/**
 	 * \brief	Important helper function to build a small vector of button VKs that are 'down'. Essential function
 	 *	is to decompose bit masked state updates into an array.
 	 * \param settingsPack	Settings pertaining to deadzone info and virtual keycodes.
@@ -149,13 +163,14 @@ namespace sds::XInput
 
 	/**
 	 * \brief Gets a wrapped controller state update.
-	 * \param settingsPack Settings information, not necessarily constexpr or compile time.
+	 * \param settings Settings information, deadzone and trigger thresholds, etc.
+	 * \param playerId The player number in the case that multiple controllers are connected.
 	 * \return Wrapper for the controller state buffer.
 	 */
 	[[nodiscard]]
 	inline
-	auto GetWrappedLegacyApiStateUpdate(const KeyboardSettingsPack& settingsPack) noexcept -> keyboardtypes::SmallVector_t<VirtualButtons>
+	auto GetWrappedLegacyApiStateUpdate(const KeyboardSettingsXInput& settings, const int playerId = 0) noexcept -> keyboardtypes::SmallVector_t<VirtualButtons>
 	{
-		return GetDownVirtualKeycodesRange(settingsPack.Settings, GetLegacyApiStateUpdate(settingsPack.PlayerInfo.PlayerId));
+		return GetDownVirtualKeycodesRange(settings, GetLegacyApiStateUpdate(playerId));
 	}
 }

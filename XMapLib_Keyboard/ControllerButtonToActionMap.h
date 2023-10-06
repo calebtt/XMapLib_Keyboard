@@ -7,12 +7,12 @@
 
 namespace sds
 {
-	enum class ActionState : int
+	enum class ActionState
 	{
-		INIT, // State indicating ready for new cycle
-		KEYDOWN,
-		KEYREPEAT,
-		KEYUP,
+		Init, // State indicating ready for new cycle
+		KeyDown,
+		KeyRepeat,
+		KeyUp,
 	};
 
 	/**
@@ -26,7 +26,7 @@ namespace sds
 		 * \brief Key Repeat Delay is the time delay a button has in-between activations.
 		 */
 		static constexpr keyboardtypes::NanosDelay_t DefaultKeyRepeatDelay{ std::chrono::microseconds{100'000} };
-		ActionState m_currentValue{ ActionState::INIT };
+		ActionState m_currentValue{ ActionState::Init };
 	public:
 		/**
 		 * \brief	This delay is mostly used for in-between key-repeats, but could also be in between other state transitions.
@@ -37,14 +37,14 @@ namespace sds
 		 */
 		DelayManagement::DelayManager DelayBeforeFirstRepeat{ LastSentTime.GetTimerPeriod() };
 	public:
-		[[nodiscard]] constexpr bool IsRepeating() const noexcept { return m_currentValue == ActionState::KEYREPEAT; }
-		[[nodiscard]] constexpr bool IsDown() const noexcept { return m_currentValue == ActionState::KEYDOWN; }
-		[[nodiscard]] constexpr bool IsUp() const noexcept { return m_currentValue == ActionState::KEYUP; }
-		[[nodiscard]] constexpr bool IsInitialState() const noexcept { return m_currentValue == ActionState::INIT; }
-		constexpr auto SetDown() noexcept { m_currentValue = ActionState::KEYDOWN; }
-		constexpr auto SetUp() noexcept { m_currentValue = ActionState::KEYUP; }
-		constexpr auto SetRepeat() noexcept { m_currentValue = ActionState::KEYREPEAT; }
-		constexpr auto SetInitial() noexcept { m_currentValue = ActionState::INIT; }
+		[[nodiscard]] constexpr bool IsRepeating() const noexcept { return m_currentValue == ActionState::KeyRepeat; }
+		[[nodiscard]] constexpr bool IsDown() const noexcept { return m_currentValue == ActionState::KeyDown; }
+		[[nodiscard]] constexpr bool IsUp() const noexcept { return m_currentValue == ActionState::KeyUp; }
+		[[nodiscard]] constexpr bool IsInitialState() const noexcept { return m_currentValue == ActionState::Init; }
+		constexpr auto SetDown() noexcept { m_currentValue = ActionState::KeyDown; }
+		constexpr auto SetUp() noexcept { m_currentValue = ActionState::KeyUp; }
+		constexpr auto SetRepeat() noexcept { m_currentValue = ActionState::KeyRepeat; }
+		constexpr auto SetInitial() noexcept { m_currentValue = ActionState::Init; }
 	};
 
 	static_assert(std::copyable<MappingStateManager>);

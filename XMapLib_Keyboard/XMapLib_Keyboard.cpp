@@ -87,6 +87,11 @@ auto GetDriverButtonMappings()
         GetBuiltMapForKeyNamed("[PAD_B]", VirtualButtons::B, PadButtonsGroup, 500ms),
         GetBuiltMapForKeyNamed("[PAD_X]", VirtualButtons::X, PadButtonsGroup, 500ms),
         GetBuiltMapForKeyNamed("[PAD_Y]", VirtualButtons::Y, PadButtonsGroup, 500ms),
+        // Dpad
+        GetBuiltMapForKeyNamed("[DPAD_LEFT]", VirtualButtons::DpadLeft, {}, 500ms),
+        GetBuiltMapForKeyNamed("[DPAD_RIGHT]", VirtualButtons::DpadRight, {}, 500ms),
+        GetBuiltMapForKeyNamed("[DPAD_UP]", VirtualButtons::DpadUp, {}, 500ms),
+        GetBuiltMapForKeyNamed("[DPAD_DOWN]", VirtualButtons::DpadDown, {}, 500ms),
         // Left thumbstick directional stuff
         GetBuiltMapForKeyNamed("[LTHUMB_UP]", VirtualButtons::LeftThumbstickUp, LeftThumbGroup, 500ms),
         GetBuiltMapForKeyNamed("[LTHUMB_DOWN]", VirtualButtons::LeftThumbstickDown, LeftThumbGroup, 500ms),
@@ -257,7 +262,7 @@ auto GetDriverMouseMappings()
 }
 
 inline
-void TranslationLoop(const sds::KeyboardSettingsPack& settingsPack, sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
+void TranslationLoop(const sds::XInput::KeyboardSettingsXInput& settingsPack, sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
 {
     using namespace std::chrono_literals;
 	const auto translation = translator.GetUpdatedState(sds::XInput::GetWrappedLegacyApiStateUpdate(settingsPack));
@@ -276,7 +281,7 @@ auto RunTestDriverLoop()
     std::cout << std::vformat("Created mappings buffer with {} mappings. Total size: {} bytes.\n", std::make_format_args(mapBuffer.size(), sizeof(mapBuffer.front())*mapBuffer.size()));
 
     // Creating a few polling/translation related types
-    sds::KeyboardSettingsPack settingsPack{};
+    const sds::XInput::KeyboardSettingsXInput settingsPack{};
     // The filter is constructed here, to support custom filters with their own construction needs.
     sds::KeyboardOvertakingFilter filter{};
     // Filter is then moved into the translator at construction.

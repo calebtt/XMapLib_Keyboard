@@ -21,7 +21,6 @@ namespace TestKeyboard
 
 	TEST_CLASS(TestOvertakingFilter)
 	{
-		static constexpr sds::KeyboardSettingsXInput ksp{};
 	public:
 		TEST_METHOD(TestFreeFuncs)
 		{
