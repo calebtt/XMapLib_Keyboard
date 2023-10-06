@@ -23,14 +23,6 @@ namespace sds
 		RightStick
 	};
 
-	enum class ControllerTrigger : int32_t
-	{
-		LeftTrigger,
-		RightTrigger,
-		LeftUpperTrigger,
-		RightUpperTrigger
-	};
-
 	/**
 	 * \brief Direction values for thumbsticks, includes diagonals.
 	 */
@@ -46,7 +38,6 @@ namespace sds
 		LeftUp,
 		Invalid
 	};
-
 
 	/**
 	 * \brief	All known/supported controller button/functionality identifiers usable with one or more pollers.
@@ -113,24 +104,15 @@ namespace sds
 	};
 
 	/**
-	 * \brief Some constants that are not configurable.
+	 * \brief Some constants that are configurable.
 	 */
 	struct KeyboardSettingsXInput final
 	{
-		/**
-		 * \brief Delay each iteration of a polling loop, short enough to not miss information, long enough to not waste CPU cycles.
-		 */
-		static constexpr keyboardtypes::NanosDelay_t PollingLoopDelay{ std::chrono::milliseconds{1} };
-		/**
-		 * \brief Key Repeat Delay is the time delay a button has in-between activations.
-		 */
-		static constexpr keyboardtypes::NanosDelay_t KeyRepeatDelay{ std::chrono::microseconds{100'000} };
+		keyboardtypes::ThumbstickValue_t LeftStickDeadzone{XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE};
+		keyboardtypes::ThumbstickValue_t RightStickDeadzone{XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE};
 
-		static constexpr keyboardtypes::ThumbstickValue_t LeftStickDeadzone{XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE};
-		static constexpr keyboardtypes::ThumbstickValue_t RightStickDeadzone{XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE};
-
-		static constexpr keyboardtypes::TriggerValue_t LeftTriggerThreshold{XINPUT_GAMEPAD_TRIGGER_THRESHOLD};
-		static constexpr keyboardtypes::TriggerValue_t RightTriggerThreshold{XINPUT_GAMEPAD_TRIGGER_THRESHOLD};
+		keyboardtypes::TriggerValue_t LeftTriggerThreshold{XINPUT_GAMEPAD_TRIGGER_THRESHOLD};
+		keyboardtypes::TriggerValue_t RightTriggerThreshold{XINPUT_GAMEPAD_TRIGGER_THRESHOLD};
 	};
 
 	static_assert(std::copyable<KeyboardSettingsXInput>);

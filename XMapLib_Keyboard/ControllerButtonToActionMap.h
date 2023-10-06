@@ -22,13 +22,16 @@ namespace sds
 	 */
 	class MappingStateManager final
 	{
+		/**
+		 * \brief Key Repeat Delay is the time delay a button has in-between activations.
+		 */
+		static constexpr keyboardtypes::NanosDelay_t DefaultKeyRepeatDelay{ std::chrono::microseconds{100'000} };
 		ActionState m_currentValue{ ActionState::INIT };
-		KeyboardSettingsXInput m_keyDefaults{};
 	public:
 		/**
 		 * \brief	This delay is mostly used for in-between key-repeats, but could also be in between other state transitions.
 		 */
-		DelayManagement::DelayManager LastSentTime{ m_keyDefaults.KeyRepeatDelay };
+		DelayManagement::DelayManager LastSentTime{ DefaultKeyRepeatDelay };
 		/**
 		 * \brief	This is the delay before the first repeat is sent whilst holding the button down.
 		 */

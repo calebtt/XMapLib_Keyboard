@@ -104,8 +104,8 @@ namespace sds::XInput
 			allKeys.emplace_back(VirtualButtons::RightTrigger);
 
 		// Stick axes
-		constexpr auto LeftStickDz{ settingsPack.LeftStickDeadzone };
-		constexpr auto RightStickDz{ settingsPack.RightStickDeadzone };
+		const auto LeftStickDz{ settingsPack.LeftStickDeadzone };
+		const auto RightStickDz{ settingsPack.RightStickDeadzone };
 
 		const auto leftThumbstickX{ controllerState.Gamepad.sThumbLX };
 		const auto rightThumbstickX{ controllerState.Gamepad.sThumbRX };
@@ -122,7 +122,6 @@ namespace sds::XInput
 		const auto leftThumbstickVk{ GetVirtualKeyFromDirection(leftDirection, ControllerStick::LeftStick) };
 		const auto rightThumbstickVk{ GetVirtualKeyFromDirection(rightDirection, ControllerStick::RightStick) };
 
-		// TODO deadzone appears too low on left stick, check this part.
 		const bool leftIsDown = leftStickPolarInfo.first > LeftStickDz && leftThumbstickVk.has_value();
 		const bool rightIsDown = rightStickPolarInfo.first > RightStickDz && rightThumbstickVk.has_value();
 
