@@ -12,11 +12,8 @@
 #include "../XMapLib_Utils/ControllerStatus.h"
 
 #include <iostream>
-#include <print>
 #include <chrono>
 #include <format>
-#include <thread>
-#include <mutex>
 
 // Crude mechanism to keep the loop running until [enter] is pressed.
 struct GetterExitCallable final
@@ -265,7 +262,8 @@ inline
 void TranslationLoop(const sds::XInput::KeyboardSettingsXInput& settingsPack, sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
 {
     using namespace std::chrono_literals;
-	const auto translation = translator.GetUpdatedState(sds::XInput::GetWrappedLegacyApiStateUpdate(settingsPack));
+	//const auto translation = translator.GetUpdatedState(sds::XInput::GetWrappedControllerStateUpdate(settingsPack));
+    const auto translation = translator.GetUpdatedState(sds::PS5::GetWrappedControllerStateUpdate());
 	translation();
 	nanotime_sleep(sleepDelay.count());
 }
@@ -281,7 +279,7 @@ auto RunTestDriverLoop()
     std::cout << std::vformat("Created mappings buffer with {} mappings. Total size: {} bytes.\n", std::make_format_args(mapBuffer.size(), sizeof(mapBuffer.front())*mapBuffer.size()));
 
     // Creating a few polling/translation related types
-    const sds::XInput::KeyboardSettingsXInput settingsPack{};
+    constexpr sds::XInput::KeyboardSettingsXInput settingsPack{};
     // The filter is constructed here, to support custom filters with their own construction needs.
     sds::KeyboardOvertakingFilter filter{};
     // Filter is then moved into the translator at construction.

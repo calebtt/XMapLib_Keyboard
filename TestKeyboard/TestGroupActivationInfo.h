@@ -16,7 +16,7 @@ namespace TestKeyboard
 
 			const auto DoDownTestFor = [&](const sds::VirtualButtons n, const bool isFiltered, const bool isKeyUpSent)
 			{
-				const auto [doFilter, keyUpOpt] = gai.UpdateForNewMatchingGroupingDown(n);
+				const auto& [doFilter, keyUpOpt] = gai.UpdateForNewMatchingGroupingDown(n);
 				Assert::IsTrue(doFilter == isFiltered);
 				Assert::IsTrue(keyUpOpt.has_value() == isKeyUpSent);
 			};

@@ -1,14 +1,8 @@
 #pragma once
-#include <cassert>
-#include <functional>
-#include <algorithm>
-#include <numeric>
-#include <numbers>
-#include <array>
-#include <ranges>
-#include <unordered_map>
-
-#include "KeyboardSettingsPack.h"
+#include "KeyboardCustomTypes.h"
+#include <limits>
+#include <cmath>
+#include <tuple>
 
 namespace sds
 {

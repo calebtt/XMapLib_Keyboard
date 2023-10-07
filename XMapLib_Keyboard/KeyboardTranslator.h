@@ -1,12 +1,12 @@
 #pragma once
+#include "KeyboardCustomTypes.h"
+#include "KeyboardTranslationHelpers.h"
+#include "KeyboardOvertakingFilter.h"
+
 #include <stdexcept>
 #include <concepts>
 #include <ranges>
 #include <type_traits>
-
-#include "KeyboardCustomTypes.h"
-#include "KeyboardTranslationHelpers.h"
-#include "KeyboardOvertakingFilter.h"
 
 /*
  *	Note: There are some static sized arrays used here with capacity defined in customtypes.

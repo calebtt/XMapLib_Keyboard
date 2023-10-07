@@ -38,7 +38,7 @@
     <ClInclude Include="ControllerButtonToActionMap.h">
       <Filter>Header Files\Keyboard\KeyInfoWrappersAndHelpers</Filter>
     </ClInclude>
-    <ClInclude Include="KeyboardSettingsPack.h">
+    <ClInclude Include="KeyboardControllerSettings.h">
       <Filter>Header Files\Keyboard\SettingsAndConfig</Filter>
     </ClInclude>
     <ClInclude Include="KeyboardTranslator.h">

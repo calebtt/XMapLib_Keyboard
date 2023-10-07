@@ -1,18 +1,11 @@
 #pragma once
+#include <SFML/window/Joystick.hpp>
+
 #include <string>
 #include <iostream>
 #include <limits>
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <SFML/window/Joystick.hpp>
-
-
-namespace sds
+namespace sds::PS5
 {
 	namespace detail
 	{
@@ -32,23 +25,23 @@ namespace sds
 		static constexpr keyboardtypes::VirtualKey_t ButtonPlayLogo{ 12 };
 		static constexpr keyboardtypes::VirtualKey_t ButtonShiftSwitch{ 13 };
 
-		static constexpr std::array<keyboardtypes::VirtualKey_t, 14> ButtonCodeArray
-		{
-			ButtonX,
-			ButtonA,
-			ButtonB,
-			ButtonY,
-			ButtonShoulderLeft,
-			ButtonShoulderRight,
-			ButtonShoulderLeftLower,
-			ButtonShoulderRightLower,
-			ButtonLeftPill,
-			ButtonRightPill,
-			ButtonLeftStickClick,
-			ButtonRightStickClick,
-			ButtonPlayLogo,
-			ButtonShiftSwitch
-		};
+		static constexpr std::array<std::pair<keyboardtypes::VirtualKey_t, VirtualButtons>, 14> ApiCodeToVirtualButtonArray
+		{ {
+			{ButtonX, VirtualButtons::X},
+			{ButtonA, VirtualButtons::A},
+			{ButtonB, VirtualButtons::B},
+			{ButtonY, VirtualButtons::Y},
+			{ButtonShoulderLeft, VirtualButtons::ShoulderLeft},
+			{ButtonShoulderRight, VirtualButtons::ShoulderRight},
+			{ButtonShoulderLeftLower, VirtualButtons::LeftTrigger},
+			{ButtonShoulderRightLower, VirtualButtons::RightTrigger},
+			{ButtonLeftPill, VirtualButtons::LeftPill},
+			{ButtonRightPill, VirtualButtons::RightPill},
+			{ButtonLeftStickClick, VirtualButtons::LeftStickClick},
+			{ButtonRightStickClick, VirtualButtons::RightStickClick},
+			{ButtonPlayLogo, VirtualButtons::PS5Logo},
+			{ButtonShiftSwitch, VirtualButtons::ShiftSwitch}
+		} };
 	}
 
 	/**
@@ -58,7 +51,7 @@ namespace sds
 	 */
 	[[nodiscard]]
 	inline
-	auto GetSFMLApiStateUpdate(const int playerId = 0) noexcept -> uint32_t
+	auto GetWrappedControllerStateUpdate(const int playerId = 0) noexcept -> keyboardtypes::SmallVector_t<VirtualButtons>
 	{
 		// TODO doesn't work yet.
 		using Stick = sf::Joystick;
@@ -72,15 +65,14 @@ namespace sds
 
 		if (Stick::isConnected(playerId))
 		{
-			const auto buttonCount = Stick::getButtonCount(playerId);
-			for (uint32_t i{}; i < buttonCount; ++i)
+			keyboardtypes::SmallVector_t<VirtualButtons> allKeys;
+
+			for (const auto& [apiCode, virtualCode] : detail::ApiCodeToVirtualButtonArray)
 			{
-				if (Stick::isButtonPressed(playerId, i))
-				{
-					cout << "Pressed: " << i << '\n';
-				}
+				if (Stick::isButtonPressed(playerId, apiCode))
+					allKeys.emplace_back(virtualCode);
 			}
-			return 1;
+			return allKeys;
 		}
 		return {};
 	}

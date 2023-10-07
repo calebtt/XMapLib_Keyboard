@@ -1,4 +1,7 @@
 #pragma once
+#include "ControllerButtonToActionMap.h"
+#include "KeyboardTranslationHelpers.h"
+
 #include <cassert>
 #include <ranges>
 #include <functional>
@@ -8,9 +11,6 @@
 #include <format>
 #include <source_location>
 #include <stacktrace>
-
-#include "ControllerButtonToActionMap.h"
-#include "KeyboardTranslationHelpers.h"
 
 namespace sds
 {
@@ -36,7 +36,7 @@ namespace sds
 		{
 			throw std::runtime_error(
 				std::vformat("Did not find mapping with vk: {} in mappings range.\nLocation:\n{}\n\n",
-					std::make_format_args((int)vk, std::source_location::current().function_name())));
+					std::make_format_args(static_cast<int>(vk), std::source_location::current().function_name())));
 		}
 
 		return static_cast<Index_t>(distance(cbegin(mappingsRange), findResult));

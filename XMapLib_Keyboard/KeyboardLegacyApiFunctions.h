@@ -9,7 +9,7 @@
 #include <Xinput.h>
 
 #include "KeyboardCustomTypes.h"
-#include "KeyboardSettingsPack.h"
+#include "KeyboardControllerSettings.h"
 #include "KeyboardPolarInfo.h"
 #include "KeyboardStickDirection.h"
 
@@ -78,8 +78,8 @@ namespace sds::XInput
 	}
 
 	/**
-	 * \brief Some constants that are configurable.
-	 * \remarks A person will wish to construct one of these for use with GetWrappedLegacyApiStateUpdate
+	 * \brief Some settings values that are configurable.
+	 * \remarks A person will wish to construct one of these for use with a poller function.
 	 */
 	struct KeyboardSettingsXInput
 	{
@@ -108,7 +108,7 @@ namespace sds::XInput
 		for (const auto& [elem, virtualCode] : ApiCodeToVirtualButtonArray)
 		{
 			if (controllerState.Gamepad.wButtons & elem)
-				allKeys.push_back(virtualCode);
+				allKeys.emplace_back(virtualCode);
 		}
 
 		// Triggers
@@ -133,16 +133,13 @@ namespace sds::XInput
 		const auto leftDirection{ GetDirectionForPolarTheta(leftStickPolarInfo.second) };
 		const auto rightDirection{ GetDirectionForPolarTheta(rightStickPolarInfo.second) };
 
-		const auto leftThumbstickVk{ GetVirtualKeyFromDirection(leftDirection, ControllerStick::LeftStick) };
-		const auto rightThumbstickVk{ GetVirtualKeyFromDirection(rightDirection, ControllerStick::RightStick) };
-
-		const bool leftIsDown = leftStickPolarInfo.first > LeftStickDz && leftThumbstickVk.has_value();
-		const bool rightIsDown = rightStickPolarInfo.first > RightStickDz && rightThumbstickVk.has_value();
+		const bool leftIsDown = leftStickPolarInfo.first > static_cast<keyboardtypes::ComputationFloat_t>(LeftStickDz);
+		const bool rightIsDown = rightStickPolarInfo.first > static_cast<keyboardtypes::ComputationFloat_t>(RightStickDz);
 
 		if (leftIsDown)
-			allKeys.emplace_back(leftThumbstickVk.value());
+			allKeys.emplace_back(GetVirtualKeyFromDirection(leftDirection, ControllerStick::LeftStick));
 		if (rightIsDown)
-			allKeys.emplace_back(rightThumbstickVk.value());
+			allKeys.emplace_back(GetVirtualKeyFromDirection(rightDirection, ControllerStick::RightStick));
 
 		return allKeys;
 	}
@@ -162,14 +159,14 @@ namespace sds::XInput
 	}
 
 	/**
-	 * \brief Gets a wrapped controller state update.
+	 * \brief  Function of note, returns a wrapped controller state update that can be passed to a translator/filter.
 	 * \param settings Settings information, deadzone and trigger thresholds, etc.
 	 * \param playerId The player number in the case that multiple controllers are connected.
 	 * \return Wrapper for the controller state buffer.
 	 */
 	[[nodiscard]]
 	inline
-	auto GetWrappedLegacyApiStateUpdate(const KeyboardSettingsXInput& settings, const int playerId = 0) noexcept -> keyboardtypes::SmallVector_t<VirtualButtons>
+	auto GetWrappedControllerStateUpdate(const KeyboardSettingsXInput& settings, const int playerId = 0) noexcept -> keyboardtypes::SmallVector_t<VirtualButtons>
 	{
 		return GetDownVirtualKeycodesRange(settings, GetLegacyApiStateUpdate(playerId));
 	}

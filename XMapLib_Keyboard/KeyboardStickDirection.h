@@ -1,7 +1,11 @@
 #pragma once
+#include "KeyboardCustomTypes.h"
+#include "KeyboardControllerSettings.h"
+
 #include <numbers>
 #include <tuple>
-#include "KeyboardSettingsPack.h"
+#include <optional>
+
 
 namespace sds
 {
@@ -90,7 +94,7 @@ namespace sds
 	 */
 	[[nodiscard]]
 	constexpr
-	auto GetVirtualKeyFromDirection(const ThumbstickDirection direction, const ControllerStick whichStick) -> std::optional<VirtualButtons>
+	auto GetVirtualKeyFromDirection(const ThumbstickDirection direction, const ControllerStick whichStick) -> VirtualButtons
 	{
 		using namespace detail;
 		using enum VirtualButtons;
@@ -106,13 +110,9 @@ namespace sds
 		case ThumbstickDirection::DownLeft: return isLeftStick ? LeftThumbstickDownLeft : RightThumbstickDownLeft;
 		case ThumbstickDirection::Left: return isLeftStick ? LeftThumbstickLeft : RightThumbstickLeft;
 		case ThumbstickDirection::LeftUp: return isLeftStick ? LeftThumbstickUpLeft : RightThumbstickUpLeft;
-		case ThumbstickDirection::Invalid: return {};
-		default:
-		{
-			throw std::runtime_error("Bad mapping of ThumbstickDirection to virtual key.");
+		case ThumbstickDirection::Invalid: return NotSet;
 		}
-		}
-		return {};
+		return NotSet;
 	}
 
 }

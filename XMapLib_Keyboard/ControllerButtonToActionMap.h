@@ -1,6 +1,6 @@
 #pragma once
 #include "KeyboardCustomTypes.h"
-#include "KeyboardSettingsPack.h"
+#include "KeyboardControllerSettings.h"
 #include "../DelayManagerProj/DelayManager/DelayManager.hpp"
 
 #include <concepts>
