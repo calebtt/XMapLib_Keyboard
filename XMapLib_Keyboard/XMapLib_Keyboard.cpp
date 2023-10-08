@@ -259,13 +259,21 @@ auto GetDriverMouseMappings()
 }
 
 inline
-void TranslationLoop(const sds::XInput::KeyboardSettingsXInput& settingsPack, sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
+void TranslationLoopXbox(const sds::XInput::KeyboardSettingsXInput& settingsPack, sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
 {
     using namespace std::chrono_literals;
-	//const auto translation = translator.GetUpdatedState(sds::XInput::GetWrappedControllerStateUpdate(settingsPack));
-    const auto translation = translator.GetUpdatedState(sds::PS5::GetWrappedControllerStateUpdate());
+	const auto translation = translator.GetUpdatedState(sds::XInput::GetWrappedControllerStateUpdate(settingsPack));
 	translation();
 	nanotime_sleep(sleepDelay.count());
+}
+
+inline
+void TranslationLoopPs5(const sds::PS5::KeyboardSettingsSFMLPlayStation5& settingsPack, sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
+{
+    using namespace std::chrono_literals;
+    const auto translation = translator.GetUpdatedState(sds::PS5::GetWrappedControllerStateUpdate(settingsPack));
+    translation();
+    nanotime_sleep(sleepDelay.count());
 }
 
 auto RunTestDriverLoop()
@@ -279,7 +287,8 @@ auto RunTestDriverLoop()
     std::cout << std::vformat("Created mappings buffer with {} mappings. Total size: {} bytes.\n", std::make_format_args(mapBuffer.size(), sizeof(mapBuffer.front())*mapBuffer.size()));
 
     // Creating a few polling/translation related types
-    constexpr sds::XInput::KeyboardSettingsXInput settingsPack{};
+    constexpr sds::XInput::KeyboardSettingsXInput xboxSettings{};
+    constexpr sds::PS5::KeyboardSettingsSFMLPlayStation5 ps5Settings{};
     // The filter is constructed here, to support custom filters with their own construction needs.
     sds::KeyboardOvertakingFilter filter{};
     // Filter is then moved into the translator at construction.
@@ -309,7 +318,8 @@ auto RunTestDriverLoop()
     const auto exitFuture = std::async(std::launch::async, [&]() { gec.GetExitSignal(); });
     while (!gec.IsDone)
     {
-        TranslationLoop(settingsPack, translator, SleepDelay);
+        TranslationLoopPs5(ps5Settings, translator, SleepDelay);
+        //TranslationLoopXbox(xboxSettings, translator, SleepDelay);
         updateLoopTimer(SleepDelay);
     }
     std::cout << "Performing cleanup actions...\n";

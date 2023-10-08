@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/window/Joystick.hpp>
+#include "KeyboardPolarInfo.h"
 
 #include <string>
 #include <iostream>
@@ -44,6 +45,12 @@ namespace sds::PS5
 		} };
 	}
 
+	struct KeyboardSettingsSFMLPlayStation5
+	{
+		keyboardtypes::ThumbstickValue_t LeftStickDeadzone{ 30 };
+		keyboardtypes::ThumbstickValue_t RightStickDeadzone{ 30 };
+	};
+
 	/**
 	 * \brief Uses SFML to call some OS API function(s) to retrieve a controller state update.
 	 * \param playerId Most commonly 0 for a single device connected.
@@ -51,15 +58,11 @@ namespace sds::PS5
 	 */
 	[[nodiscard]]
 	inline
-	auto GetWrappedControllerStateUpdate(const int playerId = 0) noexcept -> keyboardtypes::SmallVector_t<VirtualButtons>
+	auto GetWrappedControllerStateUpdate(const KeyboardSettingsSFMLPlayStation5& settings, const int playerId = 0) noexcept -> keyboardtypes::SmallVector_t<VirtualButtons>
 	{
-		// TODO doesn't work yet.
 		using Stick = sf::Joystick;
-		using std::numeric_limits;
-		using std::cout;
-		using std::cin;
-		using std::getline;
-		using std::string;
+		const auto leftStickDeadzone{ settings.LeftStickDeadzone };
+		const auto rightStickDeadzone{ settings.RightStickDeadzone };
 
 		Stick::update();
 
@@ -72,6 +75,27 @@ namespace sds::PS5
 				if (Stick::isButtonPressed(playerId, apiCode))
 					allKeys.emplace_back(virtualCode);
 			}
+			// TODO add stick directions here
+			//const auto uPos = Stick::getAxisPosition(playerId, Stick::Axis::U); // Ltrigger gradient
+			//const auto vPos = Stick::getAxisPosition(playerId, Stick::Axis::V); // Rtrigger gradient
+
+			const auto thumbstickRightX = Stick::getAxisPosition(playerId, Stick::Axis::Z);
+			const auto thumbstickRightY = Stick::getAxisPosition(playerId, Stick::Axis::R);
+
+			const auto thumbstickLeftX = Stick::getAxisPosition(playerId, Stick::Axis::X);
+			const auto thumbstickLeftY = Stick::getAxisPosition(playerId, Stick::Axis::Y);
+
+			const auto [leftStickRadius, leftStickAngle] = ComputePolarPair(thumbstickLeftX, -thumbstickLeftY);
+			const auto [rightStickRadius, rightStickAngle] = ComputePolarPair(thumbstickRightX, -thumbstickRightY);
+
+			const auto leftStickDirection = GetVirtualKeyFromDirection(GetDirectionForPolarTheta(leftStickAngle), ControllerStick::LeftStick);
+			const auto rightStickDirection = GetVirtualKeyFromDirection(GetDirectionForPolarTheta(rightStickAngle), ControllerStick::RightStick);
+
+			if (leftStickRadius >= leftStickDeadzone)
+				allKeys.emplace_back(leftStickDirection);
+			if (rightStickRadius >= rightStickDeadzone)
+				allKeys.emplace_back(rightStickDirection);
+
 			return allKeys;
 		}
 		return {};
