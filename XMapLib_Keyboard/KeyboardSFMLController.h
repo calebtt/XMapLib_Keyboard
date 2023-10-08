@@ -53,6 +53,7 @@ namespace sds::PS5
 
 	/**
 	 * \brief Uses SFML to call some OS API function(s) to retrieve a controller state update.
+	 * \param settings A poller specific settings struct with things like deadzone info.
 	 * \param playerId Most commonly 0 for a single device connected.
 	 * \return Platform/API specific state structure.
 	 */
