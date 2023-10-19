@@ -112,7 +112,7 @@ namespace TestKeyboard
             .OnReset = [=]() { Logger::WriteMessage(resetMessage.c_str()); },
             .LastAction = {}
         };
-        mappings.emplace_back(tm);
+        mappings.push_back(tm);
         return mappings;
     }
 }

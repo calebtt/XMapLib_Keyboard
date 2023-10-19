@@ -108,14 +108,14 @@ namespace sds::XInput
 		for (const auto& [elem, virtualCode] : ApiCodeToVirtualButtonArray)
 		{
 			if (controllerState.Gamepad.wButtons & elem)
-				allKeys.emplace_back(virtualCode);
+				allKeys.push_back(virtualCode);
 		}
 
 		// Triggers
 		if (IsLeftTriggerBeyondThreshold(controllerState.Gamepad.bLeftTrigger, settingsPack.LeftTriggerThreshold))
-			allKeys.emplace_back(VirtualButtons::LeftTrigger);
+			allKeys.push_back(VirtualButtons::LeftTrigger);
 		if (IsRightTriggerBeyondThreshold(controllerState.Gamepad.bRightTrigger, settingsPack.RightTriggerThreshold))
-			allKeys.emplace_back(VirtualButtons::RightTrigger);
+			allKeys.push_back(VirtualButtons::RightTrigger);
 
 		// Stick axes
 		const auto LeftStickDz{ settingsPack.LeftStickDeadzone };
@@ -137,9 +137,9 @@ namespace sds::XInput
 		const bool rightIsDown = rightStickPolarInfo.first > static_cast<keyboardtypes::ComputationFloat_t>(RightStickDz);
 
 		if (leftIsDown)
-			allKeys.emplace_back(GetVirtualKeyFromDirection(leftDirection, ControllerStick::LeftStick));
+			allKeys.push_back(GetVirtualKeyFromDirection(leftDirection, ControllerStick::LeftStick));
 		if (rightIsDown)
-			allKeys.emplace_back(GetVirtualKeyFromDirection(rightDirection, ControllerStick::RightStick));
+			allKeys.push_back(GetVirtualKeyFromDirection(rightDirection, ControllerStick::RightStick));
 
 		return allKeys;
 	}

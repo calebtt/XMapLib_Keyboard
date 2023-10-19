@@ -192,24 +192,24 @@ namespace sds
 			{
 				if (const auto upToInitial = GetButtonTranslationForUpToInitial(mapping))
 				{
-					translations.UpdateRequests.emplace_back(*upToInitial);
+					translations.UpdateRequests.push_back(*upToInitial);
 				}
 				else if (const auto initialToDown = GetButtonTranslationForInitialToDown(stateUpdateFiltered, mapping))
 				{
 					// Advance to next state.
-					translations.DownRequests.emplace_back(*initialToDown);
+					translations.DownRequests.push_back(*initialToDown);
 				}
 				else if (const auto downToFirstRepeat = GetButtonTranslationForDownToRepeat(stateUpdateFiltered, mapping))
 				{
-					translations.RepeatRequests.emplace_back(*downToFirstRepeat);
+					translations.RepeatRequests.push_back(*downToFirstRepeat);
 				}
 				else if (const auto repeatToRepeat = GetButtonTranslationForRepeatToRepeat(stateUpdateFiltered, mapping))
 				{
-					translations.RepeatRequests.emplace_back(*repeatToRepeat);
+					translations.RepeatRequests.push_back(*repeatToRepeat);
 				}
 				else if (const auto repeatToUp = GetButtonTranslationForDownOrRepeatToUp(stateUpdateFiltered, mapping))
 				{
-					translations.UpRequests.emplace_back(*repeatToUp);
+					translations.UpRequests.push_back(*repeatToUp);
 				}
 			}
 			return translations;
@@ -223,7 +223,7 @@ namespace sds
 			{
 				if(DoesMappingNeedCleanup(mapping.LastAction))
 				{
-					translations.emplace_back(GetKeyUpTranslationResult(mapping));
+					translations.push_back(GetKeyUpTranslationResult(mapping));
 				}
 			}
 			return translations;

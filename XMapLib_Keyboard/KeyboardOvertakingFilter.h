@@ -261,11 +261,11 @@ namespace sds
 				const auto& [shouldFilter, upOpt] = currentGroup.UpdateForNewMatchingGroupingDown(currentMapping.ButtonVirtualKeycode);
 				if(shouldFilter)
 				{
-					vksToRemoveRange.emplace_back(currentMapping.ButtonVirtualKeycode);
+					vksToRemoveRange.push_back(currentMapping.ButtonVirtualKeycode);
 				}
 				if(upOpt)
 				{
-					vksToRemoveRange.emplace_back(*upOpt);
+					vksToRemoveRange.push_back(*upOpt);
 				}
 			}
 
@@ -331,10 +331,10 @@ namespace sds
 
 							// If already in located, being handled groupings, add to remove buffer.
 							if (groupingFindResult != cend(groupingValueBuffer))
-								virtualKeycodesToRemove.emplace_back(vk);
+								virtualKeycodesToRemove.push_back(vk);
 							// Otherwise, add this new grouping to the grouping value buffer.
 							else
-								groupingValueBuffer.emplace_back(grpVal);
+								groupingValueBuffer.push_back(grpVal);
 						}
 					}
 				}

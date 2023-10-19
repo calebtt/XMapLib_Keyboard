@@ -47,8 +47,8 @@ namespace sds::PS5
 
 	struct KeyboardSettingsSFMLPlayStation5
 	{
-		keyboardtypes::ThumbstickValue_t LeftStickDeadzone{ 30 };
-		keyboardtypes::ThumbstickValue_t RightStickDeadzone{ 30 };
+		float LeftStickDeadzone{ 30.0f };
+		float RightStickDeadzone{ 30.0f };
 	};
 
 	/**
@@ -74,9 +74,8 @@ namespace sds::PS5
 			for (const auto& [apiCode, virtualCode] : detail::ApiCodeToVirtualButtonArray)
 			{
 				if (Stick::isButtonPressed(playerId, apiCode))
-					allKeys.emplace_back(virtualCode);
+					allKeys.push_back(virtualCode);
 			}
-			// TODO add stick directions here
 			//const auto uPos = Stick::getAxisPosition(playerId, Stick::Axis::U); // Ltrigger gradient
 			//const auto vPos = Stick::getAxisPosition(playerId, Stick::Axis::V); // Rtrigger gradient
 
@@ -93,9 +92,9 @@ namespace sds::PS5
 			const auto rightStickDirection = GetVirtualKeyFromDirection(GetDirectionForPolarTheta(rightStickAngle), ControllerStick::RightStick);
 
 			if (leftStickRadius >= leftStickDeadzone)
-				allKeys.emplace_back(leftStickDirection);
+				allKeys.push_back(leftStickDirection);
 			if (rightStickRadius >= rightStickDeadzone)
-				allKeys.emplace_back(rightStickDirection);
+				allKeys.push_back(rightStickDirection);
 
 			return allKeys;
 		}
