@@ -13,6 +13,7 @@ namespace sds
 	 */
 	enum class ThumbstickDirection
 	{
+		Invalid,
 		Up,
 		UpRight,
 		Right,
@@ -20,8 +21,7 @@ namespace sds
 		Down,
 		DownLeft,
 		Left,
-		LeftUp,
-		Invalid
+		LeftUp
 	};
 
 	/**
