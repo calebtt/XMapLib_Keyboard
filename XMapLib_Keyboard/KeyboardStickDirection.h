@@ -76,14 +76,19 @@ namespace sds
 	auto GetDirectionForPolarTheta(const keyboardtypes::ComputationFloat_t theta) noexcept -> ThumbstickDirection
 	{
 		using namespace detail;
+		// Higher order fn that returns a fn
+		const auto RaiseFnWithTheta = [theta](auto&& fnToCall)
+			{
+				return [theta, &fnToCall]() { return fnToCall(theta); };
+			};
 		const auto dir = GetDirection<StickRight>(theta)
-			.or_else([theta]() { return GetDirection<StickUpRight>(theta); })
-			.or_else([theta]() { return GetDirection<StickUp>(theta); })
-			.or_else([theta]() { return GetDirection<StickUpLeft>(theta); })
-			.or_else([theta]() { return GetDirection<StickLeft>(theta); })
-			.or_else([theta]() { return GetDirection<StickDownLeft>(theta); })
-			.or_else([theta]() { return GetDirection<StickDown>(theta); })
-			.or_else([theta]() { return GetDirection<StickDownRight>(theta); });
+			.or_else(RaiseFnWithTheta(GetDirection<StickUpRight>))
+			.or_else(RaiseFnWithTheta(GetDirection<StickUp>))
+			.or_else(RaiseFnWithTheta(GetDirection<StickUpLeft>))
+			.or_else(RaiseFnWithTheta(GetDirection<StickLeft>))
+			.or_else(RaiseFnWithTheta(GetDirection<StickDownLeft>))
+			.or_else(RaiseFnWithTheta(GetDirection<StickDown>))
+			.or_else(RaiseFnWithTheta(GetDirection<StickDownRight>));
 		return dir.value_or(ThumbstickDirection::Invalid);
 	}
 

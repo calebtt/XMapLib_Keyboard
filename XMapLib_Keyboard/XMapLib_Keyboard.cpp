@@ -318,8 +318,8 @@ auto RunTestDriverLoop()
     const auto exitFuture = std::async(std::launch::async, [&]() { gec.GetExitSignal(); });
     while (!gec.IsDone)
     {
-        TranslationLoopPs5(ps5Settings, translator, SleepDelay);
-        //TranslationLoopXbox(xboxSettings, translator, SleepDelay);
+        //TranslationLoopPs5(ps5Settings, translator, SleepDelay);
+        TranslationLoopXbox(xboxSettings, translator, SleepDelay);
         updateLoopTimer(SleepDelay);
     }
     std::cout << "Performing cleanup actions...\n";
