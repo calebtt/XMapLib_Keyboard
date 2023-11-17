@@ -1,9 +1,8 @@
 #pragma once
-#include "KeyboardCustomTypes.h"
-#include "KeyboardControllerSettings.h"
-#include "../DelayManagerProj/DelayManager/DelayManager.hpp"
-
 #include <concepts>
+#include "KeyboardCustomTypes.h"
+#include "KeyboardVirtualController.h"
+#include "../DelayManagerProj/DelayManager/DelayManager.hpp"
 
 namespace sds
 {
@@ -25,7 +24,7 @@ namespace sds
 		/**
 		 * \brief Key Repeat Delay is the time delay a button has in-between activations.
 		 */
-		static constexpr keyboardtypes::NanosDelay_t DefaultKeyRepeatDelay{ std::chrono::microseconds{100'000} };
+		static constexpr NanosDelay_t DefaultKeyRepeatDelay{ std::chrono::microseconds{100'000} };
 		ActionState m_currentValue{ ActionState::Init };
 	public:
 		/**
@@ -91,13 +90,13 @@ namespace sds
 		 *	can perform the key-down.
 		 * \remarks		optional, if not in use set to default constructed value or '{}'
 		 */
-		keyboardtypes::OptGrp_t ExclusivityGrouping; // TODO one variation of ex. group behavior is to have a priority value associated with the mapping.
-		keyboardtypes::Fn_t OnDown; // Key-down
-		keyboardtypes::Fn_t OnUp; // Key-up
-		keyboardtypes::Fn_t OnRepeat; // Key-repeat
-		keyboardtypes::Fn_t OnReset; // Reset after key-up prior to another key-down
-		keyboardtypes::OptNanosDelay_t DelayBeforeFirstRepeat; // optional custom delay before first key-repeat
-		keyboardtypes::OptNanosDelay_t DelayForRepeats; // optional custom delay between key-repeats
+		OptGrp_t ExclusivityGrouping; // TODO one variation of ex. group behavior is to have a priority value associated with the mapping.
+		Fn_t OnDown; // Key-down
+		Fn_t OnUp; // Key-up
+		Fn_t OnRepeat; // Key-repeat
+		Fn_t OnReset; // Reset after key-up prior to another key-down
+		OptNanosDelay_t DelayBeforeFirstRepeat; // optional custom delay before first key-repeat
+		OptNanosDelay_t DelayForRepeats; // optional custom delay between key-repeats
 		MappingStateManager LastAction; // Last action performed, with get/set methods.
 	public:
 		// TODO member funcs for setting delays aren't used because it would screw up the nice braced initialization list mapping construction.

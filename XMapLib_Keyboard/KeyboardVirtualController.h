@@ -2,6 +2,9 @@
 
 namespace sds
 {
+	/**
+ * \brief Left thumb stick or right.
+ */
 	enum class ControllerStick
 	{
 		LeftStick,

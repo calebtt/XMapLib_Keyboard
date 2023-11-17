@@ -1,8 +1,9 @@
 #pragma once
-#include "KeyboardCustomTypes.h"
 #include <limits>
 #include <cmath>
 #include <tuple>
+
+#include "KeyboardCustomTypes.h"
 
 namespace sds
 {
@@ -16,22 +17,21 @@ namespace sds
 	}
 
 	// [FloatingType, FloatingType] wherein the first member is the polar radius, and the second is the polar theta angle.
-	using PolarInfoPair = std::pair<keyboardtypes::ComputationFloat_t, keyboardtypes::ComputationFloat_t>;
+	using PolarInfoPair = std::pair<sds::ComputationFloat_t, ComputationFloat_t>;
 	/**
 	 * \brief Compute polar coordinates pair, [FloatingType, FloatingType] wherein the first member is the polar radius, and the second is the polar theta angle.
 	 */
 	[[nodiscard]]
 	inline
-	auto ComputePolarPair(const keyboardtypes::ComputationFloat_t xStickValue, const keyboardtypes::ComputationFloat_t yStickValue) noexcept -> PolarInfoPair
+	auto ComputePolarPair(const ComputationFloat_t xStickValue, const ComputationFloat_t yStickValue) noexcept -> PolarInfoPair
 	{
-		constexpr auto nonZeroValue{ std::numeric_limits<keyboardtypes::ComputationFloat_t>::min() }; // cannot compute with both values at 0, this is used instead
+		constexpr auto nonZeroValue{ std::numeric_limits<ComputationFloat_t>::min() }; // cannot compute with both values at 0, this is used instead
 		const bool areBothZero = IsFloatZero(xStickValue) && IsFloatZero(yStickValue);
 
-		const keyboardtypes::ComputationFloat_t xValue = areBothZero ? nonZeroValue : xStickValue;
-		const keyboardtypes::ComputationFloat_t yValue = areBothZero ? nonZeroValue : yStickValue;
+		const ComputationFloat_t xValue = areBothZero ? nonZeroValue : xStickValue;
+		const ComputationFloat_t yValue = areBothZero ? nonZeroValue : yStickValue;
 		const auto rad = std::hypot(xValue, yValue);
 		const auto angle = std::atan2(yValue, xValue);
 		return { rad, angle };
 	}
-
 }

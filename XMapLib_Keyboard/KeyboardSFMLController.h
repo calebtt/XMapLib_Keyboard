@@ -1,32 +1,33 @@
 #pragma once
-#include <SFML/window/Joystick.hpp>
+#include <array>
+#include "KeyboardCustomTypes.h"
+#include "KeyboardVirtualController.h"
 #include "KeyboardPolarInfo.h"
+#include "KeyboardStickDirection.h"
+#include <SFML/window/Joystick.hpp>
 
-#include <string>
-#include <iostream>
-#include <limits>
-
-namespace sds::PS5
+namespace sds
 {
 	namespace detail
 	{
 		// Note, these are the virtual keycodes received from SFML with a ps5 controller.
-		static constexpr keyboardtypes::VirtualKey_t ButtonX{ 0 };
-		static constexpr keyboardtypes::VirtualKey_t ButtonA{ 1 };
-		static constexpr keyboardtypes::VirtualKey_t ButtonB{ 2 };
-		static constexpr keyboardtypes::VirtualKey_t ButtonY{ 3 };
-		static constexpr keyboardtypes::VirtualKey_t ButtonShoulderLeft{ 4 };
-		static constexpr keyboardtypes::VirtualKey_t ButtonShoulderRight{ 5 };
-		static constexpr keyboardtypes::VirtualKey_t ButtonShoulderLeftLower{ 6 };
-		static constexpr keyboardtypes::VirtualKey_t ButtonShoulderRightLower{ 7 };
-		static constexpr keyboardtypes::VirtualKey_t ButtonLeftPill{ 8 };
-		static constexpr keyboardtypes::VirtualKey_t ButtonRightPill{ 9 };
-		static constexpr keyboardtypes::VirtualKey_t ButtonLeftStickClick{ 10 };
-		static constexpr keyboardtypes::VirtualKey_t ButtonRightStickClick{ 11 };
-		static constexpr keyboardtypes::VirtualKey_t ButtonPlayLogo{ 12 };
-		static constexpr keyboardtypes::VirtualKey_t ButtonShiftSwitch{ 13 };
+		static constexpr VirtualKey_t ButtonX{ 0 };
+		static constexpr VirtualKey_t ButtonA{ 1 };
+		static constexpr VirtualKey_t ButtonB{ 2 };
+		static constexpr VirtualKey_t ButtonY{ 3 };
+		static constexpr VirtualKey_t ButtonShoulderLeft{ 4 };
+		static constexpr VirtualKey_t ButtonShoulderRight{ 5 };
+		static constexpr VirtualKey_t ButtonShoulderLeftLower{ 6 };
+		static constexpr VirtualKey_t ButtonShoulderRightLower{ 7 };
+		static constexpr VirtualKey_t ButtonLeftPill{ 8 };
+		static constexpr VirtualKey_t ButtonRightPill{ 9 };
+		static constexpr VirtualKey_t ButtonLeftStickClick{ 10 };
+		static constexpr VirtualKey_t ButtonRightStickClick{ 11 };
+		static constexpr VirtualKey_t ButtonPlayLogo{ 12 };
+		static constexpr VirtualKey_t ButtonShiftSwitch{ 13 };
 
-		static constexpr std::array<std::pair<keyboardtypes::VirtualKey_t, VirtualButtons>, 14> ApiCodeToVirtualButtonArray
+		using ApiCodePair_t = std::pair<VirtualKey_t, VirtualButtons>;
+		static constexpr std::array<ApiCodePair_t, 14> ApiCodeToVirtualButtonArray
 		{ {
 			{ButtonX, VirtualButtons::X},
 			{ButtonA, VirtualButtons::A},
@@ -45,39 +46,29 @@ namespace sds::PS5
 		} };
 	}
 
-	struct KeyboardSettingsSFMLPlayStation5
-	{
-		float LeftStickDeadzone{ 30.0f };
-		float RightStickDeadzone{ 30.0f };
-	};
-
 	/**
 	 * \brief Uses SFML to call some OS API function(s) to retrieve a controller state update.
-	 * \param settings A poller specific settings struct with things like deadzone info.
+	 * \param leftStickDz Deadzone for all axes of left stick.
+	 * \param rightStickDz Deadzone for all axes of right stick.
 	 * \param playerId Most commonly 0 for a single device connected.
 	 * \return Platform/API specific state structure.
 	 */
 	[[nodiscard]]
 	inline
-	auto GetWrappedControllerStateUpdate(const KeyboardSettingsSFMLPlayStation5& settings, const int playerId = 0) noexcept -> keyboardtypes::SmallVector_t<VirtualButtons>
+	auto GetWrappedControllerStateUpdate(const int playerId = 0, 
+		const float leftStickDz = 30.0f, 
+		const float rightStickDz = 30.0f) noexcept -> SmallVector_t<VirtualButtons>
 	{
 		using Stick = sf::Joystick;
-		const auto leftStickDeadzone{ settings.LeftStickDeadzone };
-		const auto rightStickDeadzone{ settings.RightStickDeadzone };
-
 		Stick::update();
 
 		if (Stick::isConnected(playerId))
 		{
-			keyboardtypes::SmallVector_t<VirtualButtons> allKeys;
-
-			for (const auto& [apiCode, virtualCode] : detail::ApiCodeToVirtualButtonArray)
-			{
-				if (Stick::isButtonPressed(playerId, apiCode))
-					allKeys.push_back(virtualCode);
-			}
-			//const auto uPos = Stick::getAxisPosition(playerId, Stick::Axis::U); // Ltrigger gradient
-			//const auto vPos = Stick::getAxisPosition(playerId, Stick::Axis::V); // Rtrigger gradient
+			// TODO controller trigger gradients instead of built-in on/off.
+			//const auto leftTriggerGradient = Stick::getAxisPosition(playerId, Stick::Axis::U); // Ltrigger gradient
+			//const auto rightTriggerGradient = Stick::getAxisPosition(playerId, Stick::Axis::V); // Rtrigger gradient
+			//constexpr auto leftTriggerIt = std::ranges::find(detail::ApiCodeToVirtualButtonArray, detail::ButtonShoulderLeftLower, &detail::ApiCodePair_t::first);
+			//constexpr auto leftTriggerVirtual = leftTriggerIt->second;
 
 			const auto thumbstickRightX = Stick::getAxisPosition(playerId, Stick::Axis::Z);
 			const auto thumbstickRightY = Stick::getAxisPosition(playerId, Stick::Axis::R);
@@ -91,9 +82,15 @@ namespace sds::PS5
 			const auto leftStickDirection = GetVirtualKeyFromDirection(GetDirectionForPolarTheta(leftStickAngle), ControllerStick::LeftStick);
 			const auto rightStickDirection = GetVirtualKeyFromDirection(GetDirectionForPolarTheta(rightStickAngle), ControllerStick::RightStick);
 
-			if (leftStickRadius >= leftStickDeadzone)
+			SmallVector_t<VirtualButtons> allKeys;
+			for (const auto& [apiCode, virtualCode] : detail::ApiCodeToVirtualButtonArray)
+			{
+				if (Stick::isButtonPressed(playerId, apiCode))
+					allKeys.push_back(virtualCode);
+			}
+			if (leftStickRadius >= leftStickDz)
 				allKeys.push_back(leftStickDirection);
-			if (rightStickRadius >= rightStickDeadzone)
+			if (rightStickRadius >= rightStickDz)
 				allKeys.push_back(rightStickDirection);
 
 			return allKeys;

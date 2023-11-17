@@ -4,8 +4,6 @@
 #include "TestMappingProvider.h"
 #include "../XMapLib_Keyboard/KeyboardOvertakingFilter.h"
 
-#include <filesystem>
-
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace TestKeyboard
@@ -80,7 +78,6 @@ namespace TestKeyboard
 			Assert::AreEqual(1ull, filteredState.size());
 			Assert::AreEqual((int)sds::VirtualButtons::A, (int)filteredState.front());
 
-
 			const auto totalTime = steady_clock::now() - startTime;
 			Logger::WriteMessage(std::vformat("Total time: {}\n", std::make_format_args(duration_cast<microseconds>(totalTime))).c_str());
 		}
@@ -125,8 +122,6 @@ namespace TestKeyboard
 			translationPack();
 			Assert::IsTrue(translationPack.DownRequests.size() == 1);
 			Assert::IsTrue(translationPack.UpRequests.size() == 1);
-
-
 		}
 
 		TEST_METHOD(TestFilterWithTranslator)
@@ -194,7 +189,6 @@ namespace TestKeyboard
 
 			// move
 			auto newFilt = std::move(filt);
-
 		}
 	};
 }

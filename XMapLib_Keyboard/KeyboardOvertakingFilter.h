@@ -1,7 +1,4 @@
 #pragma once
-#include "ControllerButtonToActionMap.h"
-#include "KeyboardTranslationHelpers.h"
-
 #include <cassert>
 #include <ranges>
 #include <functional>
@@ -11,6 +8,10 @@
 #include <format>
 #include <source_location>
 #include <stacktrace>
+
+#include "KeyboardCustomTypes.h"
+#include "ControllerButtonToActionMap.h"
+#include "KeyboardTranslationHelpers.h"
 
 namespace sds
 {
@@ -22,13 +23,13 @@ namespace sds
 	*/
 	[[nodiscard]]
 	inline
-	auto GetMappingIndexForVk(const VirtualButtons vk, const std::span<const CBActionMap> mappingsRange) -> keyboardtypes::Index_t
+	auto GetMappingIndexForVk(const VirtualButtons vk, const std::span<const CBActionMap> mappingsRange) -> Index_t
 	{
 		using std::ranges::find;
 		using std::ranges::cend;
 		using std::ranges::cbegin;
 		using std::ranges::distance;
-		using keyboardtypes::Index_t;
+		using sds::Index_t;
 		const auto findResult = find(mappingsRange, vk, &CBActionMap::ButtonVirtualKeycode);
 		const bool didFindResult = findResult != cend(mappingsRange);
 
@@ -72,7 +73,7 @@ namespace sds
 		using Elem_t = VirtualButtons;
 	public:
 		// Exclusivity grouping value, mirroring the mapping value used.
-		keyboardtypes::GrpVal_t GroupingValue{};
+		GrpVal_t GroupingValue{};
 	private:
 		// First element of the queue is the activated mapping.
 		std::deque<Elem_t> ActivatedValuesQueue;
@@ -184,7 +185,7 @@ namespace sds
 		using VirtualCode_t = VirtualButtons;
 
 		// Mapping of exclusivity grouping value to 
-		using MapType_t = keyboardtypes::SmallFlatMap_t<keyboardtypes::GrpVal_t, GroupActivationInfo>;
+		using MapType_t = SmallFlatMap_t<GrpVal_t, GroupActivationInfo>;
 
 		// span to mappings
 		std::span<const CBActionMap> m_mappings;
@@ -209,9 +210,9 @@ namespace sds
 		}
 
 		// This function is used to filter the controller state updates before they are sent to the translator.
-		// It will effect overtaking behavior by modifying the state update buffer, which just contains the virtual keycodes that are reported as down.
+		// It will have an effect on overtaking behavior by modifying the state update buffer, which just contains the virtual keycodes that are reported as down.
 		[[nodiscard]]
-		auto GetFilteredButtonState(keyboardtypes::SmallVector_t<VirtualCode_t>&& stateUpdate) -> keyboardtypes::SmallVector_t<VirtualCode_t>
+		auto GetFilteredButtonState(SmallVector_t<VirtualCode_t>&& stateUpdate) -> SmallVector_t<VirtualCode_t>
 		{
 			using std::ranges::sort;
 
@@ -232,7 +233,7 @@ namespace sds
 
 	private:
 		[[nodiscard]]
-		auto FilterDownTranslation(const keyboardtypes::SmallVector_t<VirtualCode_t>& stateUpdate) -> keyboardtypes::SmallVector_t<VirtualCode_t>
+		auto FilterDownTranslation(const SmallVector_t<VirtualCode_t>& stateUpdate) -> SmallVector_t<VirtualCode_t>
 		{
 			using std::ranges::find;
 			using std::ranges::cend;
@@ -251,7 +252,7 @@ namespace sds
 			const auto exGroupPred = [this](const auto ind) { return GetMappingAt(ind).ExclusivityGrouping.has_value(); };
 			const auto mappingIndexPred = [this](const auto vk) { return GetMappingIndexForVk(vk, m_mappings); };
 
-			keyboardtypes::SmallVector_t<VirtualCode_t> vksToRemoveRange;
+			SmallVector_t<VirtualCode_t> vksToRemoveRange;
 
 			for(const auto index : stateUpdateCopy | filter(vkHasMappingPred) | transform(mappingIndexPred) | filter(exGroupPred))
 			{
@@ -275,7 +276,7 @@ namespace sds
 		}
 
 		// it will process only one key per ex. group per iteration. The others will be filtered out and handled on the next iteration.
-		void FilterUpTranslation(const keyboardtypes::SmallVector_t<VirtualCode_t>& stateUpdate)
+		void FilterUpTranslation(const SmallVector_t<VirtualCode_t>& stateUpdate)
 		{
 			using std::ranges::views::filter;
 
@@ -306,12 +307,12 @@ namespace sds
 		 * \return "filtered" state update.
 		 */
 		[[nodiscard]]
-		auto FilterStateUpdateForUniqueExclusivityGroups(keyboardtypes::SmallVector_t<VirtualCode_t>&& stateUpdate) -> keyboardtypes::SmallVector_t<VirtualCode_t>
+		auto FilterStateUpdateForUniqueExclusivityGroups(SmallVector_t<VirtualCode_t>&& stateUpdate) -> SmallVector_t<VirtualCode_t>
 		{
 			using std::ranges::find, std::ranges::cend;
 			using StateRange_t = std::remove_cvref_t<decltype(stateUpdate)>;
 
-			keyboardtypes::SmallVector_t<keyboardtypes::GrpVal_t> groupingValueBuffer;
+			SmallVector_t<GrpVal_t> groupingValueBuffer;
 			StateRange_t virtualKeycodesToRemove;
 			groupingValueBuffer.reserve(stateUpdate.size());
 			virtualKeycodesToRemove.reserve(stateUpdate.size());

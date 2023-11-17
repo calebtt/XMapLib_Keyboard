@@ -1,23 +1,21 @@
 ﻿#pragma once
-
-#ifndef USERHAS_BOOST
-//#define USERHAS_BOOST
-#endif
-
 #include <deque>
 #include <functional>
 #include <optional>
 #include <chrono>
 #include <vector>
-//#include <flat_map>
 #include <map>
+
+#ifndef USERHAS_BOOST
+#define USERHAS_BOOST
+#endif
 
 #ifdef USERHAS_BOOST
 #include <boost/container/small_vector.hpp>
 #include <boost/container/flat_map.hpp>
 #endif
 
-namespace sds::keyboardtypes
+namespace sds
 {
 	static constexpr std::size_t SmallBufferSize{ 32 };
 	using Fn_t = std::function<void()>;

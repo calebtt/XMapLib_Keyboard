@@ -44,7 +44,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <EnableASAN>false</EnableASAN>
+    <EnableASAN>true</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -106,7 +106,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard_C>Default</LanguageStandard_C>
       <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
@@ -147,14 +147,14 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ControllerButtonToActionMap.h" />
     <ClInclude Include="KeyboardCustomTypes.h" />
+    <ClInclude Include="ControllerButtonToActionMap.h" />
     <ClInclude Include="KeyboardOvertakingFilter.h" />
     <ClInclude Include="KeyboardPolarInfo.h" />
     <ClInclude Include="KeyboardSFMLController.h" />
     <ClInclude Include="KeyboardStickDirection.h" />
     <ClInclude Include="KeyboardTranslator.h" />
-    <ClInclude Include="KeyboardControllerSettings.h" />
+    <ClInclude Include="KeyboardVirtualController.h" />
     <ClInclude Include="KeyboardTranslationHelpers.h" />
     <ClInclude Include="KeyboardLegacyApiFunctions.h" />
   </ItemGroup>

@@ -1,12 +1,12 @@
 #pragma once
-#include "KeyboardCustomTypes.h"
-#include "KeyboardTranslationHelpers.h"
-#include "KeyboardOvertakingFilter.h"
-
 #include <stdexcept>
 #include <concepts>
 #include <ranges>
 #include <type_traits>
+
+#include "KeyboardCustomTypes.h"
+#include "KeyboardTranslationHelpers.h"
+#include "KeyboardOvertakingFilter.h"
 
 /*
  *	Note: There are some static sized arrays used here with capacity defined in customtypes.
@@ -27,7 +27,7 @@ namespace sds
 	concept ValidFilterType_c = requires(FilterType_t & t)
 	{
 		{ t.SetMappingRange(std::span<CBActionMap>{}) };
-		{ t.GetFilteredButtonState({ VirtualButtons::A, VirtualButtons::X, VirtualButtons::Y }) } -> std::convertible_to<keyboardtypes::SmallVector_t<VirtualButtons>>;
+		{ t.GetFilteredButtonState({ VirtualButtons::A, VirtualButtons::X, VirtualButtons::Y }) } -> std::convertible_to<SmallVector_t<VirtualButtons>>;
 		{ std::movable<FilterType_t> == true };
 	};
 
@@ -44,7 +44,7 @@ namespace sds
 	 */
 	template<typename Val_t>
 	[[nodiscard]]
-	auto GetButtonTranslationForInitialToDown(const keyboardtypes::SmallVector_t<Val_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
+	auto GetButtonTranslationForInitialToDown(const SmallVector_t<Val_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
 		using
 		std::ranges::find,
@@ -62,7 +62,7 @@ namespace sds
 
 	template<typename Val_t>
 	[[nodiscard]]
-	auto GetButtonTranslationForDownToRepeat(const keyboardtypes::SmallVector_t<Val_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
+	auto GetButtonTranslationForDownToRepeat(const SmallVector_t<Val_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
 		using std::ranges::find, std::ranges::end;
 		const bool isDownAndUsesRepeat = singleButton.LastAction.IsDown() && (singleButton.UsesInfiniteRepeat || singleButton.SendsFirstRepeatOnly);
@@ -79,7 +79,7 @@ namespace sds
 
 	template<typename Val_t>
 	[[nodiscard]]
-	auto GetButtonTranslationForRepeatToRepeat(const keyboardtypes::SmallVector_t<Val_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
+	auto GetButtonTranslationForRepeatToRepeat(const SmallVector_t<Val_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
 		using std::ranges::find, std::ranges::end;
 		const bool isRepeatAndUsesInfinite = singleButton.LastAction.IsRepeating() && singleButton.UsesInfiniteRepeat;
@@ -95,7 +95,7 @@ namespace sds
 
 	template<typename Val_t>
 	[[nodiscard]]
-	auto GetButtonTranslationForDownOrRepeatToUp(const keyboardtypes::SmallVector_t<Val_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
+	auto GetButtonTranslationForDownOrRepeatToUp(const SmallVector_t<Val_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
 		using std::ranges::find, std::ranges::end;
 		if (singleButton.LastAction.IsDown() || singleButton.LastAction.IsRepeating())
@@ -177,13 +177,13 @@ namespace sds
 		}
 	public:
 		[[nodiscard]]
-		auto operator()(keyboardtypes::SmallVector_t<VirtualButtons>&& stateUpdate) noexcept -> TranslationPack
+		auto operator()(SmallVector_t<VirtualButtons>&& stateUpdate) noexcept -> TranslationPack
 		{
 			return GetUpdatedState(std::move(stateUpdate));
 		}
 
 		[[nodiscard]]
-		auto GetUpdatedState(keyboardtypes::SmallVector_t<VirtualButtons>&& stateUpdate) noexcept -> TranslationPack
+		auto GetUpdatedState(SmallVector_t<VirtualButtons>&& stateUpdate) noexcept -> TranslationPack
 		{
 			auto stateUpdateFiltered = m_filter.has_value() ? m_filter->GetFilteredButtonState(std::move(stateUpdate)) : std::move(stateUpdate);
 
@@ -216,9 +216,9 @@ namespace sds
 		}
 
 		[[nodiscard]]
-		auto GetCleanupActions() noexcept -> keyboardtypes::SmallVector_t<TranslationResult>
+		auto GetCleanupActions() noexcept -> SmallVector_t<TranslationResult>
 		{
-			keyboardtypes::SmallVector_t<TranslationResult> translations;
+			SmallVector_t<TranslationResult> translations;
 			for(auto & mapping : m_mappings)
 			{
 				if(DoesMappingNeedCleanup(mapping.LastAction))

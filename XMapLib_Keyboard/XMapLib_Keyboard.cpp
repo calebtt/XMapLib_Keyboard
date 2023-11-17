@@ -1,5 +1,10 @@
 // XMapLib_Keyboard.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
+#include <iostream>
+#include <chrono>
+#include <format>
+
+#include "KeyboardCustomTypes.h"
 #include "KeyboardTranslationHelpers.h"
 #include "ControllerButtonToActionMap.h"
 #include "KeyboardTranslator.h"
@@ -10,10 +15,6 @@
 #include "../XMapLib_Utils/nanotime.h"
 #include "../XMapLib_Utils/SendMouseInput.h"
 #include "../XMapLib_Utils/ControllerStatus.h"
-
-#include <iostream>
-#include <chrono>
-#include <format>
 
 // Crude mechanism to keep the loop running until [enter] is pressed.
 struct GetterExitCallable final
@@ -258,20 +259,20 @@ auto GetDriverMouseMappings()
 	return mapBuffer;
 }
 
-inline
-void TranslationLoopXbox(const sds::XInput::KeyboardSettingsXInput& settingsPack, sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
-{
-    using namespace std::chrono_literals;
-	const auto translation = translator.GetUpdatedState(sds::XInput::GetWrappedControllerStateUpdate(settingsPack));
-	translation();
-	nanotime_sleep(sleepDelay.count());
-}
+//inline
+//void TranslationLoopXbox(const auto& settingsPack, sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
+//{
+//    using namespace std::chrono_literals;
+//	const auto translation = translator.GetUpdatedState(sds::GetWrappedControllerStateUpdate(settingsPack));
+//	translation();
+//	nanotime_sleep(sleepDelay.count());
+//}
 
 inline
-void TranslationLoopPs5(const sds::PS5::KeyboardSettingsSFMLPlayStation5& settingsPack, sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
+void TranslationLoopPs5(sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
 {
     using namespace std::chrono_literals;
-    const auto translation = translator.GetUpdatedState(sds::PS5::GetWrappedControllerStateUpdate(settingsPack));
+    const auto translation = translator.GetUpdatedState(sds::GetWrappedControllerStateUpdate());
     translation();
     nanotime_sleep(sleepDelay.count());
 }
@@ -286,9 +287,6 @@ auto RunTestDriverLoop()
 
     std::cout << std::vformat("Created mappings buffer with {} mappings. Total size: {} bytes.\n", std::make_format_args(mapBuffer.size(), sizeof(mapBuffer.front())*mapBuffer.size()));
 
-    // Creating a few polling/translation related types
-    constexpr sds::XInput::KeyboardSettingsXInput xboxSettings{};
-    constexpr sds::PS5::KeyboardSettingsSFMLPlayStation5 ps5Settings{};
     // The filter is constructed here, to support custom filters with their own construction needs.
     sds::KeyboardOvertakingFilter filter{};
     // Filter is then moved into the translator at construction.
@@ -319,7 +317,8 @@ auto RunTestDriverLoop()
     while (!gec.IsDone)
     {
         //TranslationLoopPs5(ps5Settings, translator, SleepDelay);
-        TranslationLoopXbox(xboxSettings, translator, SleepDelay);
+        //TranslationLoopXbox(xboxSettings, translator, SleepDelay);
+        TranslationLoopPs5(translator, SleepDelay);
         updateLoopTimer(SleepDelay);
     }
     std::cout << "Performing cleanup actions...\n";

@@ -1,12 +1,13 @@
 #pragma once
-#include "KeyboardCustomTypes.h"
-#include "ControllerButtonToActionMap.h"
-
 #include <optional>
 #include <span>
 #include <algorithm>
 #include <concepts>
 #include <ranges>
+
+#include "KeyboardCustomTypes.h"
+#include "ControllerButtonToActionMap.h"
+#include "KeyboardVirtualController.h"
 
 namespace sds
 {
@@ -16,14 +17,15 @@ namespace sds
 	 */
 	struct TranslationResult final
 	{
+		// TODO test with std::unique_ptr to Fn_t, it currently is like 18k of stack space.
 		// Operation being requested to be performed, callable
-		keyboardtypes::Fn_t OperationToPerform;
+		Fn_t OperationToPerform;
 		// Function to advance the button mapping to the next state (after operation has been performed)
-		keyboardtypes::Fn_t AdvanceStateFn;
+		Fn_t AdvanceStateFn;
 		// Hash of the mapping it refers to
 		VirtualButtons MappingVk{};
 		// Exclusivity grouping value, if any
-		keyboardtypes::OptGrp_t ExclusivityGrouping;
+		OptGrp_t ExclusivityGrouping;
 		// Call operator, calls op fn then advances the state
 		void operator()() const
 		{
@@ -56,10 +58,10 @@ namespace sds
 				elem();
 		}
 
-		keyboardtypes::SmallVector_t<TranslationResult> UpRequests{}; // key-ups
-		keyboardtypes::SmallVector_t<TranslationResult> DownRequests{}; // key-downs
-		keyboardtypes::SmallVector_t<TranslationResult> RepeatRequests{}; // repeats
-		keyboardtypes::SmallVector_t<TranslationResult> UpdateRequests{}; // resets
+		SmallVector_t<TranslationResult> UpRequests{}; // key-ups
+		SmallVector_t<TranslationResult> DownRequests{}; // key-downs
+		SmallVector_t<TranslationResult> RepeatRequests{}; // repeats
+		SmallVector_t<TranslationResult> UpdateRequests{}; // resets
 		// TODO might wrap the vectors in a struct with a call operator to have individual call operators for range of TranslationResult.
 	};
 
@@ -189,7 +191,7 @@ namespace sds
 	inline
 	bool AreMappingsUniquePerVk(const std::span<const CBActionMap> mappingsList) noexcept
 	{
-		keyboardtypes::SmallFlatMap_t<VirtualButtons, bool> mappingTable;
+		SmallFlatMap_t<VirtualButtons, bool> mappingTable;
 		for(const auto& e : mappingsList)
 		{
 			if(mappingTable[e.ButtonVirtualKeycode])

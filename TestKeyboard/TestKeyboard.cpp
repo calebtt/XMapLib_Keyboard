@@ -1,9 +1,9 @@
 #include "pch.h"
+#include <filesystem>
 #include "CppUnitTest.h"
 #include "TestMappingProvider.h"
 #include "TestOvertakingFilter.h"
 #include "TestGroupActivationInfo.h"
-#include <filesystem>
 #include "../XMapLib_Keyboard/KeyboardOvertakingFilter.h"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -20,7 +20,7 @@ namespace TestKeyboard
             auto maps1 = GetMapping(sds::VirtualButtons::A);
             auto maps2 = GetMapping(sds::VirtualButtons::B);
             maps2.append_range(maps1);
-            sds::KeyboardTranslator poller{ std::move(maps2) };
+            sds::KeyboardTranslator<> poller{ std::move(maps2) };
             const auto translations1 = poller( {sds::VirtualButtons::A, sds::VirtualButtons::B} );
             Assert::IsTrue(translations1.DownRequests.size() == 2, L"Translation count not 2.");
             translations1();
@@ -47,8 +47,8 @@ namespace TestKeyboard
             constexpr auto buttonA{ sds::VirtualButtons::A };
             constexpr auto buttonB{ sds::VirtualButtons::B };
 
-            sds::keyboardtypes::SmallVector_t<sds::VirtualButtons> stateUpdate{ buttonA, buttonB };
-            sds::keyboardtypes::SmallVector_t<sds::VirtualButtons> emptyState{};
+            sds::SmallVector_t<sds::VirtualButtons> stateUpdate{ buttonA, buttonB };
+            sds::SmallVector_t<sds::VirtualButtons> emptyState{};
 
             // Make the filter type.
             sds::KeyboardOvertakingFilter filter;
