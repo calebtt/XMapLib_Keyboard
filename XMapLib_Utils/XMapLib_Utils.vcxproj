@@ -155,12 +155,10 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ControllerStatus.h" />
     <ClInclude Include="nanotime.h" />
     <ClInclude Include="SendKeyInput.h" />
     <ClInclude Include="SendMouseInput.h" />
     <ClInclude Include="VirtualMap.h" />
-    <ClInclude Include="XELog.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="nanotime.cpp" />

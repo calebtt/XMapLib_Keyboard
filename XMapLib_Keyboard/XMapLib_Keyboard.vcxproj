@@ -156,7 +156,6 @@
     <ClInclude Include="KeyboardTranslator.h" />
     <ClInclude Include="KeyboardVirtualController.h" />
     <ClInclude Include="KeyboardTranslationHelpers.h" />
-    <ClInclude Include="KeyboardLegacyApiFunctions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

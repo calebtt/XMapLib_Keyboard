@@ -46,6 +46,14 @@ namespace sds
 		} };
 	}
 
+	// Returns controller connected status.
+	[[nodiscard]]
+	inline
+	bool IsControllerConnected(const int pid) noexcept
+	{
+		return sf::Joystick::isConnected(pid);
+	}
+
 	/**
 	 * \brief Uses SFML to call some OS API function(s) to retrieve a controller state update.
 	 * \param leftStickDz Deadzone for all axes of left stick.

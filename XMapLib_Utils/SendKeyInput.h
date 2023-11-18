@@ -7,29 +7,17 @@
 #endif
 #include <Windows.h>
 #include <type_traits>
-
 #include <bitset>
 #include <climits>
 #include <optional>
 #include <future>
-#include <string>
 
-#include "XELog.h"
+#include <SFML/Main.hpp>
+#include <SFML/System.hpp>
+#include <SFML/Window.hpp>
 
 namespace sds::Utilities
 {
-	//hash function obj for std::pair, uses XOR and std::hash for the built-in types to combine
-	//them into a single hash for using a std::pair as a key in the unordered_map.
-	struct PairHasher
-	{
-		template <class T1, class T2>
-		std::size_t operator() (const std::pair<T1, T2>& pair) const
-		{
-			return std::hash<T1>()(pair.first)
-				^ std::hash<T2>()(pair.second);
-		}
-	};
-
 	/**
 	 * \brief	Utility function to map a Virtual Keycode to a scancode
 	 * \param	vk integer virtual keycode
@@ -111,7 +99,7 @@ namespace sds::Utilities
 	 * \param doKeyDown		is a boolean denoting if the keypress event is KEYDOWN or KEYUP
 	 */
 	inline
-	void SendScanCode(const int virtualKeycode, const bool doKeyDown) noexcept
+	bool SendScanCode(const int virtualKeycode, const bool doKeyDown) noexcept
 	{
 		// Build INPUT struct
 		INPUT tempInput = {};
@@ -123,8 +111,9 @@ namespace sds::Utilities
 			else
 				tempInput.mi.dwFlags = flagsUp;
 			tempInput.mi.dwExtraInfo = GetMessageExtraInfo();
-			CallSendInput(&tempInput, 1);
+			return CallSendInput(&tempInput, 1);
 		};
+
 		const auto scanCode = GetScanCode(virtualKeycode);
 		if (!scanCode)
 		{
@@ -132,36 +121,30 @@ namespace sds::Utilities
 			switch (virtualKeycode)
 			{
 			case VK_LBUTTON:
-				MakeItMouse(MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, doKeyDown);
-				break;
+				return MakeItMouse(MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, doKeyDown) != 0;
 			case VK_RBUTTON:
-				MakeItMouse(MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, doKeyDown);
-				break;
+				return MakeItMouse(MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, doKeyDown) != 0;
 			case VK_MBUTTON:
-				MakeItMouse(MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, doKeyDown);
-				break;
+				return MakeItMouse(MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, doKeyDown) != 0;
 			case VK_XBUTTON1:
 				[[fallthrough]];
 			case VK_XBUTTON2:
-				MakeItMouse(MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, doKeyDown);
-				break;
+				return MakeItMouse(MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, doKeyDown) != 0;
 			default:
 				break;
 			}
+			return false;
 		}
-		else
-		{
-			//do scancode
-			tempInput = {};
-			tempInput.type = INPUT_KEYBOARD;
-			tempInput.ki.dwFlags = doKeyDown ? tempInput.ki.dwFlags = KEYEVENTF_SCANCODE
-				: tempInput.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
-			tempInput.ki.wScan = scanCode.value();
 
-			const UINT ret = CallSendInput(&tempInput, 1);
-			if (ret == 0)
-				LogError("SendInput returned 0");
-		}
+		//do scancode
+		tempInput = {};
+		tempInput.type = INPUT_KEYBOARD;
+		tempInput.ki.dwFlags = doKeyDown ? tempInput.ki.dwFlags = KEYEVENTF_SCANCODE
+			: tempInput.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
+		tempInput.ki.wScan = scanCode.value();
+
+		const UINT ret = CallSendInput(&tempInput, 1);
+		return ret != 0;
 	}
 
 	/**
@@ -171,28 +154,28 @@ namespace sds::Utilities
 	 * \remarks		Uses async()
 	 */
 	inline
-	auto UnsetNumlockAsync() noexcept -> std::optional<std::shared_future<std::string>>
+	auto UnsetNumlockAsync() noexcept -> std::optional<std::shared_future<bool>>
 	{
 		// Endian-ness of machine it's being compiled on.
-		static constexpr bool IsLittlEnd{ std::endian::native == std::endian::little };
+		static constexpr bool IsLittleEnd{ std::endian::native == std::endian::little };
 
-		const auto NumLockState = GetKeyState(static_cast<int>((VK_NUMLOCK)));
+		const auto NumLockState = GetKeyState(static_cast<int>(VK_NUMLOCK));
 		const std::bitset<sizeof(NumLockState)* CHAR_BIT> bits(NumLockState);
 		static_assert(bits.size() > 0);
-		if (const bool IsNumLockSet = IsLittlEnd ? bits[0] : bits[bits.size() - 1])
+		if (const bool IsNumLockSet = IsLittleEnd ? bits[0] : bits[bits.size() - 1])
 		{
-			auto DoNumlockSend = [&]() -> std::string
+			auto DoNumlockSend = [&]() -> bool
 			{
 				auto result = SendVirtualKey(VK_NUMLOCK, true, true);
 				if (result != 1)
-					return ("Error sending numlock keypress down.");
+					return false;
 				std::this_thread::sleep_for(std::chrono::milliseconds(15));
 				result = SendVirtualKey(VK_NUMLOCK, true, false);
 				if (result != 1)
-					return ("Error sending numlock keypress up.");
-				return {};
+					return false;
+				return true;
 			};
-			std::shared_future<std::string> fut = std::async(std::launch::async, DoNumlockSend);
+			std::shared_future<bool> fut = std::async(std::launch::async, DoNumlockSend);
 			return fut;
 		}
 		return {};
@@ -205,7 +188,7 @@ namespace sds::Utilities
 	 * \remarks		Do not call this function in a loop, it has a synchronous wait time delay.
 	 */
 	inline
-	void UnsetAndCheckNumlock(const std::chrono::milliseconds timeoutTime = std::chrono::milliseconds{20})
+	bool UnsetAndCheckNumlock(const std::chrono::milliseconds timeoutTime = std::chrono::milliseconds{20})
 	{
 		// Calls the unset numlock async function, gets a shared_future from which to determine if it succeeded, within a reasonable timeout.
 		const auto optFuture = UnsetNumlockAsync();
@@ -217,13 +200,10 @@ namespace sds::Utilities
 			// If we have a result in a reasonable timeframe...
 			if (waitResult == std::future_status::ready)
 			{
-				// If not empty, it has an error msg
-				if (!optFuture.value().get().empty())
-				{
-					LogError(optFuture.value().get());
-				}
+				return optFuture.value().get();
 			}
 		}
+		return true;
 	}
 
 }

@@ -59,9 +59,6 @@
     <ClInclude Include="KeyboardCustomTypes.h">
       <Filter>Header Files\Keyboard\SettingsAndConfig</Filter>
     </ClInclude>
-    <ClInclude Include="KeyboardLegacyApiFunctions.h">
-      <Filter>Header Files\Keyboard\ControllerIO</Filter>
-    </ClInclude>
     <ClInclude Include="KeyboardSFMLController.h">
       <Filter>Header Files\Keyboard\ControllerIO</Filter>
     </ClInclude>

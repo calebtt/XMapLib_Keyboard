@@ -8,13 +8,11 @@
 #include "KeyboardTranslationHelpers.h"
 #include "ControllerButtonToActionMap.h"
 #include "KeyboardTranslator.h"
-#include "KeyboardLegacyApiFunctions.h"
 #include "KeyboardOvertakingFilter.h"
 #include "KeyboardSFMLController.h"
 
 #include "../XMapLib_Utils/nanotime.h"
 #include "../XMapLib_Utils/SendMouseInput.h"
-#include "../XMapLib_Utils/ControllerStatus.h"
 
 // Crude mechanism to keep the loop running until [enter] is pressed.
 struct GetterExitCallable final
