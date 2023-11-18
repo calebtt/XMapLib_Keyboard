@@ -62,5 +62,11 @@
     <ClInclude Include="KeyboardSFMLController.h">
       <Filter>Header Files\Keyboard\ControllerIO</Filter>
     </ClInclude>
+    <ClInclude Include="DelayTimer.h">
+      <Filter>Header Files\Keyboard</Filter>
+    </ClInclude>
+    <ClInclude Include="MappingStateTracker.h">
+      <Filter>Header Files\Keyboard\KeyInfoWrappersAndHelpers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

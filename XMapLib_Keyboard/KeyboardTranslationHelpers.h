@@ -14,6 +14,10 @@ namespace sds
 	/**
 	 * \brief	TranslationResult holds info from a translated state change, typically the operation to perform (if any) and
 	 *	a function to call to advance the state to the next state to continue to receive proper translation results.
+	 *	\remarks	The advance state function can be used to ensure the operation to perform occurs BEFORE the mapping advances it's state.
+	 *		This does mean that it may be possible to induce some error related to setting the state inappropriately. Without this
+	 *		design, it would be possible to, for instance, withhold calling the operation to perform, yet still have the mapping's state updating internally, erroneously.
+	 *		I believe this will make calling order-dependent functionality less error-prone.
 	 */
 	struct TranslationResult final
 	{

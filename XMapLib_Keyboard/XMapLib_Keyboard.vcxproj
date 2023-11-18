@@ -139,14 +139,12 @@
     <ClCompile Include="XMapLib_Keyboard.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DelayManagerProj\DelayManager\DelayManager.vcxproj">
-      <Project>{74b1b2b0-2a3d-4832-845f-fdc9883c1c9f}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\XMapLib_Utils\XMapLib_Utils.vcxproj">
       <Project>{1f7d3830-b362-44af-b782-8fd89b948a97}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DelayTimer.h" />
     <ClInclude Include="KeyboardCustomTypes.h" />
     <ClInclude Include="ControllerButtonToActionMap.h" />
     <ClInclude Include="KeyboardOvertakingFilter.h" />
@@ -156,6 +154,7 @@
     <ClInclude Include="KeyboardTranslator.h" />
     <ClInclude Include="KeyboardVirtualController.h" />
     <ClInclude Include="KeyboardTranslationHelpers.h" />
+    <ClInclude Include="MappingStateTracker.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

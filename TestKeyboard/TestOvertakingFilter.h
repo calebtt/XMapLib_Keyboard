@@ -190,5 +190,44 @@ namespace TestKeyboard
 			// move
 			auto newFilt = std::move(filt);
 		}
+
+		TEST_METHOD(FilteredTranslatorStateUpdating)
+		{
+			using namespace std::chrono_literals;
+			using namespace std::chrono;
+
+			auto translator = GetBuiltTranslator();
+
+			// The specific behavior under test here is that only valid, repeatable, state updates will occur, even when dubiously performing multiple translation iterations without update.
+			Logger::WriteMessage("First test batch.\n");
+			auto translation1 = translator({ sds::VirtualButtons::A, sds::VirtualButtons::B });
+			auto translation2 = translator({ sds::VirtualButtons::A, sds::VirtualButtons::B });
+			auto translation3 = translator({ sds::VirtualButtons::A, sds::VirtualButtons::B });
+			translation1();
+			translation2();
+			translation3();
+			std::this_thread::sleep_for(100ms);
+			Logger::WriteMessage("Second test batch.\n");
+			auto translation4 = translator({ sds::VirtualButtons::A, sds::VirtualButtons::B });
+			auto translation5 = translator({ sds::VirtualButtons::A, sds::VirtualButtons::B });
+			auto translation6 = translator({ sds::VirtualButtons::A, sds::VirtualButtons::B });
+			translation4();
+			translation5();
+			translation6();
+			translation1();
+			translation2();
+			translation3();
+			Logger::WriteMessage("Third test batch.\n");
+			auto translation7 = translator({ });
+			auto translation8 = translator({ });
+			auto translation9 = translator({ });
+			translation7();
+			translation8();
+			translation9();
+			Logger::WriteMessage("Cleanup.\n");
+			auto cleanup = translator.GetCleanupActions();
+			for (const auto& action : cleanup)
+				action();
+		}
 	};
 }
