@@ -257,20 +257,11 @@ auto GetDriverMouseMappings()
 	return mapBuffer;
 }
 
-//inline
-//void TranslationLoopXbox(const auto& settingsPack, sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
-//{
-//    using namespace std::chrono_literals;
-//	const auto translation = translator.GetUpdatedState(sds::GetWrappedControllerStateUpdate(settingsPack));
-//	translation();
-//	nanotime_sleep(sleepDelay.count());
-//}
-
 inline
-void TranslationLoopPs5(sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
+void TranslationLoop(sds::KeyboardTranslator<>& translator, const std::chrono::nanoseconds sleepDelay)
 {
     using namespace std::chrono_literals;
-    const auto translation = translator.GetUpdatedState(sds::GetWrappedControllerStateUpdate());
+    const auto translation = translator.GetUpdatedState(sds::GetWrappedControllerStateUpdatePs5());
     translation();
     nanotime_sleep(sleepDelay.count());
 }
@@ -314,9 +305,7 @@ auto RunTestDriverLoop()
     const auto exitFuture = std::async(std::launch::async, [&]() { gec.GetExitSignal(); });
     while (!gec.IsDone)
     {
-        //TranslationLoopPs5(ps5Settings, translator, SleepDelay);
-        //TranslationLoopXbox(xboxSettings, translator, SleepDelay);
-        TranslationLoopPs5(translator, SleepDelay);
+        TranslationLoop(translator, SleepDelay);
         updateLoopTimer(SleepDelay);
     }
     std::cout << "Performing cleanup actions...\n";

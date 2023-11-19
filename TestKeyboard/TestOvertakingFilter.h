@@ -198,7 +198,7 @@ namespace TestKeyboard
 
 			auto translator = GetBuiltTranslator();
 
-			// The specific behavior under test here is that only valid, repeatable, state updates will occur, even when dubiously performing multiple translation iterations without update.
+			// The specific behavior under test here is that only valid, repeatable, state updates will occur, even when dubiously storing multiple translation iterations without intermediate mapping state updates.
 			Logger::WriteMessage("First test batch.\n");
 			auto translation1 = translator({ sds::VirtualButtons::A, sds::VirtualButtons::B });
 			auto translation2 = translator({ sds::VirtualButtons::A, sds::VirtualButtons::B });
