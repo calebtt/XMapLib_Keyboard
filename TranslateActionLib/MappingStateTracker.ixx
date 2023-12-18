@@ -1,11 +1,14 @@
-#pragma once
-#include <concepts>
-#include <source_location>
+module;
 
-#include "DelayTimer.h"
-#include "KeyboardCustomTypes.h"
+export module MappingStateTracker;
 
-namespace sds
+import <concepts>;
+import <source_location>;
+import <chrono>;
+import XMapLibBase;
+import DelayTimer;
+
+export namespace sds
 {
 	enum class ActionState
 	{
@@ -15,7 +18,7 @@ namespace sds
 		KeyUp,
 	};
 
-	consteval auto ToString(ActionState actionState) -> const char*
+	constexpr auto ToString(ActionState actionState) -> const char*
 	{
 		switch (actionState)
 		{
@@ -37,12 +40,12 @@ namespace sds
 	 *		Also contains last sent time (for key-repeat), delay before first key-repeat timer, and a keyboard settings pack.
 	 * \remarks	This class enforces an invariant that it's state cannot be altered out of sequence.
 	 */
-	class MappingStateManager final
+	class MappingStateTracker final
 	{
 		/**
 		 * \brief Key Repeat Delay is the time delay a button has in-between activations.
 		 */
-		static constexpr NanosDelay_t DefaultKeyRepeatDelay{ std::chrono::microseconds{100'000} };
+		static constexpr std::chrono::nanoseconds DefaultKeyRepeatDelay{ std::chrono::microseconds{100'000} };
 		ActionState m_currentValue{ ActionState::Init };
 	public:
 		/**
@@ -88,8 +91,8 @@ namespace sds
 		}
 	};
 
-	static_assert(std::copyable<MappingStateManager>);
-	static_assert(std::movable<MappingStateManager>);
+	static_assert(std::copyable<MappingStateTracker>);
+	static_assert(std::movable<MappingStateTracker>);
 
 	/**
 	 * \brief Used to determine if the MappingStateManager is in a state that would require some cleanup before destruction.
@@ -97,8 +100,7 @@ namespace sds
 	 * \return True if mapping needs cleanup, false otherwise.
 	 */
 	[[nodiscard]]
-	constexpr
-	bool DoesMappingNeedCleanup(const MappingStateManager& mapping) noexcept
+	constexpr bool DoesMappingNeedCleanup(const MappingStateTracker& mapping) noexcept
 	{
 		return mapping.IsDown() || mapping.IsRepeating();
 	}

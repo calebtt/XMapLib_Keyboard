@@ -1,15 +1,19 @@
-#pragma once
-#include <optional>
-#include <span>
-#include <algorithm>
-#include <concepts>
-#include <ranges>
+module;
 
-#include "KeyboardCustomTypes.h"
-#include "ControllerButtonToActionMap.h"
-#include "KeyboardVirtualController.h"
+export module TranslationResult;
 
-namespace sds
+import CustomTypes;
+import MappingStateTracker;
+import VirtualController;
+import ButtonMapping;
+import <span>;
+import <ranges>;
+import <algorithm>;
+import <functional>;
+import <optional>;
+import <numeric>;
+
+export namespace sds
 {
 	/**
 	 * \brief	TranslationResult holds info from a translated state change, typically the operation to perform (if any) and
@@ -73,95 +77,92 @@ namespace sds
 	static_assert(std::movable<TranslationPack>);
 
 	[[nodiscard]]
-	inline
-	auto GetResetTranslationResult(CBActionMap& currentMapping) noexcept -> TranslationResult
+	inline auto GetResetTranslationResult(MappingContainer& currentMapping) noexcept -> TranslationResult
 	{
 		return TranslationResult
 		{
 			.OperationToPerform = [&currentMapping]()
 			{
-				if (currentMapping.OnReset)
-					currentMapping.OnReset();
+				if (currentMapping.StateFunctions.OnReset)
+					currentMapping.StateFunctions.OnReset();
 			},
 			.AdvanceStateFn = [&currentMapping]()
 			{
 				currentMapping.LastAction.SetInitial();
 				currentMapping.LastAction.LastSentTime.Reset();
 			},
-			.MappingVk = currentMapping.ButtonVirtualKeycode,
-			.ExclusivityGrouping = currentMapping.ExclusivityGrouping
+			.MappingVk = currentMapping.Button.ButtonVirtualKeycode,
+			.ExclusivityGrouping = currentMapping.Button.ExclusivityGrouping
 		};
 	}
 
 	[[nodiscard]]
-	inline
-	auto GetRepeatTranslationResult(CBActionMap& currentMapping) noexcept -> TranslationResult
+	inline auto GetRepeatTranslationResult(MappingContainer& currentMapping) noexcept -> TranslationResult
 	{
 		return TranslationResult
 		{
-			.OperationToPerform = [&currentMapping]() {
-				if (currentMapping.OnRepeat)
-					currentMapping.OnRepeat();
+			.OperationToPerform = [&currentMapping]()
+			{
+				if (currentMapping.StateFunctions.OnRepeat)
+					currentMapping.StateFunctions.OnRepeat();
 				currentMapping.LastAction.LastSentTime.Reset();
 			},
-			.AdvanceStateFn = [&currentMapping]() {
+			.AdvanceStateFn = [&currentMapping]() 
+			{
 				currentMapping.LastAction.SetRepeat();
 			},
-			.MappingVk = currentMapping.ButtonVirtualKeycode,
-			.ExclusivityGrouping = currentMapping.ExclusivityGrouping
+			.MappingVk = currentMapping.Button.ButtonVirtualKeycode,
+			.ExclusivityGrouping = currentMapping.Button.ExclusivityGrouping
 		};
 	}
 
 	[[nodiscard]]
-	inline
-	auto GetOvertakenTranslationResult(CBActionMap& overtakenMapping) noexcept -> TranslationResult
+	inline auto GetOvertakenTranslationResult(MappingContainer& overtakenMapping) noexcept -> TranslationResult
 	{
 		return TranslationResult
 		{
 			.OperationToPerform = [&overtakenMapping]()
 			{
-				if (overtakenMapping.OnUp)
-					overtakenMapping.OnUp();
+				if (overtakenMapping.StateFunctions.OnUp)
+					overtakenMapping.StateFunctions.OnUp();
 			},
 			.AdvanceStateFn = [&overtakenMapping]()
 			{
 				overtakenMapping.LastAction.SetUp();
 			},
-			.MappingVk = overtakenMapping.ButtonVirtualKeycode,
-			.ExclusivityGrouping = overtakenMapping.ExclusivityGrouping
+			.MappingVk = overtakenMapping.Button.ButtonVirtualKeycode,
+			.ExclusivityGrouping = overtakenMapping.Button.ExclusivityGrouping
 		};
 	}
 
 	[[nodiscard]]
-	inline
-	auto GetKeyUpTranslationResult(CBActionMap& currentMapping) noexcept -> TranslationResult
+	inline auto GetKeyUpTranslationResult(MappingContainer& currentMapping) noexcept -> TranslationResult
 	{
 		return TranslationResult
 		{
 			.OperationToPerform = [&currentMapping]()
 			{
-				if (currentMapping.OnUp)
-					currentMapping.OnUp();
+				if (currentMapping.StateFunctions.OnUp)
+					currentMapping.StateFunctions.OnUp();
 			},
 			.AdvanceStateFn = [&currentMapping]()
 			{
 				currentMapping.LastAction.SetUp();
 			},
-			.MappingVk = currentMapping.ButtonVirtualKeycode,
-			.ExclusivityGrouping = currentMapping.ExclusivityGrouping
+			.MappingVk = currentMapping.Button.ButtonVirtualKeycode,
+			.ExclusivityGrouping = currentMapping.Button.ExclusivityGrouping
 		};
 	}
 
 	[[nodiscard]]
-	inline
-	auto GetInitialKeyDownTranslationResult(CBActionMap& currentMapping) noexcept -> TranslationResult
+	inline auto GetInitialKeyDownTranslationResult(MappingContainer& currentMapping) noexcept -> TranslationResult
 	{
 		return TranslationResult
 		{
 			.OperationToPerform = [&currentMapping]()
 			{
-				if (currentMapping.OnDown)
-					currentMapping.OnDown();
+				if (currentMapping.StateFunctions.OnDown)
+					currentMapping.StateFunctions.OnDown();
 				// Reset timer after activation, to wait for elapsed before another next state translation is returned.
 				currentMapping.LastAction.LastSentTime.Reset();
 				currentMapping.LastAction.DelayBeforeFirstRepeat.Reset();
@@ -170,8 +171,8 @@ namespace sds
 			{
 				currentMapping.LastAction.SetDown();
 			},
-			.MappingVk = currentMapping.ButtonVirtualKeycode,
-			.ExclusivityGrouping = currentMapping.ExclusivityGrouping
+			.MappingVk = currentMapping.Button.ButtonVirtualKeycode,
+			.ExclusivityGrouping = currentMapping.Button.ExclusivityGrouping
 		};
 	}
 
@@ -181,17 +182,16 @@ namespace sds
 	 * \return	true if good (or empty) mapping list, false if there is a problem.
 	 */
 	[[nodiscard]]
-	inline
-	bool AreMappingsUniquePerVk(const std::span<const CBActionMap> mappingsList) noexcept
+	inline bool AreMappingsUniquePerVk(const std::span<const MappingContainer> mappingsList) noexcept
 	{
 		SmallFlatMap_t<VirtualButtons, bool> mappingTable;
-		for(const auto& e : mappingsList)
+		for (const auto& e : mappingsList)
 		{
-			if(mappingTable[e.ButtonVirtualKeycode])
+			if (mappingTable[e.Button.ButtonVirtualKeycode])
 			{
 				return false;
 			}
-			mappingTable[e.ButtonVirtualKeycode] = true;
+			mappingTable[e.Button.ButtonVirtualKeycode] = true;
 		}
 		return true;
 	}
@@ -202,9 +202,8 @@ namespace sds
 	 * \return	true if good (or empty) mapping list, false if there is a problem.
 	 */
 	[[nodiscard]]
-	inline
-	bool AreMappingVksNonZero(const std::span<const CBActionMap> mappingsList) noexcept
+	inline bool AreMappingVksNonZero(const std::span<const MappingContainer> mappingsList) noexcept
 	{
-		return ! std::ranges::any_of(mappingsList, [](const auto vk) { return vk == VirtualButtons::NotSet; }, &CBActionMap::ButtonVirtualKeycode);
+		return !std::ranges::any_of(mappingsList, [](const auto vk) { return vk.ButtonVirtualKeycode == VirtualButtons::NotSet; }, &MappingContainer::Button);
 	}
 }

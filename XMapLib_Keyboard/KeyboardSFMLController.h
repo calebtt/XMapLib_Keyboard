@@ -132,68 +132,6 @@ namespace sds
 		return {};
 	}
 
-	///**
-	// * \brief Translates SFML specific axis/etc. data into the virtual buttons enum values expected for an Xbox (360) controller.
-	// * \param playerId Most commonly 0 for a single device connected.
-	// * \param stickLeftRightDz Deadzone for all axes of left and right sticks.
-	// * \return Vector type of VirtualButtons enum.
-	// */
-	//[[nodiscard]]
-	//inline
-	//auto GetWrappedControllerStateUpdateXbox(
-	//	const int playerId = 0,
-	//	const std::pair<float, float> stickLeftRightDz = std::make_pair(30.0f, 30.0f),
-	//	const std::pair<float, float> triggerLeftRightDz = std::make_pair(30.0f, 30.0f)) noexcept -> SmallVector_t<VirtualButtons>
-	//{
-	//	using Stick = sf::Joystick;
-	//	Stick::update();
 
-	//	if (Stick::isConnected(playerId))
-	//	{
-	//		// Ltrigger and Rtrigger gradient value, -100 is R trigger, +100 is Ltrigger.
-	//		const auto triggerGradient = Stick::getAxisPosition(playerId, Stick::Axis::Z);
-	//		const auto secondGradient = Stick::getAxisPosition(playerId, Stick::Axis::R);
-
-	//		std::cout << triggerGradient << '\t' << secondGradient << '\n';
-
-	//		const auto thumbstickRightX = Stick::getAxisPosition(playerId, Stick::Axis::U);
-	//		const auto thumbstickRightY = Stick::getAxisPosition(playerId, Stick::Axis::V);
-
-	//		const auto thumbstickLeftX = Stick::getAxisPosition(playerId, Stick::Axis::X);
-	//		const auto thumbstickLeftY = Stick::getAxisPosition(playerId, Stick::Axis::Y);
-
-	//		const auto [leftStickRadius, leftStickAngle] = ComputePolarPair(thumbstickLeftX, -thumbstickLeftY);
-	//		const auto [rightStickRadius, rightStickAngle] = ComputePolarPair(thumbstickRightX, -thumbstickRightY);
-
-	//		const auto leftStickDirection = GetVirtualKeyFromDirection(GetDirectionForPolarTheta(leftStickAngle), ControllerStick::LeftStick);
-	//		const auto rightStickDirection = GetVirtualKeyFromDirection(GetDirectionForPolarTheta(rightStickAngle), ControllerStick::RightStick);
-
-	//		SmallVector_t<VirtualButtons> allKeys;
-	//		for (const auto& [apiCode, virtualCode] : detail::ApiCodeToVirtualButtonArrayXbox)
-	//		{
-	//			if (Stick::isButtonPressed(playerId, apiCode))
-	//				allKeys.push_back(virtualCode);
-	//		}
-
-	//		const auto [leftStickDz, rightStickDz] = stickLeftRightDz;
-	//		if (leftStickRadius > leftStickDz)
-	//			allKeys.push_back(leftStickDirection);
-	//		if (rightStickRadius > rightStickDz)
-	//			allKeys.push_back(rightStickDirection);
-
-	//		//const auto [leftTriggerDz, rightTriggerDz] = triggerLeftRightDz;
-	//		//const bool isLeftTrigger = triggerGradient > 0;
-	//		//const auto triggerDz = isLeftTrigger > 0 ? leftTriggerDz : rightTriggerDz;
-	//		//const bool isTriggerPulled = std::abs(triggerGradient) > triggerDz;
-
-	//		//if (triggerGradient > leftTriggerDz)
-	//		//	allKeys.push_back(VirtualButtons::LeftTrigger);
-	//		//if (rightTriggerGradient > rightTriggerDz)
-	//		//	allKeys.push_back(VirtualButtons::RightTrigger);
-
-	//		return allKeys;
-	//	}
-	//	return {};
-	//}
 }
 

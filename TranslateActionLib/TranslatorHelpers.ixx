@@ -1,13 +1,16 @@
-#pragma once
-#include <optional>
-#include <span>
-#include <algorithm>
-#include <concepts>
-#include <ranges>
+module;
+export module TranslatorHelpers;
 
-#include "KeyboardCustomTypes.h"
+import <optional>;
+import <span>;
+import <algorithm>;
+import <concepts>;
+import <ranges>;
+
+import CustomTypes;
+import VirtualController;
+import KeyStateBehavior;
 #include "ControllerButtonToActionMap.h"
-#include "KeyboardVirtualController.h"
 
 namespace sds
 {
@@ -74,7 +77,7 @@ namespace sds
 
 	[[nodiscard]]
 	inline
-	auto GetResetTranslationResult(CBActionMap& currentMapping) noexcept -> TranslationResult
+		auto GetResetTranslationResult(CBActionMap& currentMapping) noexcept -> TranslationResult
 	{
 		return TranslationResult
 		{
@@ -95,7 +98,7 @@ namespace sds
 
 	[[nodiscard]]
 	inline
-	auto GetRepeatTranslationResult(CBActionMap& currentMapping) noexcept -> TranslationResult
+		auto GetRepeatTranslationResult(CBActionMap& currentMapping) noexcept -> TranslationResult
 	{
 		return TranslationResult
 		{
@@ -114,7 +117,7 @@ namespace sds
 
 	[[nodiscard]]
 	inline
-	auto GetOvertakenTranslationResult(CBActionMap& overtakenMapping) noexcept -> TranslationResult
+		auto GetOvertakenTranslationResult(CBActionMap& overtakenMapping) noexcept -> TranslationResult
 	{
 		return TranslationResult
 		{
@@ -134,7 +137,7 @@ namespace sds
 
 	[[nodiscard]]
 	inline
-	auto GetKeyUpTranslationResult(CBActionMap& currentMapping) noexcept -> TranslationResult
+		auto GetKeyUpTranslationResult(CBActionMap& currentMapping) noexcept -> TranslationResult
 	{
 		return TranslationResult
 		{
@@ -154,7 +157,7 @@ namespace sds
 
 	[[nodiscard]]
 	inline
-	auto GetInitialKeyDownTranslationResult(CBActionMap& currentMapping) noexcept -> TranslationResult
+		auto GetInitialKeyDownTranslationResult(CBActionMap& currentMapping) noexcept -> TranslationResult
 	{
 		return TranslationResult
 		{
@@ -182,12 +185,12 @@ namespace sds
 	 */
 	[[nodiscard]]
 	inline
-	bool AreMappingsUniquePerVk(const std::span<const CBActionMap> mappingsList) noexcept
+		bool AreMappingsUniquePerVk(const std::span<const CBActionMap> mappingsList) noexcept
 	{
 		SmallFlatMap_t<VirtualButtons, bool> mappingTable;
-		for(const auto& e : mappingsList)
+		for (const auto& e : mappingsList)
 		{
-			if(mappingTable[e.ButtonVirtualKeycode])
+			if (mappingTable[e.ButtonVirtualKeycode])
 			{
 				return false;
 			}
@@ -203,8 +206,8 @@ namespace sds
 	 */
 	[[nodiscard]]
 	inline
-	bool AreMappingVksNonZero(const std::span<const CBActionMap> mappingsList) noexcept
+		bool AreMappingVksNonZero(const std::span<const CBActionMap> mappingsList) noexcept
 	{
-		return ! std::ranges::any_of(mappingsList, [](const auto vk) { return vk == VirtualButtons::NotSet; }, &CBActionMap::ButtonVirtualKeycode);
+		return !std::ranges::any_of(mappingsList, [](const auto vk) { return vk == VirtualButtons::NotSet; }, &CBActionMap::ButtonVirtualKeycode);
 	}
 }

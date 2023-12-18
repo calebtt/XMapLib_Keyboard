@@ -1,6 +1,6 @@
-#pragma once
+export module VirtualController;
 
-namespace sds
+export namespace sds
 {
 	/**
 	 * \brief Left thumb stick or right.
@@ -29,7 +29,7 @@ namespace sds
 
 	/**
 	 * \brief	All known/supported controller button/functionality identifiers usable with one or more pollers.
-	 * \remarks Use these with the CBActionMap mappings to attach them to a specific virtual key--one that is supported by the chosen poller.
+	 * \remarks Use these with the ButtonDescription mappings to attach them to a specific virtual key--one that is supported by the chosen poller.
 	 */
 	enum class VirtualButtons
 	{

@@ -14,6 +14,8 @@
 #include "../XMapLib_Utils/nanotime.h"
 #include "../XMapLib_Utils/SendMouseInput.h"
 
+#include <boost/dll.hpp>
+
 // Crude mechanism to keep the loop running until [enter] is pressed.
 struct GetterExitCallable final
 {
@@ -63,26 +65,35 @@ auto GetDriverButtonMappings()
 
     const auto GetBuiltMapForKeyNamed = [&](const std::string & keyName, const auto virtualKey, const int exGroup, const auto firstDelay)
     {
+            auto downLambda = GetDownLambdaForKeyNamed(keyName);
+            auto upLambda = GetUpLambdaForKeyNamed(keyName);
+            auto repeatLambda = GetRepeatLambdaForKeyNamed(keyName);
+            auto resetLambda = GetResetLambdaForKeyNamed(keyName);
+            using Behaviors_t = KeyStateBehaviors;
+            //using BehaviorsImpl_t = KeyStateBehaviorsImpl<Behaviors_t>;
         return CBActionMap
         {
-            .ButtonVirtualKeycode = virtualKey,
-            .UsesInfiniteRepeat = true,
-            .ExclusivityGrouping = exGroup,
-            .OnDown = GetDownLambdaForKeyNamed(keyName),
-            .OnUp = GetUpLambdaForKeyNamed(keyName),
-            .OnRepeat = GetRepeatLambdaForKeyNamed(keyName),
-            .OnReset = GetResetLambdaForKeyNamed(keyName),
-            .DelayBeforeFirstRepeat = firstDelay
+            virtualKey,
+            RepeatType::Infinite,
+            Behaviors_t
+            {
+                downLambda,
+                upLambda,
+                repeatLambda,
+                resetLambda
+            },
+            exGroup,
+            firstDelay
         };
     };
 
     vector mapBuffer
     {
         // Pad buttons
-        GetBuiltMapForKeyNamed("[PAD_A]", VirtualButtons::A, PadButtonsGroup, 500ms),
-        GetBuiltMapForKeyNamed("[PAD_B]", VirtualButtons::B, PadButtonsGroup, 500ms),
         GetBuiltMapForKeyNamed("[PAD_X]", VirtualButtons::X, PadButtonsGroup, 500ms),
-        GetBuiltMapForKeyNamed("[PAD_Y]", VirtualButtons::Y, PadButtonsGroup, 500ms),
+        GetBuiltMapForKeyNamed("[PAD_CIRCLE]", VirtualButtons::Circle, PadButtonsGroup, 500ms),
+        GetBuiltMapForKeyNamed("[PAD_SQUARE]", VirtualButtons::Square, PadButtonsGroup, 500ms),
+        GetBuiltMapForKeyNamed("[PAD_TRIANGLE]", VirtualButtons::Triangle, PadButtonsGroup, 500ms),
         // Dpad
         GetBuiltMapForKeyNamed("[DPAD_LEFT]", VirtualButtons::DpadLeft, {}, 500ms),
         GetBuiltMapForKeyNamed("[DPAD_RIGHT]", VirtualButtons::DpadRight, {}, 500ms),
@@ -101,14 +112,14 @@ auto GetDriverButtonMappings()
         GetBuiltMapForKeyNamed("[RTRIGGER]", VirtualButtons::RightTrigger, LeftThumbGroup, 500ms),
         // Shoulder buttons
         CBActionMap{
-            .ButtonVirtualKeycode = VirtualButtons::ShoulderRight,
-            .UsesInfiniteRepeat = false,
-            .OnDown = []() { system("cls"); std::cout << "Cleared.\n"; }
+            VirtualButtons::ShoulderRight,
+            RepeatType::None,
+            []() { system("cls"); std::cout << "Cleared.\n"; }
         },
     	CBActionMap{
-            .ButtonVirtualKeycode = VirtualButtons::ShoulderLeft,
-            .UsesInfiniteRepeat = false,
-            .OnDown = []()
+            VirtualButtons::ShoulderLeft,
+            RepeatType::None,
+            []()
             {
                 // Add impl for something to do here
             }
@@ -133,19 +144,21 @@ auto GetDriverMouseMappings()
     {
         // Mouse move stuff
         CBActionMap{
-            .ButtonVirtualKeycode = RightThumbstickUp,
-            .UsesInfiniteRepeat = true,
-            .ExclusivityGrouping = MouseExGroup,
-            .OnDown = []()
+            RightThumbstickUp,
+            RepeatType::Infinite,
+            []()
             {
                 Utilities::SendMouseMove(0, 1);
             },
-            .OnRepeat = []()
+            {},
+            []()
             {
                 Utilities::SendMouseMove(0, 1);
             },
-            .DelayBeforeFirstRepeat = FirstDelay,
-            .DelayForRepeats = RepeatDelay
+            {},
+            MouseExGroup,
+            FirstDelay,
+            RepeatDelay
         },
         CBActionMap{
             .ButtonVirtualKeycode = RightThumbstickUpRight,
@@ -255,6 +268,12 @@ auto GetDriverMouseMappings()
     };
 
 	return mapBuffer;
+}
+
+auto GetPollerDllHandle()
+{
+    auto dllSymbol = boost::dll::import_symbol<sds::SmallVector_t<sds::VirtualButtons>(int, std::pair<float,float>)>("", "GetWrappedControllerStateUpdatePs5");
+    return dllSymbol;
 }
 
 inline

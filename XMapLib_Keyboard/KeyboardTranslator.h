@@ -65,7 +65,8 @@ namespace sds
 	auto GetButtonTranslationForDownToRepeat(const SmallVector_t<Val_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
 		using std::ranges::find, std::ranges::end;
-		const bool isDownAndUsesRepeat = singleButton.LastAction.IsDown() && (singleButton.UsesInfiniteRepeat || singleButton.SendsFirstRepeatOnly);
+		const bool isDownAndUsesRepeat = singleButton.LastAction.IsDown() && 
+			(singleButton.RepeatingKeyBehavior == RepeatType::Infinite || singleButton.RepeatingKeyBehavior == RepeatType::FirstOnly);
 		const bool isDelayElapsed = singleButton.LastAction.DelayBeforeFirstRepeat.IsElapsed();
 		if (isDownAndUsesRepeat && isDelayElapsed)
 		{
@@ -82,7 +83,7 @@ namespace sds
 	auto GetButtonTranslationForRepeatToRepeat(const SmallVector_t<Val_t>& downKeys, CBActionMap& singleButton) noexcept -> std::optional<TranslationResult>
 	{
 		using std::ranges::find, std::ranges::end;
-		const bool isRepeatAndUsesInfinite = singleButton.LastAction.IsRepeating() && singleButton.UsesInfiniteRepeat;
+		const bool isRepeatAndUsesInfinite = singleButton.LastAction.IsRepeating() && singleButton.RepeatingKeyBehavior == RepeatType::Infinite;
 		if (isRepeatAndUsesInfinite && singleButton.LastAction.LastSentTime.IsElapsed())
 		{
 			const auto findResult = find(downKeys, singleButton.ButtonVirtualKeycode);
