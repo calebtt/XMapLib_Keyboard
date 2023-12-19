@@ -137,6 +137,9 @@
     <ClCompile Include="XMapLib_Modules.ixx" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\PluginSFMLPoller\PluginSFMLPoller.vcxproj">
+      <Project>{8311b265-7b0b-48e4-b3fe-549ff4ab0a5c}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\PollerPluginLib\PollerPluginLib.vcxproj">
       <Project>{d6f03a13-3b0d-40c7-b1e7-402785947208}</Project>
     </ProjectReference>

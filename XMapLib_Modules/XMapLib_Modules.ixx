@@ -25,8 +25,9 @@ import <type_traits>;
 import <string_view>;
 import <cassert>;
 
-import PluginSfmlPoller;
+import XMapLibBase;
 import TranslateAction;
+import PluginSfmlPoller;
 
 // Crude mechanism to keep the loop running until [enter] is pressed.
 struct GetterExitCallable final

@@ -105,5 +105,4 @@ export namespace sds
 		}
 		return NotSet;
 	}
-
 }
