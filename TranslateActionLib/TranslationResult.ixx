@@ -41,7 +41,6 @@ export namespace sds
 			AdvanceStateFn();
 		}
 	};
-
 	static_assert(std::copyable<TranslationResult>);
 	static_assert(std::movable<TranslationResult>);
 
@@ -76,8 +75,7 @@ export namespace sds
 	static_assert(std::copyable<TranslationPack>);
 	static_assert(std::movable<TranslationPack>);
 
-	[[nodiscard]]
-	inline auto GetResetTranslationResult(MappingContainer& currentMapping) noexcept -> TranslationResult
+	[[nodiscard]] inline auto GetResetTranslationResult(MappingContainer& currentMapping) noexcept -> TranslationResult
 	{
 		return TranslationResult
 		{

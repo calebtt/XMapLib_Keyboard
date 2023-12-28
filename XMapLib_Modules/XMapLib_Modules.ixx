@@ -28,6 +28,7 @@ import <cassert>;
 import XMapLibBase;
 import TranslateAction;
 import PluginSfmlPoller;
+import OvertakingFilter;
 
 // Crude mechanism to keep the loop running until [enter] is pressed.
 struct GetterExitCallable final
@@ -66,14 +67,15 @@ export int main()
 	constexpr float ThumbstickDeadzone{ 30.0f };
 	println("This is a C++ modules main.");
 
-	KeyboardTranslator translator(GetTestDriverMappings());
+	Translator translator{ GetTestDriverMappings() };
+	OvertakingFilter<> filter{ translator };
 
 	// Crude mechanism to keep the loop running until [enter] is pressed.
 	GetterExitCallable gec;
 	const auto exitFuture = std::async(std::launch::async, [&gec]() { gec.GetExitSignal(); });
 	while(!gec.IsDone)
 	{
-		auto translationResult = translator(GetWrappedControllerStateUpdatePs5(PlayerId, ThumbstickDeadzone, ThumbstickDeadzone));
+		auto translationResult = translator(filter(GetWrappedControllerStateUpdatePs5(PlayerId, ThumbstickDeadzone, ThumbstickDeadzone)));
 		translationResult();
 	}
 
@@ -161,22 +163,22 @@ auto GetTestDriverMappings() -> std::vector<sds::MappingContainer>
 	{
 		MappingContainer
 		{
-			ButtonDescription{VirtualButtons::Square},
+			ButtonDescription{VirtualButtons::Square, {}, ThumbstickGrouping},
 			KeyStateBehaviors{GetPrintBehaviorsForKey("Square")}
 		},
 		MappingContainer
 		{
-			ButtonDescription{VirtualButtons::Circle},
+			ButtonDescription{VirtualButtons::Circle, {}, ThumbstickGrouping},
 			KeyStateBehaviors{GetPrintBehaviorsForKey("Circle")}
 		},
 		MappingContainer
 		{
-			ButtonDescription{VirtualButtons::X},
+			ButtonDescription{VirtualButtons::X, {}, ThumbstickGrouping},
 			KeyStateBehaviors{GetPrintBehaviorsForKey("Cross")}
 		},
 		MappingContainer
 		{
-			ButtonDescription{VirtualButtons::Triangle},
+			ButtonDescription{VirtualButtons::Triangle, {}, ThumbstickGrouping},
 			KeyStateBehaviors{GetPrintBehaviorsForKey("Triangle")}
 		},
 		MappingContainer

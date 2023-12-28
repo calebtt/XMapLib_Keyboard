@@ -8,15 +8,12 @@ import <concepts>;
 import <ranges>;
 import <type_traits>;
 import <optional>;
-
+import <vector>;
 
 import CustomTypes;
 import VirtualController;
 import TranslationResult;
 import ButtonMapping;
-/*
- *	Note: There are some static sized arrays used here with capacity defined in customtypes.
- */
 
 export namespace sds
 {
@@ -26,12 +23,8 @@ export namespace sds
 	concept InputTranslator_c = requires(Poller_t & t)
 	{
 		{ t.GetUpdatedState({ VirtualButtons::A, VirtualButtons::X, VirtualButtons::Y }) } -> std::convertible_to<TranslationPack>;
+		{ t.GetMappingsRange() } -> std::convertible_to<std::vector<MappingContainer>>;
 	};
-
-	/*
-	 *	NOTE: Testing these functions may be quite easy, pass a single ButtonDescription in a certain state to all of these functions,
-	 *	and if more than one TranslationResult is produced (aside from perhaps the reset translation), then it would obviously be in error.
-	 */
 
 	 /**
 	  * \brief For a single mapping, search the controller state update buffer and produce a TranslationResult appropriate to the current mapping state and controller state.
@@ -125,7 +118,7 @@ export namespace sds
 	 *	<p></p>
 	 *	<p>An invariant exists such that: <b>There must be only one mapping per virtual keycode.</b></p>
 	 */
-	class KeyboardTranslator final
+	class Translator final
 	{
 		using MappingVector_t = SmallVector_t<MappingContainer>;
 		static_assert(MappingRange_c<MappingVector_t>);
@@ -133,34 +126,32 @@ export namespace sds
 		MappingVector_t m_mappings;
 
 	public:
-		KeyboardTranslator() = delete; // no default
-		KeyboardTranslator(const KeyboardTranslator& other) = delete; // no copy
-		auto operator=(const KeyboardTranslator& other)->KeyboardTranslator & = delete; // no copy-assign
+		Translator() = delete; // no default
+		Translator(const Translator& other) = delete; // no copy
+		auto operator=(const Translator& other)->Translator & = delete; // no copy-assign
 
-		KeyboardTranslator(KeyboardTranslator&& other) = default; // move-construct
-		auto operator=(KeyboardTranslator&& other)->KeyboardTranslator & = default; // move-assign
-		~KeyboardTranslator() = default;
+		Translator(Translator&& other) = default; // move-construct
+		auto operator=(Translator&& other)->Translator & = default; // move-assign
+		~Translator() = default;
 
 		/**
 		 * \brief Mapping Vector move Ctor, may throw on exclusivity group error, OR more than one mapping per VK.
 		 * \param keyMappings Rv ref to a mapping vector type.
 		 * \exception std::runtime_error on exclusivity group error during construction, OR more than one mapping per VK.
 		 */
-		explicit KeyboardTranslator(MappingVector_t&& keyMappings)
+		explicit Translator(MappingVector_t&& keyMappings)
 			: m_mappings(std::move(keyMappings))
 		{
 			if (!AreMappingsUniquePerVk(m_mappings) || !AreMappingVksNonZero(m_mappings))
 				throw std::runtime_error("Exception: More than 1 mapping per VK!");
 		}
 	public:
-		[[nodiscard]]
-		auto operator()(SmallVector_t<VirtualButtons>&& stateUpdate) noexcept -> TranslationPack
+		[[nodiscard]] auto operator()(SmallVector_t<VirtualButtons>&& stateUpdate) noexcept -> TranslationPack
 		{
 			return GetUpdatedState(std::move(stateUpdate));
 		}
 
-		[[nodiscard]]
-		auto GetUpdatedState(SmallVector_t<VirtualButtons>&& stateUpdate) noexcept -> TranslationPack
+		[[nodiscard]] auto GetUpdatedState(SmallVector_t<VirtualButtons>&& stateUpdate) noexcept -> TranslationPack
 		{
 			TranslationPack translations;
 			for (auto& mapping : m_mappings)
@@ -190,8 +181,7 @@ export namespace sds
 			return translations;
 		}
 
-		[[nodiscard]]
-		auto GetCleanupActions() noexcept -> SmallVector_t<TranslationResult>
+		[[nodiscard]] auto GetCleanupActions() noexcept -> SmallVector_t<TranslationResult>
 		{
 			SmallVector_t<TranslationResult> translations;
 			for (auto& mapping : m_mappings)
@@ -203,10 +193,15 @@ export namespace sds
 			}
 			return translations;
 		}
+
+		[[nodiscard]] auto GetMappingsRange() const -> const MappingVector_t&
+		{
+			return m_mappings;
+		}
 	};
 
-	static_assert(InputTranslator_c<KeyboardTranslator>);
-	static_assert(std::movable<KeyboardTranslator>);
-	static_assert(std::copyable<KeyboardTranslator> == false);
+	static_assert(InputTranslator_c<Translator> == true);
+	static_assert(std::movable<Translator> == true);
+	static_assert(std::copyable<Translator> == false);
 
 }

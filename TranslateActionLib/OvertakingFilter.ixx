@@ -13,15 +13,29 @@ import <format>;
 import <source_location>;
 import <stacktrace>;
 import <span>;
+import <map>;
 
 import CustomTypes;
 import VirtualController;
 import ButtonMapping;
 import TranslationResult;
 import MappingRangeAlgos;
+import Translator;
 
 export namespace sds
 {
+	template<typename GroupInfo_t>
+	concept FilterGroupInfo_c = requires(GroupInfo_t & t)
+	{
+		{ t.IsMappingActivated(VirtualButtons::A) } -> std::convertible_to<bool>;
+		{ t.IsMappingOvertaken(VirtualButtons::A) } -> std::convertible_to<bool>;
+		{ t.IsAnyMappingActivated()	} -> std::convertible_to<bool>;
+		{ t.IsMappingActivatedOrOvertaken(VirtualButtons::A) } -> std::convertible_to<bool>;
+		{ t.GetActivatedValue() } -> std::convertible_to<VirtualButtons>;
+		{ t.UpdateForNewMatchingGroupingDown(VirtualButtons::A) } -> std::convertible_to<std::pair<bool, std::optional<VirtualButtons>>>;
+		{ t.UpdateForNewMatchingGroupingUp(VirtualButtons::A) } -> std::convertible_to<std::optional<VirtualButtons>>;
+	};
+
 	/**
 	 * \brief	<para>A logical representation of a mapping's exclusivity group activation status, for this setup a single key in the exclusivity group can be 'activated'
 	 *	or have a key-down state at a time. It is exclusively the only key in the group forwarded to the translator for processing of key-down events.</para>
@@ -32,10 +46,7 @@ export namespace sds
 	class GroupActivationInfo final
 	{
 		using Elem_t = VirtualButtons;
-	public:
-		// Exclusivity grouping value, mirroring the mapping value used.
-		GrpVal_t GroupingValue{};
-	private:
+
 		// First element of the queue is the activated mapping.
 		std::deque<Elem_t> ActivatedValuesQueue;
 	public:
@@ -141,12 +152,13 @@ export namespace sds
 	 *	In the event that a single state update contains presently un-handled key-downs for mappings with the same exclusivity grouping,
 	 *	it will only process a single overtaking key-down at a time, and will suppress the rest in the state update to be handled on the next iteration.
 	 */
-	class KeyboardOvertakingFilter final
+	template<typename GroupInfo_t = GroupActivationInfo>
+	class OvertakingFilter final
 	{
 		using VirtualCode_t = VirtualButtons;
 
 		// Mapping of exclusivity grouping value to 
-		using MapType_t = SmallFlatMap_t<GrpVal_t, GroupActivationInfo>;
+		using MapType_t = std::map<GrpVal_t, GroupInfo_t>;
 
 		// span to mappings
 		std::span<const MappingContainer> m_mappings;
@@ -154,26 +166,16 @@ export namespace sds
 		// map of grouping value to GroupActivationInfo container.
 		MapType_t m_groupMap;
 	public:
-		void SetMappingRange(const std::span<const MappingContainer> mappingsList)
-		{
-			m_mappings = mappingsList;
-			m_groupMap = {};
+		OvertakingFilter() = delete;
 
-			// Build the map of ex. group information.
-			for (const auto& elem : mappingsList)
-			{
-				if (elem.Button.ExclusivityGrouping)
-				{
-					const auto grpVal = *elem.Button.ExclusivityGrouping;
-					m_groupMap[grpVal].GroupingValue = grpVal;
-				}
-			}
+		explicit OvertakingFilter(const Translator& translator)
+		{
+			SetMappingRange(translator.GetMappingsRange());
 		}
 
 		// This function is used to filter the controller state updates before they are sent to the translator.
 		// It will have an effect on overtaking behavior by modifying the state update buffer, which just contains the virtual keycodes that are reported as down.
-		[[nodiscard]]
-		auto GetFilteredButtonState(SmallVector_t<VirtualCode_t>&& stateUpdate) -> SmallVector_t<VirtualCode_t>
+		[[nodiscard]] auto GetFilteredButtonState(SmallVector_t<VirtualCode_t>&& stateUpdate) -> SmallVector_t<VirtualCode_t>
 		{
 			using std::ranges::sort;
 
@@ -192,9 +194,29 @@ export namespace sds
 			return filteredForDown;
 		}
 
+		auto operator()(SmallVector_t<VirtualCode_t>&& stateUpdate) -> SmallVector_t<VirtualCode_t>
+		{
+			return GetFilteredButtonState(std::move(stateUpdate));
+		}
 	private:
-		[[nodiscard]]
-		auto FilterDownTranslation(const SmallVector_t<VirtualCode_t>& stateUpdate) -> SmallVector_t<VirtualCode_t>
+
+		void SetMappingRange(const std::span<const MappingContainer> mappingsList)
+		{
+			m_mappings = mappingsList;
+			m_groupMap = {};
+
+			// Build the map of ex. group information.
+			for (const auto& elem : mappingsList)
+			{
+				if (elem.Button.ExclusivityGrouping)
+				{
+					const auto grpVal = *elem.Button.ExclusivityGrouping;
+					m_groupMap[grpVal] = {};
+				}
+			}
+		}
+
+		[[nodiscard]] auto FilterDownTranslation(const SmallVector_t<VirtualCode_t>& stateUpdate) -> SmallVector_t<VirtualCode_t>
 		{
 			using std::ranges::find;
 			using std::ranges::cend;
@@ -267,8 +289,7 @@ export namespace sds
 		}
 
 	private:
-		[[nodiscard]]
-		constexpr auto GetMappingAt(const std::size_t index) noexcept -> const MappingContainer&
+		[[nodiscard]] constexpr auto GetMappingAt(const std::size_t index) noexcept -> const MappingContainer&
 		{
 			return m_mappings[index];
 		}
@@ -280,8 +301,7 @@ export namespace sds
 		 *	by the translator, yet their state would be updated by the filter incorrectly. Also, VKs in the state update must be unique! One VK per mapping is a hard precondition.
 		 * \return "filtered" state update.
 		 */
-		[[nodiscard]]
-		auto FilterStateUpdateForUniqueExclusivityGroups(SmallVector_t<VirtualCode_t>&& stateUpdate) -> SmallVector_t<VirtualCode_t>
+		[[nodiscard]] auto FilterStateUpdateForUniqueExclusivityGroups(SmallVector_t<VirtualCode_t>&& stateUpdate) -> SmallVector_t<VirtualCode_t>
 		{
 			using std::ranges::find_if, std::ranges::cend, std::ranges::find;
 			using StateRange_t = std::remove_cvref_t<decltype(stateUpdate)>;
@@ -323,8 +343,8 @@ export namespace sds
 			return stateUpdate;
 		}
 	};
-	static_assert(std::copyable<KeyboardOvertakingFilter>);
-	static_assert(std::movable<KeyboardOvertakingFilter>);
+	static_assert(std::copyable<OvertakingFilter<>>);
+	static_assert(std::movable<OvertakingFilter<>>);
 
 	/**
 	 * \brief	Filter concept, used to apply a specific "overtaking" behavior (exclusivity grouping behavior) implementation.

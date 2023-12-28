@@ -21,8 +21,7 @@ export namespace sds
 	* \param mappingsRange The range of CBActionMap mappings for which to return the indices of matching mappings.
 	* \remarks PRECONDITION: A mapping with the specified VK does exist in the mappingsRange!
 	*/
-	[[nodiscard]]
-	inline auto GetMappingIndexForVk(const VirtualButtons vk, const std::span<const MappingContainer> mappingsRange) -> std::optional<Index_t>
+	[[nodiscard]] inline auto GetMappingIndexForVk(const VirtualButtons vk, const std::span<const MappingContainer> mappingsRange) -> std::optional<Index_t>
 	{
 		using std::ranges::find_if;
 		using std::ranges::cend;
@@ -47,8 +46,7 @@ export namespace sds
 	* \param vk Virtual keycode of the presumably 'down' key with which to match CBActionMap mappings.
 	* \param mappingsRange The range of CBActionMap mappings for which to return the indices of matching mappings.
 	*/
-	[[nodiscard]]
-	inline auto GetMappingByVk(const VirtualButtons vk, std::span<const MappingContainer> mappingsRange) -> std::optional<std::span<const MappingContainer>::iterator>
+	[[nodiscard]] inline auto GetMappingByVk(const VirtualButtons vk, std::span<const MappingContainer> mappingsRange) -> std::optional<std::span<const MappingContainer>::iterator>
 	{
 		using std::ranges::find_if;
 		using std::ranges::cend;
@@ -66,14 +64,12 @@ export namespace sds
 		return findResult;
 	}
 
-	[[nodiscard]]
-	constexpr auto IsVkInStateUpdate(const auto vkToFind, const std::span<const VirtualButtons> downVirtualKeys) noexcept -> bool
+	[[nodiscard]] constexpr auto IsVkInStateUpdate(const auto vkToFind, const std::span<const VirtualButtons> downVirtualKeys) noexcept -> bool
 	{
 		return std::ranges::any_of(downVirtualKeys, [vkToFind](const auto vk) { return vk == vkToFind; });
 	}
 
-	[[nodiscard]]
-	constexpr auto IsMappingInRange(const VirtualButtons vkToFind, const std::ranges::range auto& downVirtualKeys) noexcept -> bool
+	[[nodiscard]] constexpr auto IsMappingInRange(const VirtualButtons vkToFind, const std::ranges::range auto& downVirtualKeys) noexcept -> bool
 	{
 		return std::ranges::any_of(downVirtualKeys, [vkToFind](const auto vk) { return vk == vkToFind; });
 	}
