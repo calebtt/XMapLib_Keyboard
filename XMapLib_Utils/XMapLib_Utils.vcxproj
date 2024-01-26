@@ -156,7 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ControllerStatus.h" />
-    <ClInclude Include="DelayManager.h" />
+    <ClInclude Include="TimeManagement.h" />
     <ClInclude Include="nanotime.h" />
     <ClInclude Include="SendKeyInput.h" />
     <ClInclude Include="SendMouseInput.h" />

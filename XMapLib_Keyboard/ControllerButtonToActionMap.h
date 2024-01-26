@@ -1,7 +1,7 @@
 #pragma once
 #include "KeyboardCustomTypes.h"
 #include "KeyboardSettingsPack.h"
-#include "../DelayManagerProj/DelayManager/DelayManager.hpp"
+#include "../XMapLib_Utils/TimeManagement.h"
 
 #include <concepts>
 
@@ -28,11 +28,11 @@ namespace sds
 		/**
 		 * \brief	This delay is mostly used for in-between key-repeats, but could also be in between other state transitions.
 		 */
-		DelayManagement::DelayManager LastSentTime{ m_keyDefaults.KeyRepeatDelay };
+		TimeManagement::DelayTimer LastSentTime{ m_keyDefaults.KeyRepeatDelay };
 		/**
 		 * \brief	This is the delay before the first repeat is sent whilst holding the button down.
 		 */
-		DelayManagement::DelayManager DelayBeforeFirstRepeat{ LastSentTime.GetTimerPeriod() };
+		TimeManagement::DelayTimer DelayBeforeFirstRepeat{ LastSentTime.GetTimerPeriod() };
 	public:
 		[[nodiscard]] constexpr bool IsRepeating() const noexcept { return m_currentValue == ActionState::KEYREPEAT; }
 		[[nodiscard]] constexpr bool IsDown() const noexcept { return m_currentValue == ActionState::KEYDOWN; }

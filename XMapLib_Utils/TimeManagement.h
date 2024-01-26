@@ -19,7 +19,6 @@ namespace TimeManagement
 		{ t.Reset(std::chrono::seconds{ 5 }) };
 		{ t.Reset() };
 		{ t.GetTimerPeriod() } -> std::convertible_to<Nanos_t>;
-		{ std::cout << t };
 	};
 
 	/**
