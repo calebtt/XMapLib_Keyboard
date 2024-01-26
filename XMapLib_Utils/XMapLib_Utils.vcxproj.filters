@@ -36,6 +36,9 @@
     <ClInclude Include="nanotime.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DelayManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="nanotime.cpp">
