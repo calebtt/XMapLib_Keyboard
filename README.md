@@ -1,6 +1,8 @@
 xmaplib_keyboard
 Free controller button to action mapping library.
 
+**Check The Wiki!**
+
 
 This is free and unencumbered software released into the public domain.
 
